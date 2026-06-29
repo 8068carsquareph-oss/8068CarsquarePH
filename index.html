@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>8068 CAR SQUARE | POS System v8.8.1</title>
+    <title>8068 CAR SQUARE | POS System v8.8.2</title>
     <script src="https://cdn.tailwindcss.com">
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -1535,6 +1535,11 @@
     <div id="root" class="min-h-screen bg-black"></div>
 
     <script>
+        // ============================================================================================
+        // 8068 CAR SQUARE - Enterprise Management System v8.8.2
+        // Enhanced Admin Panel: Removed Reports & Commission, added Daily Transactions & Weekly Commission
+        // ============================================================================================
+
         // ======================== FIREBASE CONFIGURATION ========================
         let firebaseConfig = {
             apiKey: "AIzaSyDummyKeyForDemoPurposesOnly",
@@ -1821,7 +1826,7 @@
                     if (!appData.commissionWeekly.current) {
                         appData.commissionWeekly.current = { weekStart: '', weekEnd: '', staff: {}, totals: {} };
                     }
-                    // v8.8.1: Ensure transaction reports structure
+                    // v8.8.2: Ensure transaction reports structure
                     if (!appData.transactionReports) {
                         appData.transactionReports = {
                             daily: {},
@@ -1996,7 +2001,7 @@
                 yearly: {} },
                 auditTrail: appData.auditTrail || [],
                 lastUpdated: new Date().toISOString(),
-                version: '8.8.1'
+                version: '8.8.2'
             };
 
             const dataToSync = sanitizeDataForFirebase(rawData);
@@ -2748,7 +2753,7 @@
                     ${appData.systemSettings.appIcon ? `<img src="${appData.systemSettings.appIcon}" class="mx-auto max-h-20 mb-4 rounded-lg">` : ''}
                     <h2 class="text-3xl font-bold glow-text">${appData.systemSettings.companyName}</h2>
                     <p class="text-gray-400 text-sm">${appData.systemSettings.tagline}</p>
-                    <p class="text-cyan-400 text-xs mt-2">Enterprise POS System v8.8.1</p>
+                    <p class="text-cyan-400 text-xs mt-2">Enterprise POS System v8.8.2</p>
                     <p class="text-xs text-green-400 mt-1"><i class="fas fa-check-circle"></i> Auto Transaction Reports</p>
                     <p class="text-xs text-cyan-400 mt-1"><i class="fas fa-cloud"></i> ${firebaseInitialized && isFirebasePrimary ? 'Online Mode' : 'Offline Mode'}</p>
                 </div>
@@ -4834,20 +4839,23 @@
             }
         }
 
-        // ======================== ADMIN DASHBOARD ========================
+        // ======================== ENHANCED ADMIN DASHBOARD ========================
+        // v8.8.2: Removed "reports" and "commission" from sidebar
+        // Added "dailytransactions" and "weeklycommission" as primary admin items
         function renderAdminDashboard() {
             if (showLogin) return renderLogin();
             if (!hasRole(['Owner', 'Manager'])) {
                 return `<div class="card-premium p-8 text-center"><i class="fas fa-lock text-4xl text-red-400 mb-4"></i><p class="text-xl">Access Denied. Manager or Owner required.</p></div>`;
             }
 
+            // ENHANCED ADMIN PANELS - v8.8.2
+            // Removed: reports, commission (redundant)
+            // Kept: dailytransactions, weeklycommission as primary items
             const adminPanels = [
+                { id: 'dailytransactions', icon: 'fa-calendar-day', label: '📊 Daily Transactions' },
+                { id: 'weeklycommission', icon: 'fa-calendar-week', label: '📈 Weekly Commission Report' },
                 { id: 'transactiontracking', icon: 'fa-exchange-alt', label: 'Transaction Tracking' },
-                { id: 'dailytransactions', icon: 'fa-calendar-day', label: 'Daily Transactions' },
-                { id: 'weeklycommission', icon: 'fa-calendar-week', label: 'Weekly Commission Report' },
-                { id: 'reports', icon: 'fa-chart-pie', label: 'Report Summaries' },
                 { id: 'dashboard', icon: 'fa-tachometer-alt', label: 'Dashboard' },
-                { id: 'commission', icon: 'fa-percent', label: 'Commission Reports' },
                 { id: 'credit', icon: 'fa-hand-holding-usd', label: appData.systemSettings.uiLabels
                         .creditManagement || 'Credit Management' },
                 { id: 'customers', icon: 'fa-user-friends', label: 'Customers' },
@@ -4862,12 +4870,10 @@
             ];
 
             let content = '';
-            if (currentAdminPanel === 'transactiontracking') content = renderTransactionTracking();
-            else if (currentAdminPanel === 'dailytransactions') content = renderDailyTransactionManagement();
+            if (currentAdminPanel === 'dailytransactions') content = renderDailyTransactionManagement();
             else if (currentAdminPanel === 'weeklycommission') content = renderWeeklyCommissionReport();
-            else if (currentAdminPanel === 'reports') content = renderReportSummaries();
+            else if (currentAdminPanel === 'transactiontracking') content = renderTransactionTracking();
             else if (currentAdminPanel === 'dashboard') content = renderDashboard();
-            else if (currentAdminPanel === 'commission') content = renderCommissionReports();
             else if (currentAdminPanel === 'credit') content = renderCreditManagement();
             else if (currentAdminPanel === 'customers') content = renderCustomers();
             else if (currentAdminPanel === 'services') content = renderAdminServices();
@@ -4882,6 +4888,7 @@
             return `<div class="admin-grid">
             <div class="admin-sidebar">
                 <h3 class="text-lg font-bold mb-4 neon-glow p-2 rounded text-center"><i class="fas fa-crown"></i> ${appData.systemSettings.uiLabels.adminTitle || 'Admin Panel'}</h3>
+                <div class="text-xs text-gray-400 mb-2 px-2">v8.8.2 — Enhanced Panel</div>
                 ${adminPanels.map(p => `<div class="admin-sidebar-item ${currentAdminPanel === p.id ? 'active' : ''}" onclick="navigateAdmin('${p.id}')"><i class="fas ${p.icon}"></i> ${p.label}</div>`).join('')}
                 <div class="mt-6 p-3 bg-gray-800 rounded-lg text-xs">
                     <div class="text-gray-400">System Status</div>
@@ -4891,7 +4898,7 @@
                         <div>Staff: ${appData.staff.length}</div>
                         <div>TX: ${appData.transactions.length}</div>
                         <div>Credit: ${(appData.credits || []).filter(c=>c.balance>0).length}</div>
-                        <div>v8.8.1</div>
+                        <div>v8.8.2</div>
                     </div>
                     <div class="mt-2 text-cyan-400 text-[10px]">Last Saved: ${new Date().toLocaleTimeString()}</div>
                     <div class="mt-1 text-green-400 text-[10px]">✅ Auto-Sync: ON | Auto-Commission: ON</div>
@@ -6448,8 +6455,6 @@
         };
 
         // ===== ADMIN SERVICES, CATEGORIES, INVENTORY, EXPENSES, COMMISSIONS, USERS, SYSTEM =====
-        // (Keep all existing admin functions - they work the same)
-
         function renderAdminServices() {
             if (showLogin) return renderLogin();
             return `<h3 class="text-xl font-bold mb-4"><i class="fas fa-concierge-bell"></i> Services Management</h3>
@@ -6934,7 +6939,7 @@
             'No app icon uploaded';
             const timeout = s.inactivityTimeout || 30;
 
-            return `<h3 class="text-xl font-bold mb-4"><i class="fas fa-cogs"></i> System Settings v8.8.1</h3>
+            return `<h3 class="text-xl font-bold mb-4"><i class="fas fa-cogs"></i> System Settings v8.8.2</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="space-y-3">
                     <div><label class="text-gray-400 text-sm">Company Logo</label>
@@ -7066,7 +7071,7 @@
             </div>
             <div class="mt-4 p-3 bg-gray-800 rounded-lg text-xs">
                 <div class="text-gray-400">System Info</div>
-                <div>Version: 8.8.1 Enhanced (Auto Transaction Reports + Vehicle History) | Last Saved: ${localStorage.getItem('8068_system_last_saved_v8') ? new Date(localStorage.getItem('8068_system_last_saved_v8')).toLocaleString() : 'Never'}</div>
+                <div>Version: 8.8.2 Enhanced (Auto Transaction Reports + Vehicle History) | Last Saved: ${localStorage.getItem('8068_system_last_saved_v8') ? new Date(localStorage.getItem('8068_system_last_saved_v8')).toLocaleString() : 'Never'}</div>
                 <div>Records: ${appData.transactions.length} TX | ${appData.customers.length} Customers | ${appData.staff.length} Staff</div>
                 <div>Credit Records: ${(appData.credits || []).length} | Outstanding: ₱${(appData.credits || []).reduce((sum, c) => sum + (c.balance || 0), 0).toFixed(2)}</div>
                 <div>Commission Entries: ${Object.keys(appData.commissionMatrix || {}).length}</div>
@@ -7078,9 +7083,11 @@
                 <div class="mt-1 text-green-400">🚗 Vehicle History Search by Plate Number</div>
                 <div class="mt-1 text-green-400">📊 Transaction Summary with 10 key metrics</div>
                 <div class="mt-1 text-green-400">🖨️ Automatic receipt printing after every sale</div>
+                <div class="mt-1 text-green-400">💰 All exports and commissions displayed in ₱ (Philippine Peso)</div>
                 ${firebaseInitialized && isFirebasePrimary ? `<div class="mt-1 text-green-400">🌐 Firebase: Connected (Online) - ${firebaseConfig.databaseURL || 'Custom'} | Auto-sync: ON</div>` : `<div class="mt-1 text-yellow-400">🌐 Firebase: Disconnected - Using local cache</div>`}
                 <div class="mt-1 text-green-400">🔧 Data sanitization removes undefined values before syncing</div>
                 <div class="mt-1 text-cyan-400">🎨 Customizable UI Labels for panels and modals</div>
+                <div class="mt-1 text-purple-400">📊 Admin Panel: Daily Transactions & Weekly Commission Report (v8.8.2)</div>
                 ${isUsingDemoConfig ? `<div class="mt-1 text-yellow-400">⚠️ Using demo Firebase config. Configure your own for data persistence.</div>` : ''}
             </div>
         </div>`;
@@ -7106,7 +7113,7 @@
         window.showFirebaseConfig = function() {
             const currentConfig = firebaseConfig;
             let modalHtml = `<div id="adminModal" class="modal"><div class="modal-content firebase-config-modal">
-            <h3 class="text-xl font-bold mb-4"><i class="fas fa-database"></i> Firebase Configuration v8.8.1</h3>
+            <h3 class="text-xl font-bold mb-4"><i class="fas fa-database"></i> Firebase Configuration v8.8.2</h3>
             <p class="text-sm text-gray-400 mb-4">Enter your Firebase Realtime Database configuration. Get these from your Firebase console.</p>
             <div class="space-y-3">
                 <div><label class="text-gray-400 text-sm">API Key</label><input type="text" id="fbApiKey" class="w-full bg-gray-800 p-2 rounded" value="${currentConfig.apiKey || ''}" placeholder="AIzaSy..."></div>
@@ -7124,12 +7131,13 @@
                 <div class="text-xs text-gray-500 mt-2">
                     <p class="text-yellow-400">⚠️ Your config is stored locally in your browser. Never share your config publicly.</p>
                     <p class="text-cyan-400 mt-1">📖 Get your config from Firebase Console → Project Settings → Your Apps → Web App Config</p>
-                    <p class="text-green-400 mt-1">✅ v8.8.1: Auto Transaction Reports (Daily/Weekly/Monthly/Yearly)</p>
+                    <p class="text-green-400 mt-1">✅ v8.8.2: Auto Transaction Reports (Daily/Weekly/Monthly/Yearly)</p>
                     <p class="text-green-400 mt-1">📊 Vehicle History Search by Plate Number</p>
                     <p class="text-green-400 mt-1">📈 Transaction Summary with 10 key metrics</p>
                     <p class="text-green-400 mt-1">🔄 All transactions and data synchronized in real-time</p>
                     <p class="text-green-400 mt-1">⚡ Offline support - data syncs when connection is restored</p>
                     <p class="text-green-400 mt-1">🖨️ Automatic receipt printing after every sale</p>
+                    <p class="text-purple-400 mt-1">📊 Admin Panel: Daily Transactions & Weekly Commission Report</p>
                 </div>
             </div>
         </div></div>`;
@@ -8621,7 +8629,7 @@
                     </div>
                     <div class="brand-text">
                         <span class="company-title">8068 CAR SQUARE</span>
-                        <span class="company-subtitle">One Stop Shop <span class="company-version">| v8.8.1</span></span>
+                        <span class="company-subtitle">One Stop Shop <span class="company-version">| v8.8.2</span></span>
                     </div>
                 </div>
 
@@ -8658,7 +8666,7 @@
 
             <div id="mainContent" class="mt-2"></div>
 
-            <footer class="text-center text-gray-500 text-sm mt-8 pt-4 border-t border-gray-800">${appData.systemSettings.companyName} | v8.8.1 | Auto Transaction Reports | Sunday-Saturday Payroll Cycle | ${firebaseInitialized && isFirebasePrimary ? '🌐 Online Mode - Real-time Sync ON' : '📡 Offline Mode - Local Cache'}</footer>
+            <footer class="text-center text-gray-500 text-sm mt-8 pt-4 border-t border-gray-800">${appData.systemSettings.companyName} | v8.8.2 | Auto Transaction Reports | Sunday-Saturday Payroll Cycle | ${firebaseInitialized && isFirebasePrimary ? '🌐 Online Mode - Real-time Sync ON' : '📡 Offline Mode - Local Cache'}</footer>
         </div>
     `;
 
@@ -8666,7 +8674,7 @@
         saveToLocal();
 
         console.log(
-            '%c8068 CAR SQUARE - Enterprise Management System v8.8.1 (Auto Transaction Reports)',
+            '%c8068 CAR SQUARE - Enterprise Management System v8.8.2 (Enhanced Admin Panel)',
             'color: #00d4ff; font-size: 20px; font-weight: bold;');
         console.log(
             `%cRecords: ${appData.transactions.length} TX | ${appData.customers.length} Customers | ${appData.staff.length} Staff`,
@@ -8679,9 +8687,8 @@
         console.log('%c📋 Monthly and Yearly Reports Auto-Generated', 'color: #00d4ff;');
         console.log('%c📈 Interactive Sales Chart with Daily/Weekly/Monthly toggle views', 'color: #00d4ff;');
         console.log('%c📊 Today\'s Commission = Commission from Today\'s Transactions only', 'color: #00ff88;');
-        console.log('%c⚡ Reorganized Admin Panel: Transaction Tracking as primary view', 'color: #00d4ff;');
-        console.log('%c🔄 v8.8.1: Online Mode with offline support - data syncs when connection is restored',
-            'color: #00d4ff;');
+        console.log('%c⚡ Enhanced Admin Panel: Daily Transactions & Weekly Commission Report', 'color: #00d4ff;');
+        console.log('%c🔄 v8.8.2: Removed Reports & Commission from sidebar, added Daily & Weekly views', 'color: #00d4ff;');
         console.log('%c👥 Customer Database with full transaction history and credit tracking', 'color: #00d4ff;');
         console.log('%c🛒 POS Panel fully functional with staff assignment, size selection, and open services',
             'color: #00d4ff;');
@@ -8695,6 +8702,8 @@
             console.log('%c✅ Auto-sync enabled - all data saved to Firebase in real-time', 'color: #00ff88;');
         }
         console.log('%c🔍 Search: Plate, Receipt, Customer, Vehicle, Staff, Date Range', 'color: #00d4ff;');
+        console.log('%c📊 Admin Panel v8.8.2: Daily Transactions & Weekly Commission Report as primary items',
+            'color: #a78bfa;');
     </script>
 </body>
 </html>
