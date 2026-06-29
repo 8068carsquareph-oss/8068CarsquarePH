@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>8068 CAR SQUARE | POS System v8.8.3</title>
+    <title>8068 CAR SQUARE | POS System v8.8.4</title>
     <script src="https://cdn.tailwindcss.com">
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -1536,9 +1536,8 @@
 
     <script>
         // ============================================================================================
-        // 8068 CAR SQUARE - Enterprise Management System v8.8.3
-        // Enhanced Role-Based Access (Staff only sees Weekly Commission Report)
-        // Added "Print Entire Dashboard" functionality
+        // 8068 CAR SQUARE - Enterprise Management System v8.8.4
+        // Full Export & Print restored from v8.8.2, Role-Based Staff Access from v8.8.3
         // ============================================================================================
 
         // ======================== FIREBASE CONFIGURATION ========================
@@ -1827,7 +1826,7 @@
                     if (!appData.commissionWeekly.current) {
                         appData.commissionWeekly.current = { weekStart: '', weekEnd: '', staff: {}, totals: {} };
                     }
-                    // v8.8.3: Ensure transaction reports structure
+                    // v8.8.4: Ensure transaction reports structure
                     if (!appData.transactionReports) {
                         appData.transactionReports = {
                             daily: {},
@@ -2002,7 +2001,7 @@
                 yearly: {} },
                 auditTrail: appData.auditTrail || [],
                 lastUpdated: new Date().toISOString(),
-                version: '8.8.3'
+                version: '8.8.4'
             };
 
             const dataToSync = sanitizeDataForFirebase(rawData);
@@ -2754,7 +2753,7 @@
                     ${appData.systemSettings.appIcon ? `<img src="${appData.systemSettings.appIcon}" class="mx-auto max-h-20 mb-4 rounded-lg">` : ''}
                     <h2 class="text-3xl font-bold glow-text">${appData.systemSettings.companyName}</h2>
                     <p class="text-gray-400 text-sm">${appData.systemSettings.tagline}</p>
-                    <p class="text-cyan-400 text-xs mt-2">Enterprise POS System v8.8.3</p>
+                    <p class="text-cyan-400 text-xs mt-2">Enterprise POS System v8.8.4</p>
                     <p class="text-xs text-green-400 mt-1"><i class="fas fa-check-circle"></i> Auto Transaction Reports</p>
                     <p class="text-xs text-cyan-400 mt-1"><i class="fas fa-cloud"></i> ${firebaseInitialized && isFirebasePrimary ? 'Online Mode' : 'Offline Mode'}</p>
                 </div>
@@ -3096,7 +3095,7 @@
             // Update dashboard stats
             updateDashboardStats();
 
-            // AUTOMATIC RECEIPT PRINTING - Always print after successful sale
+            // AUTOMATIC RECEIPT PRINTING - Always print after successful sale (restored v8.8.2 behavior)
             printReceipt(transaction);
 
             alert(`✅ SALE COMPLETED!\nTotal: ₱${total.toFixed(2)}${isCredit ? '\n⚠️ CREDIT (UTANG) - PENDING PAYMENT' : ''}`);
@@ -3629,7 +3628,7 @@
                 service.id, 'open_service');
             alert(`✅ Payment Completed!\nTotal: ₱${total.toFixed(2)}`);
 
-            // AUTOMATIC RECEIPT PRINTING - Always print after successful payment
+            // AUTOMATIC RECEIPT PRINTING - Always print after successful payment (restored v8.8.2 behavior)
             const txToPrint = appData.transactions.find(t => t.openServiceId === service.id);
             if (txToPrint) printReceipt(txToPrint);
             appData.openServices = appData.openServices.filter(s => s.id !== id);
@@ -3840,32 +3839,7 @@
         // ======================== STAFF DASHBOARD ========================
         function renderStaffDashboard() {
             if (showLogin) return renderLogin();
-            // Ensure only Staff can see this view
-            if (appData.currentUser?.role !== 'Staff') {
-                // If an admin/manager tries to access, redirect to main dashboard
-                currentView = 'dashboard';
-                return renderDashboard();
-            }
-
-            // Staff only sees the Weekly Commission Report with a welcome header
-            return `
-            <div class="max-w-7xl mx-auto px-4 py-6">
-                <div class="flex justify-between items-center mb-4">
-                    <div>
-                        <h2 class="text-2xl font-bold"><i class="fas fa-user-shield"></i> Staff Portal</h2>
-                        <p class="text-sm text-gray-400">Welcome, ${appData.currentUser.name}. Here is your weekly commission overview.</p>
-                    </div>
-                    <span class="text-xs text-cyan-400"><i class="fas fa-clock"></i> ${new Date().toLocaleString()}</span>
-                </div>
-                ${renderWeeklyCommissionReport()}
-            </div>
-            `;
-        }
-
-        // ======================== STAFF DASHBOARD ========================
-        function renderStaffDashboard() {
-            if (showLogin) return renderLogin();
-            // Ensure only Staff can see this view
+            // Ensure only Staff can see this view (v8.8.3 role-based access)
             if (appData.currentUser?.role !== 'Staff') {
                 // If an admin/manager tries to access, redirect to main dashboard
                 currentView = 'dashboard';
@@ -4091,7 +4065,7 @@
                 <div class="text-sm text-gray-400">${appData.systemSettings.businessHours}</div>
             </div>
 
-            <!-- Print Entire Dashboard Button -->
+            <!-- Print Entire Dashboard Button (v8.8.3 feature) -->
             <div class="flex justify-end mb-4 no-print">
                 <button onclick="printEntireDashboard()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded text-sm transition flex items-center gap-2">
                     <i class="fas fa-print"></i> Print Entire Dashboard
@@ -4737,14 +4711,14 @@
         }
 
         // ======================== ENHANCED ADMIN DASHBOARD ========================
-        // v8.8.3: Staff restricted to Weekly Commission Report only
+        // v8.8.4: Full export & print restored from v8.8.2, role-based access from v8.8.3
         function renderAdminDashboard() {
             if (showLogin) return renderLogin();
             if (!hasRole(['Owner', 'Manager'])) {
                 return `<div class="card-premium p-8 text-center"><i class="fas fa-lock text-4xl text-red-400 mb-4"></i><p class="text-xl">Access Denied. Manager or Owner required.</p></div>`;
             }
 
-            // ENHANCED ADMIN PANELS - v8.8.3
+            // ENHANCED ADMIN PANELS - v8.8.4
             const adminPanels = [
                 { id: 'dailytransactions', icon: 'fa-calendar-day', label: '📊 Daily Transactions' },
                 { id: 'weeklycommission', icon: 'fa-calendar-week', label: '📈 Weekly Commission Report' },
@@ -4782,7 +4756,7 @@
             return `<div class="admin-grid">
             <div class="admin-sidebar">
                 <h3 class="text-lg font-bold mb-4 neon-glow p-2 rounded text-center"><i class="fas fa-crown"></i> ${appData.systemSettings.uiLabels.adminTitle || 'Admin Panel'}</h3>
-                <div class="text-xs text-gray-400 mb-2 px-2">v8.8.3 — Staff Access Restricted</div>
+                <div class="text-xs text-gray-400 mb-2 px-2">v8.8.4 — Full Export & Print Restored</div>
                 ${adminPanels.map(p => `<div class="admin-sidebar-item ${currentAdminPanel === p.id ? 'active' : ''}" onclick="navigateAdmin('${p.id}')"><i class="fas ${p.icon}"></i> ${p.label}</div>`).join('')}
                 <div class="mt-6 p-3 bg-gray-800 rounded-lg text-xs">
                     <div class="text-gray-400">System Status</div>
@@ -4792,7 +4766,7 @@
                         <div>Staff: ${appData.staff.length}</div>
                         <div>TX: ${appData.transactions.length}</div>
                         <div>Credit: ${(appData.credits || []).filter(c=>c.balance>0).length}</div>
-                        <div>v8.8.3</div>
+                        <div>v8.8.4</div>
                     </div>
                     <div class="mt-2 text-cyan-400 text-[10px]">Last Saved: ${new Date().toLocaleTimeString()}</div>
                     <div class="mt-1 text-green-400 text-[10px]">✅ Auto-Sync: ON | Auto-Commission: ON</div>
@@ -4801,6 +4775,8 @@
                     <div class="mt-1 text-cyan-400 text-[10px]">📊 Sunday-Saturday Weekly Commission Cycle</div>
                     <div class="mt-1 text-cyan-400 text-[10px]">📋 Weekly reports auto-archived for historical tracking</div>
                     <div class="mt-1 text-purple-400 text-[10px]">🔒 Staff: Access to Weekly Commission Report only</div>
+                    <div class="mt-1 text-green-400 text-[10px]">🖨️ Auto Print Receipts: ON (v8.8.2 restored)</div>
+                    <div class="mt-1 text-green-400 text-[10px]">📊 Export: Excel, PDF, CSV fully restored</div>
                     ${isUsingDemoConfig ? `<div class="mt-1 text-yellow-400 text-[10px]">⚠️ Using demo Firebase config - Configure your own in System Settings</div>` : ''}
                 </div>
             </div>
@@ -6834,7 +6810,7 @@
             'No app icon uploaded';
             const timeout = s.inactivityTimeout || 30;
 
-            return `<h3 class="text-xl font-bold mb-4"><i class="fas fa-cogs"></i> System Settings v8.8.3</h3>
+            return `<h3 class="text-xl font-bold mb-4"><i class="fas fa-cogs"></i> System Settings v8.8.4</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="space-y-3">
                     <div><label class="text-gray-400 text-sm">Company Logo</label>
@@ -6928,6 +6904,10 @@
                                 <label class="text-gray-400 text-xs">Auto-Transaction Reports</label>
                                 <span class="text-green-400 text-xs"><i class="fas fa-check-circle"></i> ON</span>
                             </div>
+                            <div class="flex items-center justify-between">
+                                <label class="text-gray-400 text-xs">Auto Print Receipts</label>
+                                <span class="text-green-400 text-xs"><i class="fas fa-check-circle"></i> ON (v8.8.4)</span>
+                            </div>
                         </div>
                     </div>
                     
@@ -6966,21 +6946,21 @@
             </div>
             <div class="mt-4 p-3 bg-gray-800 rounded-lg text-xs">
                 <div class="text-gray-400">System Info</div>
-                <div>Version: 8.8.3 Enhanced (Role-Based Staff Access + Print Entire Dashboard) | Last Saved: ${localStorage.getItem('8068_system_last_saved_v8') ? new Date(localStorage.getItem('8068_system_last_saved_v8')).toLocaleString() : 'Never'}</div>
+                <div>Version: 8.8.4 Enhanced (Full Export & Print Restored + Role-Based Access) | Last Saved: ${localStorage.getItem('8068_system_last_saved_v8') ? new Date(localStorage.getItem('8068_system_last_saved_v8')).toLocaleString() : 'Never'}</div>
                 <div>Records: ${appData.transactions.length} TX | ${appData.customers.length} Customers | ${appData.staff.length} Staff</div>
                 <div>Credit Records: ${(appData.credits || []).length} | Outstanding: ₱${(appData.credits || []).reduce((sum, c) => sum + (c.balance || 0), 0).toFixed(2)}</div>
                 <div>Commission Entries: ${Object.keys(appData.commissionMatrix || {}).length}</div>
                 <div>Open Services: ${appData.openServices.filter(s=>s.status!=='completed').length}</div>
-                <div class="mt-1 text-green-400">✅ All Export (Excel/PDF/CSV) & Print Functions Working</div>
+                <div class="mt-1 text-green-400">✅ All Export (Excel/PDF/CSV) & Print Functions Restored</div>
                 <div class="mt-1 text-cyan-400">📊 Sunday-Saturday Weekly Commission Cycle (Auto-Sync)</div>
                 <div class="mt-1 text-cyan-400">📋 Auto Transaction Reports: Daily, Weekly, Monthly, Yearly</div>
                 <div class="mt-1 text-green-400">📈 Interactive Sales Chart with Daily/Weekly/Monthly views</div>
                 <div class="mt-1 text-green-400">🚗 Vehicle History Search by Plate Number</div>
                 <div class="mt-1 text-green-400">📊 Transaction Summary with 10 key metrics</div>
-                <div class="mt-1 text-green-400">🖨️ Automatic receipt printing after every sale</div>
+                <div class="mt-1 text-green-400">🖨️ Automatic receipt printing after every sale (v8.8.4)</div>
                 <div class="mt-1 text-green-400">💰 All exports and commissions displayed in ₱ (Philippine Peso)</div>
                 <div class="mt-1 text-purple-400">🔒 Staff Role: Access to Weekly Commission Report only</div>
-                <div class="mt-1 text-purple-400">🖨️ Print Entire Dashboard feature added</div>
+                <div class="mt-1 text-purple-400">🖨️ Print Entire Dashboard feature</div>
                 ${firebaseInitialized && isFirebasePrimary ? `<div class="mt-1 text-green-400">🌐 Firebase: Connected (Online) - ${firebaseConfig.databaseURL || 'Custom'} | Auto-sync: ON</div>` : `<div class="mt-1 text-yellow-400">🌐 Firebase: Disconnected - Using local cache</div>`}
                 <div class="mt-1 text-green-400">🔧 Data sanitization removes undefined values before syncing</div>
                 <div class="mt-1 text-cyan-400">🎨 Customizable UI Labels for panels and modals</div>
@@ -7009,7 +6989,7 @@
         window.showFirebaseConfig = function() {
             const currentConfig = firebaseConfig;
             let modalHtml = `<div id="adminModal" class="modal"><div class="modal-content firebase-config-modal">
-            <h3 class="text-xl font-bold mb-4"><i class="fas fa-database"></i> Firebase Configuration v8.8.3</h3>
+            <h3 class="text-xl font-bold mb-4"><i class="fas fa-database"></i> Firebase Configuration v8.8.4</h3>
             <p class="text-sm text-gray-400 mb-4">Enter your Firebase Realtime Database configuration. Get these from your Firebase console.</p>
             <div class="space-y-3">
                 <div><label class="text-gray-400 text-sm">API Key</label><input type="text" id="fbApiKey" class="w-full bg-gray-800 p-2 rounded" value="${currentConfig.apiKey || ''}" placeholder="AIzaSy..."></div>
@@ -7027,7 +7007,7 @@
                 <div class="text-xs text-gray-500 mt-2">
                     <p class="text-yellow-400">⚠️ Your config is stored locally in your browser. Never share your config publicly.</p>
                     <p class="text-cyan-400 mt-1">📖 Get your config from Firebase Console → Project Settings → Your Apps → Web App Config</p>
-                    <p class="text-green-400 mt-1">✅ v8.8.3: Auto Transaction Reports (Daily/Weekly/Monthly/Yearly)</p>
+                    <p class="text-green-400 mt-1">✅ v8.8.4: Full Export & Print Restored</p>
                     <p class="text-green-400 mt-1">📊 Vehicle History Search by Plate Number</p>
                     <p class="text-green-400 mt-1">📈 Transaction Summary with 10 key metrics</p>
                     <p class="text-green-400 mt-1">🔄 All transactions and data synchronized in real-time</p>
@@ -8529,13 +8509,10 @@
                     <hr/>
                     ${cloneContent.innerHTML}
                     <script>
-                        // Ensure charts render properly in print
                         document.querySelectorAll('canvas').forEach(c => {
-                            // Charts are already rendered, but we need to make sure they are visible
                             c.style.display = 'block';
                             c.style.maxWidth = '100%';
                         });
-                        // Remove any remaining interactive elements
                         document.querySelectorAll('.action-btn, .pagination-btn, .quick-action-btn, .chart-period-btn, .filter-panel, .search-input, .nav-btn, .logout-btn, .mobile-nav-toggle, .admin-sidebar, .no-print, [onclick]').forEach(el => {
                             el.removeAttribute('onclick');
                             el.style.cursor = 'default';
@@ -8558,7 +8535,7 @@
                 return;
             }
 
-            // Force Staff users to the Staff Dashboard
+            // Force Staff users to the Staff Dashboard (v8.8.3 role-based access)
             if (appData.currentUser?.role === 'Staff') {
                 currentView = 'staff_dashboard';
             }
@@ -8608,7 +8585,7 @@
         }
 
         window.navigate = (view) => {
-            // Prevent staff from navigating to restricted views
+            // Prevent staff from navigating to restricted views (v8.8.3)
             if (appData.currentUser?.role === 'Staff' && view !== 'staff_dashboard' && view !== 'dashboard') {
                 alert("Access Denied. Staff users can only view the Weekly Commission Report.");
                 return;
@@ -8619,7 +8596,7 @@
         };
 
         window.navigateAdmin = (panel) => {
-            // Prevent staff from accessing admin panels
+            // Prevent staff from accessing admin panels (v8.8.3)
             if (appData.currentUser?.role === 'Staff') {
                 alert("Access Denied. Staff users can only view the Weekly Commission Report.");
                 return;
@@ -8711,7 +8688,7 @@
                     </div>
                     <div class="brand-text">
                         <span class="company-title">8068 CAR SQUARE</span>
-                        <span class="company-subtitle">One Stop Shop <span class="company-version">| v8.8.3</span></span>
+                        <span class="company-subtitle">One Stop Shop <span class="company-version">| v8.8.4</span></span>
                     </div>
                 </div>
 
@@ -8745,7 +8722,7 @@
 
             <div id="mainContent" class="mt-2"></div>
 
-            <footer class="text-center text-gray-500 text-sm mt-8 pt-4 border-t border-gray-800">${appData.systemSettings.companyName} | v8.8.3 | Auto Transaction Reports | Sunday-Saturday Payroll Cycle | ${firebaseInitialized && isFirebasePrimary ? '🌐 Online Mode - Real-time Sync ON' : '📡 Offline Mode - Local Cache'}</footer>
+            <footer class="text-center text-gray-500 text-sm mt-8 pt-4 border-t border-gray-800">${appData.systemSettings.companyName} | v8.8.4 | Full Export & Print Restored | Sunday-Saturday Payroll Cycle | ${firebaseInitialized && isFirebasePrimary ? '🌐 Online Mode - Real-time Sync ON' : '📡 Offline Mode - Local Cache'}</footer>
         </div>
     `;
 
@@ -8753,12 +8730,13 @@
         saveToLocal();
 
         console.log(
-            '%c8068 CAR SQUARE - Enterprise Management System v8.8.3 (Role-Based Staff Access)',
+            '%c8068 CAR SQUARE - Enterprise Management System v8.8.4 (Full Export & Print Restored)',
             'color: #00d4ff; font-size: 20px; font-weight: bold;');
         console.log(
             `%cRecords: ${appData.transactions.length} TX | ${appData.customers.length} Customers | ${appData.staff.length} Staff`,
             'color: #00ff88;');
-        console.log('%c✅ All Export (Excel/PDF/CSV) & Print Functions Fully Operational', 'color: #00ff88;');
+        console.log('%c✅ All Export (Excel/PDF/CSV) & Print Functions Fully Restored', 'color: #00ff88;');
+        console.log('%c🖨️ Automatic Receipt Printing: ON (v8.8.4)', 'color: #00ff88;');
         console.log('%c📊 Auto Transaction Reports: Daily, Weekly, Monthly, Yearly', 'color: #00d4ff;');
         console.log('%c🚗 Vehicle History Search by Plate Number', 'color: #00d4ff;');
         console.log('%c📈 Transaction Summary with 10 key metrics', 'color: #00d4ff;');
@@ -8766,14 +8744,13 @@
         console.log('%c📋 Monthly and Yearly Reports Auto-Generated', 'color: #00d4ff;');
         console.log('%c📈 Interactive Sales Chart with Daily/Weekly/Monthly toggle views', 'color: #00d4ff;');
         console.log('%c📊 Today\'s Commission = Commission from Today\'s Transactions only', 'color: #00ff88;');
-        console.log('%c🔒 Staff Role: Access to Weekly Commission Report only', 'color: #a78bfa;');
-        console.log('%c🖨️ Print Entire Dashboard feature added', 'color: #a78bfa;');
-        console.log('%c🔄 v8.8.3: Enhanced Role-Based Access Control', 'color: #00d4ff;');
+        console.log('%c🔒 Staff Role: Access to Weekly Commission Report only (v8.8.3)', 'color: #a78bfa;');
+        console.log('%c🖨️ Print Entire Dashboard feature (v8.8.3)', 'color: #a78bfa;');
+        console.log('%c🔄 v8.8.4: Full Export & Print Restored + Role-Based Access', 'color: #00d4ff;');
         console.log('%c👥 Customer Database with full transaction history and credit tracking', 'color: #00d4ff;');
         console.log('%c🛒 POS Panel fully functional with staff assignment, size selection, and open services',
             'color: #00d4ff;');
         console.log('%c📋 Auto-Weekly Commission with daily breakdown and archive system', 'color: #00d4ff;');
-        console.log('%c🖨️ Automatic receipt printing after every successful sale', 'color: #00ff88;');
         console.log('%c💰 All exports, commissions, and summaries displayed in ₱ (Philippine Peso)', 'color: #00d4ff;');
         if (!firebaseInitialized || !isFirebasePrimary) {
             console.log('%c⚠️ Click "Admin" → "System Settings" → "Configure Firebase" to connect online',
@@ -8782,6 +8759,8 @@
             console.log('%c✅ Auto-sync enabled - all data saved to Firebase in real-time', 'color: #00ff88;');
         }
         console.log('%c🔍 Search: Plate, Receipt, Customer, Vehicle, Staff, Date Range', 'color: #00d4ff;');
+        console.log('%c📊 Admin Panel: Daily Transactions & Weekly Commission Report as primary items',
+            'color: #a78bfa;');
     </script>
 </body>
 </html>
