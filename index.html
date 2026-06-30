@@ -1537,7 +1537,7 @@
     <script>
         // ============================================================================================
         // 8068 CAR SQUARE - Enterprise Management System v8.8.4
-        // Full Export & Print restored from v8.8.2, Role-Based Staff Access from v8.8.3
+        // Full Export & Print Restoration | Automatic Receipt Printing | All v8.8.2 Features Restored
         // ============================================================================================
 
         // ======================== FIREBASE CONFIGURATION ========================
@@ -3095,7 +3095,7 @@
             // Update dashboard stats
             updateDashboardStats();
 
-            // AUTOMATIC RECEIPT PRINTING - Always print after successful sale (restored v8.8.2 behavior)
+            // ===== AUTOMATIC RECEIPT PRINTING - Always print after successful sale =====
             printReceipt(transaction);
 
             alert(`✅ SALE COMPLETED!\nTotal: ₱${total.toFixed(2)}${isCredit ? '\n⚠️ CREDIT (UTANG) - PENDING PAYMENT' : ''}`);
@@ -3628,7 +3628,7 @@
                 service.id, 'open_service');
             alert(`✅ Payment Completed!\nTotal: ₱${total.toFixed(2)}`);
 
-            // AUTOMATIC RECEIPT PRINTING - Always print after successful payment (restored v8.8.2 behavior)
+            // ===== AUTOMATIC RECEIPT PRINTING - Always print after successful payment =====
             const txToPrint = appData.transactions.find(t => t.openServiceId === service.id);
             if (txToPrint) printReceipt(txToPrint);
             appData.openServices = appData.openServices.filter(s => s.id !== id);
@@ -3839,7 +3839,7 @@
         // ======================== STAFF DASHBOARD ========================
         function renderStaffDashboard() {
             if (showLogin) return renderLogin();
-            // Ensure only Staff can see this view (v8.8.3 role-based access)
+            // Ensure only Staff can see this view
             if (appData.currentUser?.role !== 'Staff') {
                 // If an admin/manager tries to access, redirect to main dashboard
                 currentView = 'dashboard';
@@ -4065,7 +4065,7 @@
                 <div class="text-sm text-gray-400">${appData.systemSettings.businessHours}</div>
             </div>
 
-            <!-- Print Entire Dashboard Button (v8.8.3 feature) -->
+            <!-- Print Entire Dashboard Button -->
             <div class="flex justify-end mb-4 no-print">
                 <button onclick="printEntireDashboard()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded text-sm transition flex items-center gap-2">
                     <i class="fas fa-print"></i> Print Entire Dashboard
@@ -4711,7 +4711,7 @@
         }
 
         // ======================== ENHANCED ADMIN DASHBOARD ========================
-        // v8.8.4: Full export & print restored from v8.8.2, role-based access from v8.8.3
+        // v8.8.4: Full export & print restoration, all v8.8.2 features
         function renderAdminDashboard() {
             if (showLogin) return renderLogin();
             if (!hasRole(['Owner', 'Manager'])) {
@@ -4775,8 +4775,8 @@
                     <div class="mt-1 text-cyan-400 text-[10px]">📊 Sunday-Saturday Weekly Commission Cycle</div>
                     <div class="mt-1 text-cyan-400 text-[10px]">📋 Weekly reports auto-archived for historical tracking</div>
                     <div class="mt-1 text-purple-400 text-[10px]">🔒 Staff: Access to Weekly Commission Report only</div>
-                    <div class="mt-1 text-green-400 text-[10px]">🖨️ Auto Print Receipts: ON (v8.8.2 restored)</div>
-                    <div class="mt-1 text-green-400 text-[10px]">📊 Export: Excel, PDF, CSV fully restored</div>
+                    <div class="mt-1 text-green-400 text-[10px]">🖨️ All Export (Excel/PDF/CSV) & Print Functions Restored</div>
+                    <div class="mt-1 text-green-400 text-[10px]">🧾 Automatic Receipt Printing After Every Sale</div>
                     ${isUsingDemoConfig ? `<div class="mt-1 text-yellow-400 text-[10px]">⚠️ Using demo Firebase config - Configure your own in System Settings</div>` : ''}
                 </div>
             </div>
@@ -6904,10 +6904,6 @@
                                 <label class="text-gray-400 text-xs">Auto-Transaction Reports</label>
                                 <span class="text-green-400 text-xs"><i class="fas fa-check-circle"></i> ON</span>
                             </div>
-                            <div class="flex items-center justify-between">
-                                <label class="text-gray-400 text-xs">Auto Print Receipts</label>
-                                <span class="text-green-400 text-xs"><i class="fas fa-check-circle"></i> ON (v8.8.4)</span>
-                            </div>
                         </div>
                     </div>
                     
@@ -6946,18 +6942,18 @@
             </div>
             <div class="mt-4 p-3 bg-gray-800 rounded-lg text-xs">
                 <div class="text-gray-400">System Info</div>
-                <div>Version: 8.8.4 Enhanced (Full Export & Print Restored + Role-Based Access) | Last Saved: ${localStorage.getItem('8068_system_last_saved_v8') ? new Date(localStorage.getItem('8068_system_last_saved_v8')).toLocaleString() : 'Never'}</div>
+                <div>Version: 8.8.4 Enhanced (Full Export/Print Restoration + Auto Receipt Printing) | Last Saved: ${localStorage.getItem('8068_system_last_saved_v8') ? new Date(localStorage.getItem('8068_system_last_saved_v8')).toLocaleString() : 'Never'}</div>
                 <div>Records: ${appData.transactions.length} TX | ${appData.customers.length} Customers | ${appData.staff.length} Staff</div>
                 <div>Credit Records: ${(appData.credits || []).length} | Outstanding: ₱${(appData.credits || []).reduce((sum, c) => sum + (c.balance || 0), 0).toFixed(2)}</div>
                 <div>Commission Entries: ${Object.keys(appData.commissionMatrix || {}).length}</div>
                 <div>Open Services: ${appData.openServices.filter(s=>s.status!=='completed').length}</div>
-                <div class="mt-1 text-green-400">✅ All Export (Excel/PDF/CSV) & Print Functions Restored</div>
+                <div class="mt-1 text-green-400">✅ All Export (Excel/PDF/CSV) & Print Functions Fully Restored</div>
+                <div class="mt-1 text-green-400">🧾 Automatic Receipt Printing After Every Sale/Payment</div>
                 <div class="mt-1 text-cyan-400">📊 Sunday-Saturday Weekly Commission Cycle (Auto-Sync)</div>
                 <div class="mt-1 text-cyan-400">📋 Auto Transaction Reports: Daily, Weekly, Monthly, Yearly</div>
                 <div class="mt-1 text-green-400">📈 Interactive Sales Chart with Daily/Weekly/Monthly views</div>
                 <div class="mt-1 text-green-400">🚗 Vehicle History Search by Plate Number</div>
                 <div class="mt-1 text-green-400">📊 Transaction Summary with 10 key metrics</div>
-                <div class="mt-1 text-green-400">🖨️ Automatic receipt printing after every sale (v8.8.4)</div>
                 <div class="mt-1 text-green-400">💰 All exports and commissions displayed in ₱ (Philippine Peso)</div>
                 <div class="mt-1 text-purple-400">🔒 Staff Role: Access to Weekly Commission Report only</div>
                 <div class="mt-1 text-purple-400">🖨️ Print Entire Dashboard feature</div>
@@ -7007,12 +7003,11 @@
                 <div class="text-xs text-gray-500 mt-2">
                     <p class="text-yellow-400">⚠️ Your config is stored locally in your browser. Never share your config publicly.</p>
                     <p class="text-cyan-400 mt-1">📖 Get your config from Firebase Console → Project Settings → Your Apps → Web App Config</p>
-                    <p class="text-green-400 mt-1">✅ v8.8.4: Full Export & Print Restored</p>
-                    <p class="text-green-400 mt-1">📊 Vehicle History Search by Plate Number</p>
-                    <p class="text-green-400 mt-1">📈 Transaction Summary with 10 key metrics</p>
+                    <p class="text-green-400 mt-1">✅ v8.8.4: Full Export & Print Restoration</p>
+                    <p class="text-green-400 mt-1">🧾 Automatic Receipt Printing After Every Sale</p>
+                    <p class="text-green-400 mt-1">📊 All v8.8.2 Export Features Restored (Excel/PDF/CSV)</p>
                     <p class="text-green-400 mt-1">🔄 All transactions and data synchronized in real-time</p>
                     <p class="text-green-400 mt-1">⚡ Offline support - data syncs when connection is restored</p>
-                    <p class="text-green-400 mt-1">🖨️ Automatic receipt printing after every sale</p>
                     <p class="text-purple-400 mt-1">🔒 Staff Role: Access to Weekly Commission Report only</p>
                     <p class="text-purple-400 mt-1">🖨️ Print Entire Dashboard feature</p>
                 </div>
@@ -8509,6 +8504,7 @@
                     <hr/>
                     ${cloneContent.innerHTML}
                     <script>
+                        // Ensure charts render properly in print
                         document.querySelectorAll('canvas').forEach(c => {
                             c.style.display = 'block';
                             c.style.maxWidth = '100%';
@@ -8528,6 +8524,92 @@
             printWindow.document.close();
         };
 
+        // ===== RECEIPT PRINTING =====
+        function printReceipt(tx, size) {
+            const receiptSize = size || appData.systemSettings.receiptSize || '58mm';
+            const printWindow = window.open('', '_blank');
+            const logoHtml = appData.systemSettings.companyLogo ?
+                `<div class="center"><img src="${appData.systemSettings.companyLogo}" style="max-width:${appData.systemSettings.logoSize || 80}px;max-height:${(appData.systemSettings.logoSize || 80)/2}px;object-fit:contain;"></div>` :
+                '';
+            const receiptClass = receiptSize === '80mm' ? 'receipt-80mm' : 'receipt-58mm';
+
+            printWindow.document.write(`<!DOCTYPE html>
+            <html>
+            <head>
+                <title>Receipt</title>
+                <style>
+                    body { margin: 0; padding: 4px; background: white; font-family: 'Courier New', monospace; width: ${receiptSize === '80mm' ? '80mm' : '58mm'}; margin: 0 auto; }
+                    .${receiptClass} { width: ${receiptSize === '80mm' ? '80mm' : '58mm'}; padding: ${receiptSize === '80mm' ? '12px' : '8px'}; background: white; color: black; font-size: ${receiptSize === '80mm' ? '12px' : '11px'}; font-family: 'Courier New', monospace; }
+                    .center { text-align: center; }
+                    .line { border-top: 1px dashed #000; margin: ${receiptSize === '80mm' ? '6px' : '4px'} 0; }
+                    .bold { font-weight: bold; }
+                    .small { font-size: ${receiptSize === '80mm' ? '10px' : '9px'}; }
+                    .total { font-size: ${receiptSize === '80mm' ? '18px' : '16px'}; font-weight: bold; }
+                    .item .name { display: inline-block; width: 65%; }
+                    .item .price { display: inline-block; width: 35%; text-align: right; }
+                    .header-text { font-size: ${receiptSize === '80mm' ? '16px' : '14px'}; font-weight: bold; }
+                    .sub-text { font-size: ${receiptSize === '80mm' ? '11px' : '10px'}; }
+                    .thankyou { font-size: ${receiptSize === '80mm' ? '14px' : '12px'}; font-weight: bold; margin-top: 6px; }
+                    img { max-width: ${appData.systemSettings.logoSize || 80}px; max-height: ${(appData.systemSettings.logoSize || 80)/2}px; object-fit: contain; }
+                    @media print { body { margin: 0; padding: 0; } .${receiptClass} { width: ${receiptSize === '80mm' ? '80mm' : '58mm'}; padding: ${receiptSize === '80mm' ? '8px' : '4px'}; } }
+                </style>
+            </head>
+            <body>
+                <div class="${receiptClass}">
+                    ${logoHtml}
+                    <div class="center header-text">${appData.systemSettings.companyName}</div>
+                    <div class="center sub-text">${appData.systemSettings.tagline}</div>
+                    <div class="center sub-text">${appData.systemSettings.address}</div>
+                    <div class="center sub-text">Tel: ${appData.systemSettings.phone}</div>
+                    <div class="center sub-text">FB: ${appData.systemSettings.facebook}</div>
+                    <div class="line"></div>
+                    <div><span class="bold">${appData.systemSettings.receiptHeader}:</span> ${tx.id}</div>
+                    <div><span class="bold">Date:</span> ${new Date(tx.date).toLocaleString()}</div>
+                    <div><span class="bold">Customer:</span> ${tx.customer}</div>
+                    <div><span class="bold">Vehicle:</span> ${tx.vehicle} | ${tx.plate}</div>
+                    <div><span class="bold">Payment:</span> ${tx.paymentMethod}</div>
+                    ${tx.isCredit ? `<div><span class="bold" style="color:#ff6b00;">⚠️ CREDIT (UTANG) - PENDING</span></div>` : ''}
+                    <div class="line"></div>
+                    ${tx.items.map(i => `
+                        <div class="item">
+                            <span class="name">${i.serviceName} (${i.variant}) x${i.quantity}</span>
+                            <span class="price">₱${(i.price * i.quantity).toFixed(2)}</span>
+                            ${i.remarks ? `<div class="small" style="padding-left:4px;">📝 ${i.remarks}</div>` : ''}
+                            ${i.assignedStaff?.length ? `<div class="small" style="padding-left:4px;">Staff: ${i.assignedStaff.map(s => s.name).join(', ')}</div>` : ''}
+                        </div>
+                    `).join('')}
+                    <div class="line"></div>
+                    <div><span class="bold">Subtotal:</span> ₱${tx.subtotal.toFixed(2)}</div>
+                    ${tx.discount > 0 ? `<div><span class="bold">Discount:</span> -₱${tx.discount.toFixed(2)}</div>` : ''}
+                    ${tx.loyaltyUsed > 0 ? `<div><span class="bold">Loyalty:</span> -₱${tx.loyaltyUsed.toFixed(2)}</div>` : ''}
+                    ${appData.systemSettings.showVAT ? `<div><span class="bold">VAT (12%):</span> ₱${(tx.total * 0.12).toFixed(2)}</div>` : ''}
+                    <div class="line"></div>
+                    <div class="center total">TOTAL: ₱${tx.total.toFixed(2)}</div>
+                    <div class="line"></div>
+                    <div><span class="bold">Payment:</span> ${tx.paymentMethod}</div>
+                    ${tx.paymentMethod === 'Cash' ? `<div><span class="bold">Tendered:</span> ₱${tx.cashTendered.toFixed(2)}</div><div><span class="bold">Change:</span> ₱${tx.change.toFixed(2)}</div>` : ''}
+                    ${tx.isCredit ? `<div class="bold" style="color:#ff6b00;text-align:center;">⚠️ CREDIT (UTANG) - PENDING PAYMENT</div>` : ''}
+                    <div class="line"></div>
+                    <div class="center thankyou">Thank You For Choosing</div>
+                    <div class="center thankyou">${appData.systemSettings.companyName}</div>
+                    <div class="center sub-text">${appData.systemSettings.receiptFooter}</div>
+                    <div style="text-align:center; font-size:8px; margin-top:4px; color:#888;">${tx.id}</div>
+                    <div style="text-align:center; font-size:8px; margin-top:2px; color:#888;">${new Date().toLocaleString()}</div>
+                    <div style="text-align:center; font-size:6px; margin-top:8px;">--- Cut Here ---</div>
+                </div>
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        window.print();
+                        window.onafterprint = function() { window.close(); };
+                    });
+                <\/script>
+            </body>
+            </html>`);
+            printWindow.document.close();
+            setTimeout(() => { printWindow.focus();
+                printWindow.print(); }, 500);
+        }
+
         // ===== MAIN RENDER =====
         function renderApp() {
             if (showLogin) {
@@ -8535,7 +8617,7 @@
                 return;
             }
 
-            // Force Staff users to the Staff Dashboard (v8.8.3 role-based access)
+            // Force Staff users to the Staff Dashboard
             if (appData.currentUser?.role === 'Staff') {
                 currentView = 'staff_dashboard';
             }
@@ -8557,7 +8639,6 @@
             } else if (currentView === "staff") {
                 content = renderStaffDashboard();
             } else if (currentView === "admin") {
-                // Check if user has admin access, if not, redirect to staff dashboard or show access denied
                 if (!hasRole(['Owner', 'Manager'])) {
                     content =
                         `<div class="card-premium p-8 text-center"><i class="fas fa-lock text-4xl text-red-400 mb-4"></i><p class="text-xl">Access Denied. You do not have permission to view this page.</p></div>`;
@@ -8585,7 +8666,6 @@
         }
 
         window.navigate = (view) => {
-            // Prevent staff from navigating to restricted views (v8.8.3)
             if (appData.currentUser?.role === 'Staff' && view !== 'staff_dashboard' && view !== 'dashboard') {
                 alert("Access Denied. Staff users can only view the Weekly Commission Report.");
                 return;
@@ -8596,7 +8676,6 @@
         };
 
         window.navigateAdmin = (panel) => {
-            // Prevent staff from accessing admin panels (v8.8.3)
             if (appData.currentUser?.role === 'Staff') {
                 alert("Access Denied. Staff users can only view the Weekly Commission Report.");
                 return;
@@ -8653,7 +8732,6 @@
                     'warn');
                 updateFirebaseStatus('offline', 'Local Cache');
             }
-            // Rebuild transaction reports from existing data
             recalculateAllTransactionReports();
             recalculateAllCommissions();
             renderApp();
@@ -8661,7 +8739,6 @@
         });
 
         // ===== BODY RENDER =====
-        // Determine navigation items based on user role
         const isStaff = appData.currentUser?.role === 'Staff';
         const navItems = isStaff ? `
             <button class="nav-btn active" onclick="navigate('staff_dashboard')"><i class="fas fa-chart-line"></i> Dashboard</button>
@@ -8736,7 +8813,7 @@
             `%cRecords: ${appData.transactions.length} TX | ${appData.customers.length} Customers | ${appData.staff.length} Staff`,
             'color: #00ff88;');
         console.log('%c✅ All Export (Excel/PDF/CSV) & Print Functions Fully Restored', 'color: #00ff88;');
-        console.log('%c🖨️ Automatic Receipt Printing: ON (v8.8.4)', 'color: #00ff88;');
+        console.log('%c🧾 Automatic Receipt Printing After Every Sale/Payment', 'color: #00ff88;');
         console.log('%c📊 Auto Transaction Reports: Daily, Weekly, Monthly, Yearly', 'color: #00d4ff;');
         console.log('%c🚗 Vehicle History Search by Plate Number', 'color: #00d4ff;');
         console.log('%c📈 Transaction Summary with 10 key metrics', 'color: #00d4ff;');
@@ -8744,13 +8821,9 @@
         console.log('%c📋 Monthly and Yearly Reports Auto-Generated', 'color: #00d4ff;');
         console.log('%c📈 Interactive Sales Chart with Daily/Weekly/Monthly toggle views', 'color: #00d4ff;');
         console.log('%c📊 Today\'s Commission = Commission from Today\'s Transactions only', 'color: #00ff88;');
-        console.log('%c🔒 Staff Role: Access to Weekly Commission Report only (v8.8.3)', 'color: #a78bfa;');
-        console.log('%c🖨️ Print Entire Dashboard feature (v8.8.3)', 'color: #a78bfa;');
-        console.log('%c🔄 v8.8.4: Full Export & Print Restored + Role-Based Access', 'color: #00d4ff;');
-        console.log('%c👥 Customer Database with full transaction history and credit tracking', 'color: #00d4ff;');
-        console.log('%c🛒 POS Panel fully functional with staff assignment, size selection, and open services',
-            'color: #00d4ff;');
-        console.log('%c📋 Auto-Weekly Commission with daily breakdown and archive system', 'color: #00d4ff;');
+        console.log('%c🔒 Staff Role: Access to Weekly Commission Report only', 'color: #a78bfa;');
+        console.log('%c🖨️ Print Entire Dashboard feature', 'color: #a78bfa;');
+        console.log('%c🔄 v8.8.4: All v8.8.2 Features Restored', 'color: #00d4ff;');
         console.log('%c💰 All exports, commissions, and summaries displayed in ₱ (Philippine Peso)', 'color: #00d4ff;');
         if (!firebaseInitialized || !isFirebasePrimary) {
             console.log('%c⚠️ Click "Admin" → "System Settings" → "Configure Firebase" to connect online',
@@ -8759,8 +8832,6 @@
             console.log('%c✅ Auto-sync enabled - all data saved to Firebase in real-time', 'color: #00ff88;');
         }
         console.log('%c🔍 Search: Plate, Receipt, Customer, Vehicle, Staff, Date Range', 'color: #00d4ff;');
-        console.log('%c📊 Admin Panel: Daily Transactions & Weekly Commission Report as primary items',
-            'color: #a78bfa;');
     </script>
 </body>
 </html>
