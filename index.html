@@ -1926,73 +1926,6 @@
             font-size: 10px;
             color: #00d4ff;
         }
-        .panel-edit-btn {
-            background: rgba(0, 212, 255, 0.1);
-            border: 1px solid rgba(0, 212, 255, 0.2);
-            border-radius: 8px;
-            padding: 4px 12px;
-            font-size: 11px;
-            color: #00d4ff;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-        }
-        .panel-edit-btn:hover {
-            background: rgba(0, 212, 255, 0.2);
-            transform: scale(1.02);
-        }
-        .panel-editor-modal .editor-toolbar {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            padding: 8px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            margin-bottom: 12px;
-        }
-        .panel-editor-modal .editor-toolbar button {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 6px;
-            padding: 6px 12px;
-            color: #aaa;
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .panel-editor-modal .editor-toolbar button:hover {
-            background: rgba(0, 212, 255, 0.1);
-            border-color: #00d4ff;
-            color: #fff;
-        }
-        .panel-editor-modal .editor-content {
-            min-height: 200px;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 8px;
-            padding: 12px;
-            font-family: monospace;
-            font-size: 13px;
-            color: #ccc;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            border: 1px solid #333;
-            outline: none;
-            max-height: 400px;
-            overflow-y: auto;
-        }
-        .panel-editor-modal .editor-content:focus {
-            border-color: #00d4ff;
-        }
-        .panel-editor-modal .editor-preview {
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 8px;
-            padding: 12px;
-            margin-top: 12px;
-            border: 1px solid #2a2a2a;
-            min-height: 50px;
-            color: #ddd;
-        }
     </style>
 </head>
 <body class="text-white">
@@ -2002,7 +1935,7 @@
     <script>
         // ============================================================================================
         // 8068 CAR SQUARE - Enterprise Management System v8.8.5
-        // FULLY FUNCTIONAL - Fixed Transaction Tracking, Staff Panel, Admin Panel Editor
+        // FULLY FUNCTIONAL - ADMIN PANEL FIXED, NO BREAKING CHANGES
         // ============================================================================================
 
         // ======================== FIREBASE CONFIGURATION ========================
@@ -2304,7 +2237,6 @@
                     if (!appData.systemSettings.transactionIdCounter) appData.systemSettings.transactionIdCounter = 1;
                     if (!appData.feedback) appData.feedback = [];
                     if (!appData.systemSettings.feedbackUrl) appData.systemSettings.feedbackUrl = '';
-                    if (!appData.adminPanelCustomizations) appData.adminPanelCustomizations = {};
                     dataLoaded = true;
                     addFirebaseLog('📂 Loaded from localStorage (cache)', 'info');
                     renderApp();
@@ -2408,8 +2340,6 @@
                             hasChanges = true; }
                         if (!appData.systemSettings.feedbackUrl) { appData.systemSettings.feedbackUrl = '';
                             hasChanges = true; }
-                        if (!appData.adminPanelCustomizations) { appData.adminPanelCustomizations = {};
-                            hasChanges = true; }
                         dataLoaded = true;
                         if (hasChanges) {
                             saveToLocal();
@@ -2475,7 +2405,6 @@
                 yearly: {} },
                 auditTrail: appData.auditTrail || [],
                 feedback: appData.feedback || [],
-                adminPanelCustomizations: appData.adminPanelCustomizations || {},
                 lastUpdated: new Date().toISOString(),
                 version: '8.8.5'
             };
@@ -2740,8 +2669,7 @@
             commissionWeekly: { current: null, archives: [] },
             transactionReports: { daily: {}, weekly: {}, monthly: {}, yearly: {} },
             auditTrail: [],
-            feedback: [],
-            adminPanelCustomizations: {}
+            feedback: []
         };
 
         function getDescription(name) {
@@ -2828,7 +2756,6 @@
                 if (!appData.systemSettings.transactionIdCounter) appData.systemSettings.transactionIdCounter = 1;
                 if (!appData.feedback) appData.feedback = [];
                 if (!appData.systemSettings.feedbackUrl) appData.systemSettings.feedbackUrl = '';
-                if (!appData.adminPanelCustomizations) appData.adminPanelCustomizations = {};
                 dataLoaded = true;
             } catch (e) {}
         }
@@ -4854,7 +4781,7 @@
             alert(msg);
         };
 
-        // ===== STAFF DASHBOARD (FIXED) =====
+        // ===== STAFF DASHBOARD =====
         function renderStaffDashboard() {
             if (showLogin) return renderLogin();
             if (appData.currentUser?.role !== 'Staff') {
@@ -4862,37 +4789,15 @@
                 return renderDashboard();
             }
 
-            // Get staff member's own data
-            const staffMember = appData.staff.find(s => s.name === appData.currentUser.name);
-            const staffCommissions = staffMember ? staffMember.totalCommission || 0 : 0;
-            const staffJobs = staffMember ? staffMember.jobsCompleted || 0 : 0;
-            const staffSales = staffMember ? staffMember.salesGenerated || 0 : 0;
-
             return `
             <div class="max-w-7xl mx-auto px-4 py-6">
                 <div class="flex justify-between items-center mb-4">
                     <div>
                         <h2 class="text-2xl font-bold"><i class="fas fa-user-shield"></i> Staff Portal</h2>
-                        <p class="text-sm text-gray-400">Welcome, ${appData.currentUser.name}. Here is your personal performance overview.</p>
+                        <p class="text-sm text-gray-400">Welcome, ${appData.currentUser.name}. Here is your weekly commission overview.</p>
                     </div>
                     <span class="text-xs text-cyan-400"><i class="fas fa-clock"></i> ${new Date().toLocaleString()}</span>
                 </div>
-                
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    <div class="bg-gray-800/30 p-4 rounded-lg text-center border border-cyan-400/20">
-                        <div class="text-xs text-gray-400">Your Total Commission</div>
-                        <div class="text-2xl font-bold text-green-400">₱${staffCommissions.toFixed(2)}</div>
-                    </div>
-                    <div class="bg-gray-800/30 p-4 rounded-lg text-center border border-cyan-400/20">
-                        <div class="text-xs text-gray-400">Jobs Completed</div>
-                        <div class="text-2xl font-bold text-yellow-400">${staffJobs}</div>
-                    </div>
-                    <div class="bg-gray-800/30 p-4 rounded-lg text-center border border-cyan-400/20">
-                        <div class="text-xs text-gray-400">Sales Generated</div>
-                        <div class="text-2xl font-bold text-cyan-400">₱${staffSales.toFixed(2)}</div>
-                    </div>
-                </div>
-
                 ${renderWeeklyCommissionReport()}
             </div>
             `;
@@ -6769,20 +6674,8 @@
         };
 
         // ================================================================
-        //  ENHANCED ADMIN DASHBOARD - WITH PANEL EDITOR FEATURE
+        //  ENHANCED ADMIN DASHBOARD - FIXED
         // ================================================================
-
-        // Panel customization storage
-        function getPanelCustomization(panelId) {
-            if (!appData.adminPanelCustomizations) appData.adminPanelCustomizations = {};
-            return appData.adminPanelCustomizations[panelId] || null;
-        }
-
-        function setPanelCustomization(panelId, content) {
-            if (!appData.adminPanelCustomizations) appData.adminPanelCustomizations = {};
-            appData.adminPanelCustomizations[panelId] = content;
-            saveToLocal();
-        }
 
         function renderAdminDashboard() {
             if (showLogin) return renderLogin();
@@ -6811,53 +6704,23 @@
 
             let content = '';
             try {
-                // Check if there's a custom panel content
-                const customContent = getPanelCustomization(currentAdminPanel);
-                if (customContent) {
-                    // Render custom content with edit button
-                    content = `
-                        <div class="relative">
-                            <div class="flex justify-between items-center mb-4">
-                                <span class="text-xs text-purple-400"><i class="fas fa-pen-fancy"></i> Custom Panel Content</span>
-                                <button onclick="openPanelEditor('${currentAdminPanel}')" class="panel-edit-btn">
-                                    <i class="fas fa-edit"></i> Edit Panel
-                                </button>
-                            </div>
-                            <div class="custom-panel-content">
-                                ${customContent}
-                            </div>
-                        </div>
-                    `;
-                } else {
-                    // Render default content
-                    let defaultContent = '';
-                    if (currentAdminPanel === 'dailytransactions') defaultContent = renderDailyTransactionManagement();
-                    else if (currentAdminPanel === 'weeklycommission') defaultContent = renderWeeklyCommissionReport();
-                    else if (currentAdminPanel === 'transactiontracking') defaultContent = renderTransactionTracking();
-                    else if (currentAdminPanel === 'dashboard') defaultContent = renderDashboard();
-                    else if (currentAdminPanel === 'credit') defaultContent = renderCreditManagement();
-                    else if (currentAdminPanel === 'customers') defaultContent = renderCustomers();
-                    else if (currentAdminPanel === 'services') defaultContent = renderAdminServices();
-                    else if (currentAdminPanel === 'categories') defaultContent = renderAdminCategories();
-                    else if (currentAdminPanel === 'staff') defaultContent = renderStaffDashboard();
-                    else if (currentAdminPanel === 'inventory') defaultContent = renderInventory();
-                    else if (currentAdminPanel === 'expenses') defaultContent = renderAdminExpenses();
-                    else if (currentAdminPanel === 'commissions') defaultContent = renderAdminCommissions();
-                    else if (currentAdminPanel === 'users') defaultContent = renderAdminUsers();
-                    else if (currentAdminPanel === 'system') defaultContent = renderAdminSystem();
-                    else if (currentAdminPanel === 'feedback') defaultContent = renderAdminFeedback();
-                    else defaultContent = renderDailyTransactionManagement();
-
-                    content = `
-                        <div class="relative">
-                            <div class="flex justify-end items-center mb-4">
-                                <button onclick="openPanelEditor('${currentAdminPanel}')" class="panel-edit-btn">
-                                    <i class="fas fa-pen"></i> Customize This Panel
-                                </button>
-                            </div>
-                            ${defaultContent}
-                        </div>
-                    `;
+                if (currentAdminPanel === 'dailytransactions') content = renderDailyTransactionManagement();
+                else if (currentAdminPanel === 'weeklycommission') content = renderWeeklyCommissionReport();
+                else if (currentAdminPanel === 'transactiontracking') content = renderTransactionTracking();
+                else if (currentAdminPanel === 'dashboard') content = renderDashboard();
+                else if (currentAdminPanel === 'credit') content = renderCreditManagement();
+                else if (currentAdminPanel === 'customers') content = renderCustomers();
+                else if (currentAdminPanel === 'services') content = renderAdminServices();
+                else if (currentAdminPanel === 'categories') content = renderAdminCategories();
+                else if (currentAdminPanel === 'staff') content = renderStaffDashboard();
+                else if (currentAdminPanel === 'inventory') content = renderInventory();
+                else if (currentAdminPanel === 'expenses') content = renderAdminExpenses();
+                else if (currentAdminPanel === 'commissions') content = renderAdminCommissions();
+                else if (currentAdminPanel === 'users') content = renderAdminUsers();
+                else if (currentAdminPanel === 'system') content = renderAdminSystem();
+                else if (currentAdminPanel === 'feedback') content = renderAdminFeedback();
+                else {
+                    content = renderDailyTransactionManagement();
                 }
             } catch (e) {
                 console.error('Admin panel error:', e);
@@ -6884,7 +6747,6 @@
                     <div class="mt-1 text-green-400 text-[10px]">📊 Auto Transaction Reports: ON</div>
                     <div class="mt-1 text-purple-400 text-[10px]">💬 QR Code Feedback: Active</div>
                     <div class="mt-1 text-purple-400 text-[10px]">📝 ${getAllFeedback().length} feedback entries</div>
-                    <div class="mt-1 text-cyan-400 text-[10px]">🎨 Panel Customization: ${Object.keys(appData.adminPanelCustomizations || {}).length} custom panels</div>
                     ${firebaseInitialized && isFirebasePrimary ? `<div class="mt-1 text-green-400 text-[10px]">🌐 Online Mode | Real-time sync enabled</div>` : `<div class="mt-1 text-yellow-400 text-[10px]">⚠️ Offline Mode | Using local cache</div>`}
                     <div class="mt-1 text-cyan-400 text-[10px]">📊 Sunday-Saturday Weekly Commission Cycle</div>
                     <div class="mt-1 text-cyan-400 text-[10px]">📋 Weekly reports auto-archived for historical tracking</div>
@@ -6898,141 +6760,7 @@
         </div>`;
         }
 
-        // ===== PANEL EDITOR MODAL =====
-        function openPanelEditor(panelId) {
-            const currentContent = getPanelCustomization(panelId) || '';
-            const panelNames = {
-                dailytransactions: 'Daily Transactions',
-                weeklycommission: 'Weekly Commission Report',
-                transactiontracking: 'Transaction Tracking',
-                dashboard: 'Dashboard',
-                credit: 'Credit Management',
-                customers: 'Customers',
-                services: 'Services',
-                categories: 'Categories',
-                staff: 'Staff',
-                inventory: 'Inventory',
-                expenses: 'Expenses',
-                commissions: 'Commission Matrix',
-                users: 'Users',
-                system: 'System Settings',
-                feedback: 'Feedback'
-            };
-            const panelName = panelNames[panelId] || panelId;
-
-            let modalHtml = `
-                <div id="panelEditorModal" class="modal panel-editor-modal">
-                    <div class="modal-content" style="max-width: 800px;">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="text-xl font-bold"><i class="fas fa-pen-fancy"></i> Customize: ${panelName}</h3>
-                            <button onclick="closePanelEditor()" class="text-gray-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
-                        </div>
-                        <p class="text-sm text-gray-400 mb-3">Edit the HTML content of this panel. Use standard HTML with Tailwind classes.</p>
-                        
-                        <div class="editor-toolbar">
-                            <button onclick="editorInsert('h2')"><i class="fas fa-heading"></i> H2</button>
-                            <button onclick="editorInsert('h3')"><i class="fas fa-heading"></i> H3</button>
-                            <button onclick="editorInsert('p')"><i class="fas fa-paragraph"></i> P</button>
-                            <button onclick="editorInsert('div')"><i class="fas fa-square"></i> Div</button>
-                            <button onclick="editorInsert('card')"><i class="fas fa-credit-card"></i> Card</button>
-                            <button onclick="editorInsert('stat')"><i class="fas fa-chart-simple"></i> Stat</button>
-                            <button onclick="editorInsert('table')"><i class="fas fa-table"></i> Table</button>
-                            <button onclick="editorInsert('list')"><i class="fas fa-list"></i> List</button>
-                            <button onclick="editorReset()" class="text-red-400 hover:text-red-300"><i class="fas fa-undo"></i> Reset</button>
-                        </div>
-                        
-                        <div class="editor-content" contenteditable="true" id="panelEditorContent">${currentContent}</div>
-                        
-                        <div class="flex gap-3 mt-4">
-                            <button onclick="savePanelCustomization('${panelId}')" class="btn-neon flex-1 p-2 rounded"><i class="fas fa-save"></i> Save Customization</button>
-                            <button onclick="removePanelCustomization('${panelId}')" class="bg-red-600 flex-1 p-2 rounded hover:bg-red-700 transition"><i class="fas fa-trash"></i> Remove Customization</button>
-                            <button onclick="closePanelEditor()" class="bg-gray-700 flex-1 p-2 rounded hover:bg-gray-600 transition">Cancel</button>
-                        </div>
-                        <div class="mt-3 text-xs text-gray-500">
-                            <p>💡 Tip: You can use any HTML with Tailwind classes. The content will be rendered inside the panel.</p>
-                            <p>🔒 This customization is stored locally and synced to Firebase.</p>
-                        </div>
-                    </div>
-                </div>
-            `;
-            document.body.insertAdjacentHTML('beforeend', modalHtml);
-
-            // Editor toolbar functions
-            window.editorInsert = function(type) {
-                const editor = document.getElementById('panelEditorContent');
-                if (!editor) return;
-                let template = '';
-                switch(type) {
-                    case 'h2':
-                        template = '<h2 class="text-xl font-bold text-cyan-400 mb-3">Your Heading Here</h2>';
-                        break;
-                    case 'h3':
-                        template = '<h3 class="text-lg font-bold text-yellow-400 mb-2">Sub Heading</h3>';
-                        break;
-                    case 'p':
-                        template = '<p class="text-gray-300 mb-2">Your paragraph text here.</p>';
-                        break;
-                    case 'div':
-                        template = '<div class="bg-gray-800/30 p-4 rounded-lg mb-3">Content inside a container</div>';
-                        break;
-                    case 'card':
-                        template = '<div class="bg-gray-800/20 border border-cyan-400/20 rounded-lg p-4 mb-3"><h4 class="font-bold text-cyan-400 mb-2">Card Title</h4><p class="text-gray-300">Card content goes here.</p></div>';
-                        break;
-                    case 'stat':
-                        template = '<div class="grid grid-cols-2 gap-3 mb-3"><div class="bg-gray-800/30 p-3 rounded text-center"><div class="text-xs text-gray-400">Stat Label</div><div class="text-xl font-bold text-green-400">₱0.00</div></div><div class="bg-gray-800/30 p-3 rounded text-center"><div class="text-xs text-gray-400">Another Stat</div><div class="text-xl font-bold text-cyan-400">0</div></div></div>';
-                        break;
-                    case 'table':
-                        template = '<table class="w-full text-sm border-collapse"><thead><tr class="border-b border-cyan-400"><th class="text-left py-2">Column 1</th><th class="text-left py-2">Column 2</th><th class="text-right py-2">Amount</th></tr></thead><tbody><tr class="border-b border-gray-700"><td class="py-2">Item 1</td><td>Description</td><td class="text-right text-green-400">₱0.00</td></tr></tbody></table>';
-                        break;
-                    case 'list':
-                        template = '<ul class="list-disc list-inside text-gray-300 space-y-1 mb-3"><li>List item 1</li><li>List item 2</li><li>List item 3</li></ul>';
-                        break;
-                    default:
-                        template = '<div class="text-gray-300">Content</div>';
-                }
-                document.execCommand('insertHTML', false, template);
-            };
-
-            window.editorReset = function() {
-                if (confirm('Reset the editor content to empty?')) {
-                    document.getElementById('panelEditorContent').innerHTML = '';
-                }
-            };
-        }
-
-        function closePanelEditor() {
-            document.getElementById('panelEditorModal')?.remove();
-        }
-
-        function savePanelCustomization(panelId) {
-            const editor = document.getElementById('panelEditorContent');
-            if (!editor) return;
-            const content = editor.innerHTML;
-            if (!content || content.trim() === '') {
-                if (confirm('Save empty content? This will clear the panel. Click Cancel to go back.')) {
-                    setPanelCustomization(panelId, '');
-                    closePanelEditor();
-                    renderApp();
-                    alert('✅ Panel content cleared.');
-                }
-                return;
-            }
-            setPanelCustomization(panelId, content);
-            closePanelEditor();
-            renderApp();
-            alert('✅ Panel customization saved successfully!');
-        }
-
-        function removePanelCustomization(panelId) {
-            if (confirm('Remove customization for this panel? The default content will be restored.')) {
-                setPanelCustomization(panelId, '');
-                closePanelEditor();
-                renderApp();
-                alert('✅ Customization removed. Default content restored.');
-            }
-        }
-
-        // ===== TRANSACTION TRACKING (FIXED) =====
+        // ===== TRANSACTION TRACKING =====
         function renderTransactionTracking() {
             if (showLogin) return renderLogin();
 
@@ -7325,148 +7053,6 @@
                     <div class="summary-item"><div class="s-label">Lowest Amount</div><div class="s-value red">₱${summary.lowestAmount.toFixed(2)}</div></div>
                 </div>
             </div>
-        </div>`;
-        }
-
-        // ===== DAILY TRANSACTION MANAGEMENT (FIXED) =====
-        function renderDailyTransactionManagement() {
-            if (showLogin) return renderLogin();
-
-            const today = new Date().toISOString().slice(0, 10);
-            let dailyTx = appData.transactions.filter(t => t.date && t.date.startsWith(today));
-
-            if (searchQuery) {
-                const q = searchQuery.toLowerCase();
-                dailyTx = dailyTx.filter(t =>
-                    t.id.toLowerCase().includes(q) ||
-                    (t.customer && t.customer.toLowerCase().includes(q)) ||
-                    (t.vehicle && t.vehicle.toLowerCase().includes(q)) ||
-                    (t.plate && t.plate.toLowerCase().includes(q))
-                );
-            }
-
-            if (dateRangeStart && dateRangeEnd) {
-                dailyTx = dailyTx.filter(t => t.date >= dateRangeStart && t.date <= dateRangeEnd);
-            }
-
-            dailyTx.sort((a, b) => new Date(b.date) - new Date(a.date));
-
-            const totalPages = Math.ceil(dailyTx.length / pageSize);
-            const startIdx = (currentPage - 1) * pageSize;
-            const paginatedTx = dailyTx.slice(startIdx, startIdx + pageSize);
-
-            let txRows = paginatedTx.map((t, idx) => {
-                const staffNames = t.items.flatMap(i => i.assignedStaff?.map(s => s.name) || []).filter((v,
-                    i, a) => a.indexOf(v) === i).join(', ') || 'Unassigned';
-                const size = t.items.map(i => i.variant).join(', ') || 'N/A';
-                const serviceAvailed = t.items.map(i => i.serviceName).join(', ') || 'N/A';
-                const isCredit = t.paymentMethod === 'Credit (Utang)' || t.isCredit;
-                let txCommission = 0;
-                if (t.staffCommissions) {
-                    txCommission = Object.values(t.staffCommissions).reduce((sum, st) => sum + (st
-                    .commission || 0), 0);
-                }
-                const customer = appData.customers.find(c => c.name === t.customer);
-                const customerId = customer?.id || '';
-
-                return `<tr class="border-b border-gray-700 tx-row-clickable ${isCredit ? 'credit-row' : ''}" onclick="openTransactionEdit('${t.id}')">
-                <td class="py-2 text-center text-xs text-gray-400">${startIdx + idx + 1}</td>
-                <td class="py-2 font-mono text-xs"><span class="receipt-link" onclick="event.stopPropagation();openTransactionEdit('${t.id}')">${t.id}</span></td>
-                <td class="py-2 text-xs">${new Date(t.date).toLocaleString()}</td>
-                <td class="editable-field" onclick="event.stopPropagation();editTransactionCustomer('${t.id}')">
-                    ${customerId ? `<a href="#" class="customer-profile-link" onclick="event.stopPropagation();viewCustomerHistory(${customerId})">${t.customer}</a>` : t.customer}
-                </td>
-                <td class="editable-field" onclick="event.stopPropagation();editTransactionVehicle('${t.id}')">${t.vehicle}</td>
-                <td class="editable-field" onclick="event.stopPropagation();editTransactionPlate('${t.id}')">${t.plate}</td>
-                <td class="text-xs">${size}</td>
-                <td class="text-xs">${serviceAvailed}</td>
-                <td class="text-xs">${staffNames}</td>
-                <td class="text-green-400 font-bold editable-field" onclick="event.stopPropagation();editTransactionAmount('${t.id}')">₱${t.total.toFixed(2)}</td>
-                <td class="editable-field" onclick="event.stopPropagation();editTransactionPayment('${t.id}')">
-                    ${isCredit ? `<span class="credit-badge status-badge">CREDIT</span>` : t.paymentMethod || 'Cash'}
-                </td>
-                <td class="text-yellow-400 font-bold">₱${txCommission.toFixed(2)}</td>
-                <td>
-                    <div class="column-actions">
-                        <button onclick="event.stopPropagation();viewTransactionDetails('${t.id}')" class="action-btn bg-purple-600 text-white hover:bg-purple-700" title="View"><i class="fas fa-eye"></i></button>
-                        <button onclick="event.stopPropagation();editTransactionFull('${t.id}')" class="action-btn bg-cyan-600 text-white hover:bg-cyan-700" title="Edit"><i class="fas fa-edit"></i></button>
-                        <button onclick="event.stopPropagation();printReceiptFromTransaction('${t.id}')" class="action-btn bg-green-600 text-white hover:bg-green-700" title="Print"><i class="fas fa-print"></i></button>
-                        <button onclick="event.stopPropagation();exportSingleTransaction('${t.id}')" class="action-btn bg-blue-600 text-white hover:bg-blue-700" title="Export"><i class="fas fa-file-export"></i></button>
-                        <button onclick="event.stopPropagation();deleteTransactionAndCommission('${t.id}')" class="action-btn bg-red-600 text-white hover:bg-red-700" title="Delete"><i class="fas fa-trash"></i></button>
-                    </div>
-                </td>
-            </tr>`;
-            }).join('');
-
-            const totalSales = dailyTx.reduce((s, t) => s + (t.total || 0), 0);
-            const totalCommission = dailyTx.filter(t => t.staffCommissions).reduce((sum, t) => sum + Object.values(t
-                .staffCommissions).reduce((s, st) => s + (st.commission || 0), 0), 0);
-            const creditTx = dailyTx.filter(t => t.paymentMethod === 'Credit (Utang)' || t.isCredit);
-            const totalCredit = creditTx.reduce((s, t) => s + (t.total || 0), 0);
-
-            let paginationHtml = '';
-            if (totalPages > 1) {
-                paginationHtml = `<div class="flex gap-1 mt-2 flex-wrap">
-                <button class="pagination-btn" onclick="changePage(1)">First</button>
-                <button class="pagination-btn" onclick="changePage(${currentPage - 1})" ${currentPage <= 1 ? 'disabled' : ''}>Prev</button>
-                ${Array.from({length: Math.min(totalPages, 5)}, (_, i) => {
-                    const p = i + 1;
-                    return `<button class="pagination-btn ${p === currentPage ? 'active' : ''}" onclick="changePage(${p})">${p}</button>`;
-                }).join('')}
-                <button class="pagination-btn" onclick="changePage(${currentPage + 1})" ${currentPage >= totalPages ? 'disabled' : ''}>Next</button>
-                <button class="pagination-btn" onclick="changePage(${totalPages})">Last</button>
-            </div>`;
-            }
-
-            return `<div class="card-premium p-6">
-            <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
-                <div>
-                    <h2 class="text-2xl font-bold"><i class="fas fa-calendar-day"></i> Daily Transactions</h2>
-                    <p class="text-sm text-gray-400">${today} | ${dailyTx.length} transactions</p>
-                    ${firebaseInitialized && isFirebasePrimary ? `<span class="firebase-primary-badge"><i class="fas fa-cloud"></i> Online</span>` : `<span class="text-yellow-400 text-xs"><i class="fas fa-sync-alt"></i> Offline</span>`}
-                </div>
-                <div class="flex gap-2 flex-wrap">
-                    <input type="text" placeholder="Search..." class="search-input text-sm" id="dailySearchInput" value="${searchQuery}" oninput="updateDailySearch(this.value)">
-                    <input type="date" class="search-input text-sm" id="dateStartInput" value="${dateRangeStart}" onchange="updateDateRange()">
-                    <input type="date" class="search-input text-sm" id="dateEndInput" value="${dateRangeEnd}" onchange="updateDateRange()">
-                    <span class="text-sm text-green-400">Sales: ₱${totalSales.toFixed(2)}</span>
-                    <span class="text-sm text-yellow-400">Commission: ₱${totalCommission.toFixed(2)}</span>
-                    <span class="text-sm text-orange-400">Credit: ₱${totalCredit.toFixed(2)}</span>
-                    <button onclick="showAddTransactionModal()" class="bg-green-600 px-3 py-1 rounded text-sm"><i class="fas fa-plus"></i> Add</button>
-                    <button onclick="exportDailyExcel()" class="excel-export-btn px-3 py-1 rounded text-sm text-white"><i class="fas fa-file-excel"></i> Excel</button>
-                    <button onclick="exportDailyPDF()" class="pdf-export-btn px-3 py-1 rounded text-sm text-white"><i class="fas fa-file-pdf"></i> PDF</button>
-                    <button onclick="exportDailyCSV()" class="csv-export-btn px-3 py-1 rounded text-sm text-white"><i class="fas fa-file-csv"></i> CSV</button>
-                    <button onclick="printDailyTransactions()" class="bg-cyan-600 px-3 py-1 rounded text-sm"><i class="fas fa-print"></i> Print</button>
-                </div>
-            </div>
-            <div class="table-container">
-                <table class="w-full text-sm">
-                    <thead class="border-b-2 border-cyan-400">
-                        <tr>
-                            <th class="text-center py-2">#</th>
-                            <th class="text-left py-2">Receipt No.</th>
-                            <th class="text-left py-2">Date & Time</th>
-                            <th class="text-left py-2">Customer</th>
-                            <th class="text-left py-2">Vehicle Model</th>
-                            <th class="text-left py-2">Plate No.</th>
-                            <th class="text-left py-2">Size</th>
-                            <th class="text-left py-2">Service Availed</th>
-                            <th class="text-left py-2">Assigned Staff</th>
-                            <th class="text-right py-2">Total Amount</th>
-                            <th class="text-left py-2">Payment Method</th>
-                            <th class="text-right py-2">Staff Commission</th>
-                            <th class="text-center py-2">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${txRows || '<tr><td colspan="13" class="text-center py-8 text-gray-400">No transactions found</td></tr>'}
-                    </tbody>
-                    <tfoot class="border-t-2 border-cyan-400 font-bold">
-                        <tr><td colspan="9" class="py-2 text-right">TOTALS:</td><td class="text-right text-green-400">₱${totalSales.toFixed(2)}</td><td colspan="3"></td></tr>
-                    </tfoot>
-                </table>
-            </div>
-            ${paginationHtml}
         </div>`;
         }
 
@@ -8122,10 +7708,6 @@
                                 <label class="text-gray-400 text-xs">Feedback System</label>
                                 <span class="text-purple-400 text-xs"><i class="fas fa-check-circle"></i> Active (${getAllFeedback().length} entries)</span>
                             </div>
-                            <div class="flex items-center justify-between">
-                                <label class="text-gray-400 text-xs">Panel Customization</label>
-                                <span class="text-cyan-400 text-xs"><i class="fas fa-pen-fancy"></i> ${Object.keys(appData.adminPanelCustomizations || {}).length} custom panels</span>
-                            </div>
                         </div>
                     </div>
                     
@@ -8182,7 +7764,6 @@
                 <div class="mt-1 text-green-400">💰 All exports and commissions displayed in ₱ (Philippine Peso)</div>
                 <div class="mt-1 text-purple-400">🔒 Staff Role: Access to Weekly Commission Report only</div>
                 <div class="mt-1 text-purple-400">🖨️ Print Entire Dashboard feature</div>
-                <div class="mt-1 text-cyan-400">🎨 Panel Customization: Edit any admin panel content</div>
                 ${firebaseInitialized && isFirebasePrimary ? `<div class="mt-1 text-green-400">🌐 Firebase: Connected (Online) - ${firebaseConfig.databaseURL || 'Custom'} | Auto-sync: ON</div>` : `<div class="mt-1 text-yellow-400">🌐 Firebase: Disconnected - Using local cache</div>`}
                 <div class="mt-1 text-green-400">🔧 Data sanitization removes undefined values before syncing</div>
                 <div class="mt-1 text-cyan-400">🎨 Customizable UI Labels for panels and modals</div>
@@ -8249,7 +7830,6 @@
                     <p class="text-green-400 mt-1">⚡ Offline support - data syncs when connection is restored</p>
                     <p class="text-purple-400 mt-1">🔒 Staff Role: Access to Weekly Commission Report only</p>
                     <p class="text-purple-400 mt-1">🖨️ Print Entire Dashboard feature</p>
-                    <p class="text-cyan-400 mt-1">🎨 Panel Customization: Edit any admin panel content</p>
                 </div>
             </div>
         </div></div>`;
@@ -10686,7 +10266,6 @@
         console.log('%c💰 All exports and commissions displayed in ₱ (Philippine Peso)', 'color: #00d4ff;');
         console.log('%c📝 Feedback System: ${getAllFeedback().length} entries | Staff Performance | Service Analytics',
             'color: #00ff88;');
-        console.log('%c🎨 Panel Customization: Edit any admin panel content via the "Customize" button', 'color: #00d4ff;');
         if (!firebaseInitialized || !isFirebasePrimary) {
             console.log('%c⚠️ Click "Admin" → "System Settings" → "Configure Firebase" to connect online',
                 'color: #ff6b6b;');
