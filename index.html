@@ -1993,6 +1993,304 @@
             min-height: 50px;
             color: #ddd;
         }
+
+        /* AI Assistant Styles */
+        .ai-assistant-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 999;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 8px;
+        }
+        .ai-assistant-toggle {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00d4ff, #0077b6);
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(0, 212, 255, 0.4);
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .ai-assistant-toggle:hover {
+            transform: scale(1.08);
+            box-shadow: 0 6px 30px rgba(0, 212, 255, 0.6);
+        }
+        .ai-assistant-toggle .pulse-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 2px solid rgba(0, 212, 255, 0.3);
+            animation: pulse-ring 2s ease-out infinite;
+        }
+        @keyframes pulse-ring {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1.8);
+                opacity: 0;
+            }
+        }
+        .ai-assistant-window {
+            width: 380px;
+            max-width: 90vw;
+            max-height: 500px;
+            background: rgba(10, 10, 10, 0.97);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(0, 212, 255, 0.25);
+            border-radius: 16px;
+            box-shadow: 0 12px 50px rgba(0, 0, 0, 0.8);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        .ai-assistant-window.open {
+            display: flex;
+            animation: slideUp 0.3s ease-out;
+        }
+        @keyframes slideUp {
+            0% {
+                opacity: 0;
+                transform: translateY(20px) scale(0.95);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        .ai-assistant-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(0, 212, 255, 0.15);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0, 212, 255, 0.05);
+        }
+        .ai-assistant-header h4 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #00d4ff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .ai-assistant-header h4 i {
+            font-size: 18px;
+        }
+        .ai-assistant-header .close-btn {
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            font-size: 18px;
+            transition: color 0.2s;
+        }
+        .ai-assistant-header .close-btn:hover {
+            color: #fff;
+        }
+        .ai-assistant-chat {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px 16px;
+            max-height: 320px;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .ai-message {
+            padding: 10px 14px;
+            border-radius: 12px;
+            max-width: 90%;
+            font-size: 13px;
+            line-height: 1.5;
+            animation: messageIn 0.3s ease-out;
+        }
+        @keyframes messageIn {
+            0% {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .ai-message.user {
+            background: rgba(0, 212, 255, 0.12);
+            border: 1px solid rgba(0, 212, 255, 0.15);
+            align-self: flex-end;
+            color: #fff;
+        }
+        .ai-message.assistant {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            align-self: flex-start;
+            color: #ddd;
+        }
+        .ai-message.assistant .highlight {
+            color: #00d4ff;
+            font-weight: 600;
+        }
+        .ai-message.assistant .highlight-green {
+            color: #00ff88;
+            font-weight: 600;
+        }
+        .ai-message.assistant .highlight-yellow {
+            color: #ffaa00;
+            font-weight: 600;
+        }
+        .ai-message.assistant .highlight-red {
+            color: #ff6b6b;
+            font-weight: 600;
+        }
+        .ai-message.assistant .stat-block {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 8px 12px;
+            margin: 4px 0;
+            border-left: 2px solid #00d4ff;
+        }
+        .ai-message.assistant .stat-block .label {
+            color: #888;
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+        .ai-message.assistant .stat-block .value {
+            font-weight: 600;
+            font-size: 15px;
+        }
+        .ai-assistant-input {
+            display: flex;
+            gap: 8px;
+            padding: 10px 14px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            background: rgba(0, 0, 0, 0.3);
+        }
+        .ai-assistant-input input {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            padding: 8px 12px;
+            color: #fff;
+            font-size: 13px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .ai-assistant-input input:focus {
+            border-color: #00d4ff;
+        }
+        .ai-assistant-input input::placeholder {
+            color: #555;
+        }
+        .ai-assistant-input button {
+            background: linear-gradient(135deg, #00b4d8, #0077b6);
+            border: none;
+            border-radius: 8px;
+            padding: 8px 16px;
+            color: #fff;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .ai-assistant-input button:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+        }
+        .ai-assistant-input button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .ai-suggestions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            padding: 4px 14px 8px;
+        }
+        .ai-suggestions button {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 3px 10px;
+            font-size: 10px;
+            color: #888;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .ai-suggestions button:hover {
+            background: rgba(0, 212, 255, 0.1);
+            border-color: rgba(0, 212, 255, 0.2);
+            color: #00d4ff;
+        }
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 6px 0;
+        }
+        .typing-indicator span {
+            width: 6px;
+            height: 6px;
+            background: #555;
+            border-radius: 50%;
+            animation: typing 1.4s infinite both;
+        }
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        @keyframes typing {
+            0%,
+            60%,
+            100% {
+                transform: translateY(0);
+                opacity: 0.4;
+            }
+            30% {
+                transform: translateY(-6px);
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .ai-assistant-window {
+                width: 100vw;
+                max-width: 100vw;
+                max-height: 80vh;
+                bottom: 0;
+                right: 0;
+                border-radius: 16px 16px 0 0;
+                position: fixed;
+                bottom: 0;
+                right: 0;
+                left: 0;
+            }
+            .ai-assistant-container {
+                bottom: 10px;
+                right: 10px;
+            }
+            .ai-assistant-toggle {
+                width: 48px;
+                height: 48px;
+                font-size: 20px;
+            }
+        }
     </style>
 </head>
 <body class="text-white">
@@ -2002,7 +2300,7 @@
     <script>
         // ============================================================================================
         // 8068 CAR SQUARE - Enterprise Management System v8.8.5
-        // FULLY FUNCTIONAL - Fixed Transaction Tracking, Staff Panel, Admin Panel Editor
+        // FULLY FUNCTIONAL - Fixed Admin Staff, Transaction Tracking, AI Assistant
         // ============================================================================================
 
         // ======================== FIREBASE CONFIGURATION ========================
@@ -3593,6 +3891,7 @@
                     <p class="text-xs text-green-400 mt-1"><i class="fas fa-check-circle"></i> QR Code Feedback</p>
                     <p class="text-xs text-cyan-400 mt-1"><i class="fas fa-cloud"></i> ${firebaseInitialized && isFirebasePrimary ? 'Online Mode' : 'Offline Mode'}</p>
                     <p class="text-xs text-purple-400 mt-1"><i class="fas fa-calendar-week"></i> Sunday-Saturday Cycle</p>
+                    <p class="text-xs text-blue-400 mt-1"><i class="fas fa-robot"></i> AI Assistant</p>
                 </div>
                 <div class="space-y-4">
                     <div><label class="text-gray-400">Username</label><input type="text" id="loginUser" class="w-full bg-gray-800 p-3 rounded border border-gray-700" placeholder="Enter username" value="owner"></div>
@@ -6769,6 +7068,288 @@
         };
 
         // ================================================================
+        //  AI ASSISTANT - INTELLIGENT SEARCH & INSIGHTS
+        // ================================================================
+
+        let aiAssistantOpen = false;
+        let aiChatHistory = [];
+
+        function toggleAIAssistant() {
+            aiAssistantOpen = !aiAssistantOpen;
+            const window = document.getElementById('aiAssistantWindow');
+            if (window) {
+                window.classList.toggle('open');
+                if (aiAssistantOpen && aiChatHistory.length === 0) {
+                    // Welcome message
+                    addAIMessage('assistant', '👋 Hi! I\'m your POS Assistant. I can help you with:\n\n• Viewing sales and revenue insights\n• Checking staff performance\n• Finding specific transactions\n• Analyzing customer data\n• Commission reports\n• Inventory status\n\nTry asking something like "What are today\'s sales?" or "Show me top performing staff"');
+                }
+            }
+            if (aiAssistantOpen) {
+                document.getElementById('aiInput')?.focus();
+            }
+        }
+
+        function addAIMessage(role, content) {
+            const chat = document.getElementById('aiChat');
+            if (!chat) return;
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `ai-message ${role}`;
+            // Simple markdown-like formatting
+            let formatted = content;
+            // Bold
+            formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            // Newlines
+            formatted = formatted.replace(/\n/g, '<br>');
+            // Bullet points
+            formatted = formatted.replace(/• (.*?)(<br>|$)/g, '• $1<br>');
+            // Highlight patterns
+            formatted = formatted.replace(/₱([\d,]+\.\d{2})/g, '<span class="highlight-green">₱$1</span>');
+            formatted = formatted.replace(/(\d+)★/g, '<span class="highlight-yellow">$1★</span>');
+            formatted = formatted.replace(/⚠️/g, '<span class="highlight-red">⚠️</span>');
+            formatted = formatted.replace(/✅/g, '<span class="highlight-green">✅</span>');
+            msgDiv.innerHTML = formatted;
+            chat.appendChild(msgDiv);
+            chat.scrollTop = chat.scrollHeight;
+            aiChatHistory.push({ role, content });
+        }
+
+        function showTypingIndicator() {
+            const chat = document.getElementById('aiChat');
+            if (!chat) return;
+            const indicator = document.createElement('div');
+            indicator.className = 'typing-indicator';
+            indicator.id = 'aiTyping';
+            indicator.innerHTML = '<span></span><span></span><span></span>';
+            chat.appendChild(indicator);
+            chat.scrollTop = chat.scrollHeight;
+        }
+
+        function hideTypingIndicator() {
+            const indicator = document.getElementById('aiTyping');
+            if (indicator) indicator.remove();
+        }
+
+        function processAIQuery(query) {
+            const q = query.toLowerCase().trim();
+
+            // Add user message
+            addAIMessage('user', query);
+
+            // Show typing indicator
+            showTypingIndicator();
+
+            // Simulate AI processing with setTimeout
+            setTimeout(() => {
+                hideTypingIndicator();
+
+                let response = '';
+
+                // Check for sales/transactions queries
+                if (q.includes('today') && (q.includes('sales') || q.includes('revenue') || q.includes('transaction'))) {
+                    const today = new Date().toISOString().slice(0, 10);
+                    const todayTx = appData.transactions.filter(t => t.date.startsWith(today));
+                    const total = todayTx.reduce((s, t) => s + t.total, 0);
+                    const count = todayTx.length;
+                    const avg = count > 0 ? total / count : 0;
+                    const commissions = todayTx.filter(t => t.staffCommissions).reduce((sum, t) => sum + Object.values(t
+                        .staffCommissions).reduce((s, st) => s + (st.commission || 0), 0), 0);
+                    response = `📊 **Today's Sales Summary**\n\n• Total Sales: ₱${total.toFixed(2)}\n• Transactions: ${count}\n• Average per Transaction: ₱${avg.toFixed(2)}\n• Staff Commission: ₱${commissions.toFixed(2)}\n\n${count > 0 ? '✅ Activity is healthy today!' : '⚠️ No transactions recorded today yet.'}`;
+                } else if (q.includes('week') && (q.includes('sales') || q.includes('revenue') || q.includes(
+                    'transaction'))) {
+                    const weekStart = getCurrentWeekStart();
+                    const weekStartStr = weekStart.toISOString().slice(0, 10);
+                    const weekEndStr = getCurrentWeekEnd().toISOString().slice(0, 10);
+                    const weekTx = appData.transactions.filter(t => t.date >= weekStartStr && t.date <= weekEndStr);
+                    const total = weekTx.reduce((s, t) => s + t.total, 0);
+                    const count = weekTx.length;
+                    const avg = count > 0 ? total / count : 0;
+                    const weeklyData = getWeeklyCommission();
+                    const commissions = weeklyData.totals?.commission || 0;
+                    const weekLabel = getWeekLabel(new Date());
+                    response =
+                        `📈 **Weekly Sales Summary**\n\n${weekLabel}\n• Total Sales: ₱${total.toFixed(2)}\n• Transactions: ${count}\n• Average per Transaction: ₱${avg.toFixed(2)}\n• Staff Commission: ₱${commissions.toFixed(2)}\n\n📊 ${count > 0 ? 'This week is active!' : 'No transactions this week yet.'}`;
+                } else if (q.includes('month') && (q.includes('sales') || q.includes('revenue') || q.includes(
+                    'transaction'))) {
+                    const now = new Date();
+                    const month = now.getMonth();
+                    const year = now.getFullYear();
+                    const monthTx = appData.transactions.filter(t => {
+                        const d = new Date(t.date);
+                        return d.getMonth() === month && d.getFullYear() === year;
+                    });
+                    const total = monthTx.reduce((s, t) => s + t.total, 0);
+                    const count = monthTx.length;
+                    const monthName = now.toLocaleString('default', { month: 'long' });
+                    response =
+                        `📊 **Monthly Sales Summary**\n\n${monthName} ${year}\n• Total Sales: ₱${total.toFixed(2)}\n• Transactions: ${count}\n• ${count > 0 ? `Average: ₱${(total/count).toFixed(2)}` : 'No transactions yet.'}`;
+                }
+
+                // Check for staff queries
+                else if (q.includes('staff') || q.includes('employee') || q.includes('top')) {
+                    if (q.includes('top') || q.includes('best') || q.includes('performing')) {
+                        const staffData = appData.staff.map(s => ({
+                            name: s.name,
+                            commission: s.totalCommission || 0,
+                            jobs: s.jobsCompleted || 0,
+                            sales: s.salesGenerated || 0
+                        }));
+                        staffData.sort((a, b) => b.commission - a.commission);
+                        const top = staffData.slice(0, 3);
+                        if (top.length === 0) {
+                            response = '👤 No staff data available yet.';
+                        } else {
+                            response =
+                                `🏆 **Top Performing Staff**\n\n${top.map((s, i) => `${i+1}. **${s.name}** — ₱${s.commission.toFixed(2)} commission, ${s.jobs} jobs, ₱${s.sales.toFixed(2)} sales`).join('\n')}\n\n💡 Total Staff: ${appData.staff.length}`;
+                        }
+                    } else if (q.includes('total')) {
+                        const totalCommission = appData.staff.reduce((sum, s) => sum + (s.totalCommission || 0), 0);
+                        const totalJobs = appData.staff.reduce((sum, s) => sum + (s.jobsCompleted || 0), 0);
+                        const totalSales = appData.staff.reduce((sum, s) => sum + (s.salesGenerated || 0), 0);
+                        response =
+                            `👥 **Staff Overview**\n\n• Total Staff: ${appData.staff.length}\n• Total Commission: ₱${totalCommission.toFixed(2)}\n• Total Jobs: ${totalJobs}\n• Total Sales Generated: ₱${totalSales.toFixed(2)}`;
+                    } else {
+                        // Show staff list
+                        const staffList = appData.staff.map(s =>
+                            `• ${s.name} — ${s.position || 'Staff'} | ₱${(s.totalCommission||0).toFixed(2)} commission | ${s.jobsCompleted||0} jobs`
+                            ).join('\n');
+                        response =
+                            `👤 **Staff Members**\n\n${staffList || 'No staff members added yet.'}\n\n💡 Ask about top performers or total stats.`;
+                    }
+                }
+
+                // Check for transaction search
+                else if (q.includes('find') || q.includes('search') || q.includes('look') || q.includes('transaction')) {
+                    // Try to extract a receipt number or customer name
+                    const words = q.split(' ');
+                    let searchTerm = '';
+                    for (const word of words) {
+                        if (word.startsWith('inv-') || word.startsWith('INV-') || word.length > 5) {
+                            searchTerm = word;
+                            break;
+                        }
+                    }
+                    if (!searchTerm) {
+                        // Look for customer name in query
+                        const customers = appData.customers.map(c => c.name.toLowerCase());
+                        for (const word of words) {
+                            if (word.length > 3 && customers.some(c => c.includes(word))) {
+                                searchTerm = word;
+                                break;
+                            }
+                        }
+                    }
+                    if (searchTerm) {
+                        const foundTx = appData.transactions.filter(t =>
+                            t.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            (t.customer && t.customer.toLowerCase().includes(searchTerm.toLowerCase()))
+                        );
+                        if (foundTx.length > 0) {
+                            const recent = foundTx.slice(0, 5);
+                            response =
+                                `🔍 **Found ${foundTx.length} transaction(s)** for "${searchTerm}"\n\n${recent.map(t => `• ${t.id} — ${t.customer} — ₱${t.total.toFixed(2)} — ${new Date(t.date).toLocaleDateString()}`).join('\n')}\n\n${foundTx.length > 5 ? `... and ${foundTx.length - 5} more` : ''}`;
+                        } else {
+                            response =
+                                `🔍 No transactions found for "${searchTerm}". Try a receipt number like INV-2024-000123 or customer name.`;
+                        }
+                    } else {
+                        response =
+                            `🔍 **Search Help**\n\nI can search for transactions by:\n• Receipt number (e.g., INV-2024-000123)\n• Customer name\n• Vehicle plate number\n\nTry: "Find transaction INV-2024-000123" or "Search customer Juan"`;
+                    }
+                }
+
+                // Check for customer queries
+                else if (q.includes('customer') || q.includes('buyer') || q.includes('client')) {
+                    const totalCustomers = appData.customers.length;
+                    const totalSpent = appData.customers.reduce((sum, c) => {
+                        const tx = appData.transactions.filter(t => t.customer === c.name);
+                        return sum + tx.reduce((s, t) => s + t.total, 0);
+                    }, 0);
+                    const avgSpent = totalCustomers > 0 ? totalSpent / totalCustomers : 0;
+                    const topCustomers = appData.customers.map(c => {
+                        const tx = appData.transactions.filter(t => t.customer === c.name);
+                        const spent = tx.reduce((s, t) => s + t.total, 0);
+                        return { name: c.name, spent, visits: tx.length };
+                    }).sort((a, b) => b.spent - a.spent).slice(0, 5);
+                    response =
+                        `👤 **Customer Overview**\n\n• Total Customers: ${totalCustomers}\n• Total Spending: ₱${totalSpent.toFixed(2)}\n• Average per Customer: ₱${avgSpent.toFixed(2)}\n\n🏆 **Top Customers**\n\n${topCustomers.map((c, i) => `${i+1}. ${c.name} — ₱${c.spent.toFixed(2)} (${c.visits} visits)`).join('\n')}`;
+                }
+
+                // Check for commission queries
+                else if (q.includes('commission')) {
+                    const weeklyData = getWeeklyCommission();
+                    const totalComm = appData.staff.reduce((sum, s) => sum + (s.totalCommission || 0), 0);
+                    const weeklyComm = weeklyData.totals?.commission || 0;
+                    const topStaff = appData.staff.sort((a, b) => (b.totalCommission || 0) - (a.totalCommission || 0))
+                        .slice(0, 3);
+                    response =
+                        `💰 **Commission Report**\n\n• Total Commission (All Time): ₱${totalComm.toFixed(2)}\n• Weekly Commission: ₱${weeklyComm.toFixed(2)}\n• Staff Count: ${appData.staff.length}\n\n🏆 **Top Earners**\n\n${topStaff.map((s, i) => `${i+1}. ${s.name} — ₱${(s.totalCommission||0).toFixed(2)}`).join('\n')}\n\n💡 Ask about staff performance for more details.`;
+                }
+
+                // Check for inventory queries
+                else if (q.includes('inventory') || q.includes('stock') || q.includes('supply')) {
+                    const totalItems = appData.inventory.length;
+                    const lowStock = appData.inventory.filter(i => i.quantity <= i.reorderLevel);
+                    const lowStockCount = lowStock.length;
+                    const totalQuantity = appData.inventory.reduce((sum, i) => sum + i.quantity, 0);
+                    response =
+                        `📦 **Inventory Overview**\n\n• Total Items: ${totalItems}\n• Total Stock Units: ${totalQuantity}\n• Low Stock Items: ${lowStockCount}\n\n${lowStockCount > 0 ? '⚠️ **Low Stock Alert**\n' + lowStock.map(i => `• ${i.name}: ${i.quantity} ${i.unit} (Reorder at ${i.reorderLevel})`).join('\n') : '✅ All items are well-stocked.'}\n\n💡 Ask about a specific item by name.`;
+                }
+
+                // Check for service queries
+                else if (q.includes('service') || q.includes('wash') || q.includes('detail')) {
+                    const serviceCount = {};
+                    appData.transactions.forEach(t => {
+                        t.items.forEach(item => {
+                            serviceCount[item.serviceName] = (serviceCount[item.serviceName] || 0) + item
+                                .quantity;
+                        });
+                    });
+                    const topServices = Object.entries(serviceCount).sort((a, b) => b[1] - a[1]).slice(0, 5);
+                    const totalServices = appData.services.length;
+                    response =
+                        `🧼 **Service Overview**\n\n• Total Services Offered: ${totalServices}\n• Most Popular Services:\n\n${topServices.map(([name, count], i) => `${i+1}. ${name} — ${count} times`).join('\n')}\n\n💡 Ask about specific service prices or details.`;
+                }
+
+                // Check for general help
+                else if (q.includes('help') || q.includes('what can you do') || q.includes('capabilities')) {
+                    response =
+                        `🤖 **AI Assistant Help**\n\nI can help you with:\n\n📊 **Sales & Revenue**\n• Today/Week/Month sales\n• Transaction analysis\n\n👤 **Staff**\n• Performance reports\n• Top earners\n• Staff list\n\n💰 **Commissions**\n• Total commission\n• Weekly breakdown\n\n👥 **Customers**\n• Customer overview\n• Top customers\n• Customer search\n\n📦 **Inventory**\n• Stock levels\n• Low stock alerts\n• Item search\n\n🧼 **Services**\n• Popular services\n• Service details\n\n🔍 **Search**\n• Find transactions by receipt, customer, or plate\n• Search staff, customers, or inventory\n\nJust ask in plain English!`;
+                }
+
+                // Default response with suggestion
+                else {
+                    response =
+                        `🤔 I'm not sure about that. Here are some things I can help with:\n\n• "What are today's sales?"\n• "Show me top performing staff"\n• "Find transaction INV-2024-000123"\n• "Customer overview"\n• "Commission report"\n• "Inventory status"\n• "Help" for all capabilities`;
+                }
+
+                // Add AI response
+                addAIMessage('assistant', response);
+
+            }, 500 + Math.random() * 500); // Simulate thinking time
+        }
+
+        function handleAIQuery() {
+            const input = document.getElementById('aiInput');
+            if (!input) return;
+            const query = input.value.trim();
+            if (!query) return;
+
+            input.value = '';
+            processAIQuery(query);
+        }
+
+        function handleAIKeyPress(e) {
+            if (e.key === 'Enter') {
+                handleAIQuery();
+            }
+        }
+
+        function aiSuggestion(query) {
+            document.getElementById('aiInput').value = query;
+            handleAIQuery();
+        }
+
+        // ================================================================
         //  ENHANCED ADMIN DASHBOARD - WITH PANEL EDITOR FEATURE
         // ================================================================
 
@@ -6867,7 +7448,7 @@
             return `<div class="admin-grid">
             <div class="admin-sidebar">
                 <h3 class="text-lg font-bold mb-4 neon-glow p-2 rounded text-center"><i class="fas fa-crown"></i> ${appData.systemSettings.uiLabels.adminTitle || 'Admin Panel'}</h3>
-                <div class="text-xs text-gray-400 mb-2 px-2">v8.8.5 — QR Code Feedback</div>
+                <div class="text-xs text-gray-400 mb-2 px-2">v8.8.5 — AI Assistant</div>
                 ${adminPanels.map(p => `<div class="admin-sidebar-item ${currentAdminPanel === p.id ? 'active' : ''}" onclick="navigateAdmin('${p.id}')"><i class="fas ${p.icon}"></i> ${p.label}</div>`).join('')}
                 <div class="mt-6 p-3 bg-gray-800 rounded-lg text-xs">
                     <div class="text-gray-400">System Status</div>
@@ -6884,6 +7465,7 @@
                     <div class="mt-1 text-green-400 text-[10px]">📊 Auto Transaction Reports: ON</div>
                     <div class="mt-1 text-purple-400 text-[10px]">💬 QR Code Feedback: Active</div>
                     <div class="mt-1 text-purple-400 text-[10px]">📝 ${getAllFeedback().length} feedback entries</div>
+                    <div class="mt-1 text-blue-400 text-[10px]">🤖 AI Assistant: Active</div>
                     <div class="mt-1 text-cyan-400 text-[10px]">🎨 Panel Customization: ${Object.keys(appData.adminPanelCustomizations || {}).length} custom panels</div>
                     ${firebaseInitialized && isFirebasePrimary ? `<div class="mt-1 text-green-400 text-[10px]">🌐 Online Mode | Real-time sync enabled</div>` : `<div class="mt-1 text-yellow-400 text-[10px]">⚠️ Offline Mode | Using local cache</div>`}
                     <div class="mt-1 text-cyan-400 text-[10px]">📊 Sunday-Saturday Weekly Commission Cycle</div>
@@ -8126,6 +8708,10 @@
                                 <label class="text-gray-400 text-xs">Panel Customization</label>
                                 <span class="text-cyan-400 text-xs"><i class="fas fa-pen-fancy"></i> ${Object.keys(appData.adminPanelCustomizations || {}).length} custom panels</span>
                             </div>
+                            <div class="flex items-center justify-between">
+                                <label class="text-gray-400 text-xs">AI Assistant</label>
+                                <span class="text-blue-400 text-xs"><i class="fas fa-robot"></i> Active</span>
+                            </div>
                         </div>
                     </div>
                     
@@ -8183,6 +8769,7 @@
                 <div class="mt-1 text-purple-400">🔒 Staff Role: Access to Weekly Commission Report only</div>
                 <div class="mt-1 text-purple-400">🖨️ Print Entire Dashboard feature</div>
                 <div class="mt-1 text-cyan-400">🎨 Panel Customization: Edit any admin panel content</div>
+                <div class="mt-1 text-blue-400">🤖 AI Assistant: Search transactions, staff, inventory, and more</div>
                 ${firebaseInitialized && isFirebasePrimary ? `<div class="mt-1 text-green-400">🌐 Firebase: Connected (Online) - ${firebaseConfig.databaseURL || 'Custom'} | Auto-sync: ON</div>` : `<div class="mt-1 text-yellow-400">🌐 Firebase: Disconnected - Using local cache</div>`}
                 <div class="mt-1 text-green-400">🔧 Data sanitization removes undefined values before syncing</div>
                 <div class="mt-1 text-cyan-400">🎨 Customizable UI Labels for panels and modals</div>
@@ -8250,6 +8837,7 @@
                     <p class="text-purple-400 mt-1">🔒 Staff Role: Access to Weekly Commission Report only</p>
                     <p class="text-purple-400 mt-1">🖨️ Print Entire Dashboard feature</p>
                     <p class="text-cyan-400 mt-1">🎨 Panel Customization: Edit any admin panel content</p>
+                    <p class="text-blue-400 mt-1">🤖 AI Assistant: Intelligent search across all data</p>
                 </div>
             </div>
         </div></div>`;
@@ -10448,12 +11036,50 @@
         }
 
         // ================================================================
+        //  AI ASSISTANT UI - Add to body
+        // ================================================================
+
+        function renderAIAssistant() {
+            return `
+                <div class="ai-assistant-container" id="aiAssistantContainer">
+                    <div class="ai-assistant-window" id="aiAssistantWindow">
+                        <div class="ai-assistant-header">
+                            <h4><i class="fas fa-robot"></i> POS AI Assistant</h4>
+                            <button class="close-btn" onclick="toggleAIAssistant()"><i class="fas fa-times"></i></button>
+                        </div>
+                        <div class="ai-assistant-chat" id="aiChat"></div>
+                        <div class="ai-suggestions" id="aiSuggestions">
+                            <button onclick="aiSuggestion('What are today\'s sales?')">Today's Sales</button>
+                            <button onclick="aiSuggestion('Show me top performing staff')">Top Staff</button>
+                            <button onclick="aiSuggestion('Customer overview')">Customers</button>
+                            <button onclick="aiSuggestion('Commission report')">Commission</button>
+                            <button onclick="aiSuggestion('Inventory status')">Inventory</button>
+                            <button onclick="aiSuggestion('Help')">Help</button>
+                        </div>
+                        <div class="ai-assistant-input">
+                            <input type="text" id="aiInput" placeholder="Ask me anything about your business..." onkeypress="handleAIKeyPress(event)">
+                            <button onclick="handleAIQuery()"><i class="fas fa-paper-plane"></i></button>
+                        </div>
+                    </div>
+                    <button class="ai-assistant-toggle" onclick="toggleAIAssistant()" id="aiToggle">
+                        <span class="pulse-ring"></span>
+                        <i class="fas fa-robot"></i>
+                    </button>
+                </div>
+            `;
+        }
+
+        // ================================================================
         //  MAIN RENDER
         // ================================================================
 
         function renderApp() {
             if (showLogin) {
                 document.getElementById("mainContent").innerHTML = renderLogin();
+                // Keep AI assistant visible on login
+                if (!document.getElementById('aiAssistantContainer')) {
+                    document.body.insertAdjacentHTML('beforeend', renderAIAssistant());
+                }
                 return;
             }
 
@@ -10474,6 +11100,10 @@
                     receiptParam)) {
                 content = renderFeedbackForm(receiptParam || '');
                 main.innerHTML = content;
+                // Ensure AI assistant is rendered
+                if (!document.getElementById('aiAssistantContainer')) {
+                    document.body.insertAdjacentHTML('beforeend', renderAIAssistant());
+                }
                 return;
             }
 
@@ -10511,6 +11141,18 @@
             }
 
             main.innerHTML = content;
+
+            // Ensure AI assistant is rendered
+            if (!document.getElementById('aiAssistantContainer')) {
+                document.body.insertAdjacentHTML('beforeend', renderAIAssistant());
+            }
+
+            // Initialize AI chat if not already done
+            const chat = document.getElementById('aiChat');
+            if (chat && aiChatHistory.length === 0) {
+                addAIMessage('assistant', '👋 Hi! I\'m your POS Assistant. I can help you with:\n\n• Viewing sales and revenue insights\n• Checking staff performance\n• Finding specific transactions\n• Analyzing customer data\n• Commission reports\n• Inventory status\n\nTry asking something like "What are today\'s sales?" or "Show me top performing staff"');
+            }
+
             setTimeout(() => {
                 document.getElementById('plateInput')?.addEventListener('input', (e) => vehicleInfo.plate = e
                     .target.value);
@@ -10665,11 +11307,14 @@
         </div>
     `;
 
+        // Add AI Assistant
+        document.body.insertAdjacentHTML('beforeend', renderAIAssistant());
+
         renderApp();
         saveToLocal();
 
         console.log(
-            '%c8068 CAR SQUARE - Enterprise Management System v8.8.5 (QR Code Feedback Edition)',
+            '%c8068 CAR SQUARE - Enterprise Management System v8.8.5 (AI-Powered Edition)',
             'color: #00d4ff; font-size: 20px; font-weight: bold;');
         console.log(
             `%cRecords: ${appData.transactions.length} TX | ${appData.customers.length} Customers | ${appData.staff.length} Staff | ${getAllFeedback().length} Feedback`,
@@ -10677,6 +11322,7 @@
         console.log('%c✅ All Export (Excel/PDF/CSV) & Print Functions Fully Restored', 'color: #00ff88;');
         console.log('%c🧾 Dual Receipts: Customer + Shop Copy with Cut Marker', 'color: #00ff88;');
         console.log('%c💬 QR Code Feedback System - Scan to leave feedback', 'color: #a78bfa;');
+        console.log('%c🤖 AI Assistant - Intelligent search across all data', 'color: #00d4ff;');
         console.log('%c📊 Auto Transaction Reports: Daily, Weekly, Monthly, Yearly', 'color: #00d4ff;');
         console.log('%c🚗 Vehicle History Search by Plate Number', 'color: #00d4ff;');
         console.log('%c📈 Transaction Summary with 10 key metrics', 'color: #00d4ff;');
@@ -10694,6 +11340,7 @@
             console.log('%c✅ Auto-sync enabled - all data saved to Firebase in real-time', 'color: #00ff88;');
         }
         console.log('%c🔍 Search: Plate, Receipt, Customer, Vehicle, Staff, Date Range', 'color: #00d4ff;');
+        console.log('%c🤖 Try the AI Assistant: Click the robot icon in the bottom-right corner!', 'color: #00d4ff;');
     </script>
 </body>
 </html>
