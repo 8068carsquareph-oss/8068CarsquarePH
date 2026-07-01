@@ -2291,6 +2291,73 @@
                 font-size: 20px;
             }
         }
+
+        /* Staff Management Styles */
+        .staff-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+            background: linear-gradient(135deg, #00d4ff20, #0077b620);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            color: #00d4ff;
+            flex-shrink: 0;
+        }
+        .staff-avatar.active {
+            background: linear-gradient(135deg, #00ff8820, #00b89420);
+            border-color: rgba(0, 255, 136, 0.2);
+            color: #00ff88;
+        }
+        .staff-avatar.inactive {
+            background: linear-gradient(135deg, #ff6b6b20, #dc354520);
+            border-color: rgba(255, 107, 107, 0.2);
+            color: #ff6b6b;
+        }
+        .staff-card {
+            transition: all 0.3s;
+        }
+        .staff-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(0, 212, 255, 0.3);
+        }
+        .commission-tier-select {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 4px 8px;
+            color: white;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .commission-tier-select:focus {
+            border-color: #00d4ff;
+            outline: none;
+        }
+        .staff-stat-card {
+            background: rgba(10, 10, 10, 0.5);
+            border: 1px solid rgba(0, 212, 255, 0.08);
+            border-radius: 10px;
+            padding: 12px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        .staff-stat-card:hover {
+            border-color: rgba(0, 212, 255, 0.2);
+        }
+        .staff-stat-card .stat-value {
+            font-size: 22px;
+            font-weight: 700;
+        }
+        .staff-stat-card .stat-label {
+            font-size: 10px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
     </style>
 </head>
 <body class="text-white">
@@ -2300,7 +2367,7 @@
     <script>
         // ============================================================================================
         // 8068 CAR SQUARE - Enterprise Management System v8.8.5
-        // FULLY FUNCTIONAL - Fixed Admin Staff, Transaction Tracking, AI Assistant
+        // FULLY FUNCTIONAL - Staff Management Restored (Add, Edit, Delete, Toggle)
         // ============================================================================================
 
         // ======================== FIREBASE CONFIGURATION ========================
@@ -7068,289 +7135,7 @@
         };
 
         // ================================================================
-        //  AI ASSISTANT - INTELLIGENT SEARCH & INSIGHTS
-        // ================================================================
-
-        let aiAssistantOpen = false;
-        let aiChatHistory = [];
-
-        function toggleAIAssistant() {
-            aiAssistantOpen = !aiAssistantOpen;
-            const window = document.getElementById('aiAssistantWindow');
-            if (window) {
-                window.classList.toggle('open');
-                if (aiAssistantOpen && aiChatHistory.length === 0) {
-                    // Welcome message
-                    addAIMessage('assistant', '👋 Hi! I\'m your POS Assistant. I can help you with:\n\n• Viewing sales and revenue insights\n• Checking staff performance\n• Finding specific transactions\n• Analyzing customer data\n• Commission reports\n• Inventory status\n\nTry asking something like "What are today\'s sales?" or "Show me top performing staff"');
-                }
-            }
-            if (aiAssistantOpen) {
-                document.getElementById('aiInput')?.focus();
-            }
-        }
-
-        function addAIMessage(role, content) {
-            const chat = document.getElementById('aiChat');
-            if (!chat) return;
-            const msgDiv = document.createElement('div');
-            msgDiv.className = `ai-message ${role}`;
-            // Simple markdown-like formatting
-            let formatted = content;
-            // Bold
-            formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-            // Newlines
-            formatted = formatted.replace(/\n/g, '<br>');
-            // Bullet points
-            formatted = formatted.replace(/• (.*?)(<br>|$)/g, '• $1<br>');
-            // Highlight patterns
-            formatted = formatted.replace(/₱([\d,]+\.\d{2})/g, '<span class="highlight-green">₱$1</span>');
-            formatted = formatted.replace(/(\d+)★/g, '<span class="highlight-yellow">$1★</span>');
-            formatted = formatted.replace(/⚠️/g, '<span class="highlight-red">⚠️</span>');
-            formatted = formatted.replace(/✅/g, '<span class="highlight-green">✅</span>');
-            msgDiv.innerHTML = formatted;
-            chat.appendChild(msgDiv);
-            chat.scrollTop = chat.scrollHeight;
-            aiChatHistory.push({ role, content });
-        }
-
-        function showTypingIndicator() {
-            const chat = document.getElementById('aiChat');
-            if (!chat) return;
-            const indicator = document.createElement('div');
-            indicator.className = 'typing-indicator';
-            indicator.id = 'aiTyping';
-            indicator.innerHTML = '<span></span><span></span><span></span>';
-            chat.appendChild(indicator);
-            chat.scrollTop = chat.scrollHeight;
-        }
-
-        function hideTypingIndicator() {
-            const indicator = document.getElementById('aiTyping');
-            if (indicator) indicator.remove();
-        }
-
-        function processAIQuery(query) {
-            const q = query.toLowerCase().trim();
-
-            // Add user message
-            addAIMessage('user', query);
-
-            // Show typing indicator
-            showTypingIndicator();
-
-            // Simulate AI processing with setTimeout
-            setTimeout(() => {
-                hideTypingIndicator();
-
-                let response = '';
-
-                // Check for sales/transactions queries
-                if (q.includes('today') && (q.includes('sales') || q.includes('revenue') || q.includes('transaction'))) {
-                    const today = new Date().toISOString().slice(0, 10);
-                    const todayTx = appData.transactions.filter(t => t.date.startsWith(today));
-                    const total = todayTx.reduce((s, t) => s + t.total, 0);
-                    const count = todayTx.length;
-                    const avg = count > 0 ? total / count : 0;
-                    const commissions = todayTx.filter(t => t.staffCommissions).reduce((sum, t) => sum + Object.values(t
-                        .staffCommissions).reduce((s, st) => s + (st.commission || 0), 0), 0);
-                    response = `📊 **Today's Sales Summary**\n\n• Total Sales: ₱${total.toFixed(2)}\n• Transactions: ${count}\n• Average per Transaction: ₱${avg.toFixed(2)}\n• Staff Commission: ₱${commissions.toFixed(2)}\n\n${count > 0 ? '✅ Activity is healthy today!' : '⚠️ No transactions recorded today yet.'}`;
-                } else if (q.includes('week') && (q.includes('sales') || q.includes('revenue') || q.includes(
-                    'transaction'))) {
-                    const weekStart = getCurrentWeekStart();
-                    const weekStartStr = weekStart.toISOString().slice(0, 10);
-                    const weekEndStr = getCurrentWeekEnd().toISOString().slice(0, 10);
-                    const weekTx = appData.transactions.filter(t => t.date >= weekStartStr && t.date <= weekEndStr);
-                    const total = weekTx.reduce((s, t) => s + t.total, 0);
-                    const count = weekTx.length;
-                    const avg = count > 0 ? total / count : 0;
-                    const weeklyData = getWeeklyCommission();
-                    const commissions = weeklyData.totals?.commission || 0;
-                    const weekLabel = getWeekLabel(new Date());
-                    response =
-                        `📈 **Weekly Sales Summary**\n\n${weekLabel}\n• Total Sales: ₱${total.toFixed(2)}\n• Transactions: ${count}\n• Average per Transaction: ₱${avg.toFixed(2)}\n• Staff Commission: ₱${commissions.toFixed(2)}\n\n📊 ${count > 0 ? 'This week is active!' : 'No transactions this week yet.'}`;
-                } else if (q.includes('month') && (q.includes('sales') || q.includes('revenue') || q.includes(
-                    'transaction'))) {
-                    const now = new Date();
-                    const month = now.getMonth();
-                    const year = now.getFullYear();
-                    const monthTx = appData.transactions.filter(t => {
-                        const d = new Date(t.date);
-                        return d.getMonth() === month && d.getFullYear() === year;
-                    });
-                    const total = monthTx.reduce((s, t) => s + t.total, 0);
-                    const count = monthTx.length;
-                    const monthName = now.toLocaleString('default', { month: 'long' });
-                    response =
-                        `📊 **Monthly Sales Summary**\n\n${monthName} ${year}\n• Total Sales: ₱${total.toFixed(2)}\n• Transactions: ${count}\n• ${count > 0 ? `Average: ₱${(total/count).toFixed(2)}` : 'No transactions yet.'}`;
-                }
-
-                // Check for staff queries
-                else if (q.includes('staff') || q.includes('employee') || q.includes('top')) {
-                    if (q.includes('top') || q.includes('best') || q.includes('performing')) {
-                        const staffData = appData.staff.map(s => ({
-                            name: s.name,
-                            commission: s.totalCommission || 0,
-                            jobs: s.jobsCompleted || 0,
-                            sales: s.salesGenerated || 0
-                        }));
-                        staffData.sort((a, b) => b.commission - a.commission);
-                        const top = staffData.slice(0, 3);
-                        if (top.length === 0) {
-                            response = '👤 No staff data available yet.';
-                        } else {
-                            response =
-                                `🏆 **Top Performing Staff**\n\n${top.map((s, i) => `${i+1}. **${s.name}** — ₱${s.commission.toFixed(2)} commission, ${s.jobs} jobs, ₱${s.sales.toFixed(2)} sales`).join('\n')}\n\n💡 Total Staff: ${appData.staff.length}`;
-                        }
-                    } else if (q.includes('total')) {
-                        const totalCommission = appData.staff.reduce((sum, s) => sum + (s.totalCommission || 0), 0);
-                        const totalJobs = appData.staff.reduce((sum, s) => sum + (s.jobsCompleted || 0), 0);
-                        const totalSales = appData.staff.reduce((sum, s) => sum + (s.salesGenerated || 0), 0);
-                        response =
-                            `👥 **Staff Overview**\n\n• Total Staff: ${appData.staff.length}\n• Total Commission: ₱${totalCommission.toFixed(2)}\n• Total Jobs: ${totalJobs}\n• Total Sales Generated: ₱${totalSales.toFixed(2)}`;
-                    } else {
-                        // Show staff list
-                        const staffList = appData.staff.map(s =>
-                            `• ${s.name} — ${s.position || 'Staff'} | ₱${(s.totalCommission||0).toFixed(2)} commission | ${s.jobsCompleted||0} jobs`
-                            ).join('\n');
-                        response =
-                            `👤 **Staff Members**\n\n${staffList || 'No staff members added yet.'}\n\n💡 Ask about top performers or total stats.`;
-                    }
-                }
-
-                // Check for transaction search
-                else if (q.includes('find') || q.includes('search') || q.includes('look') || q.includes('transaction')) {
-                    // Try to extract a receipt number or customer name
-                    const words = q.split(' ');
-                    let searchTerm = '';
-                    for (const word of words) {
-                        if (word.startsWith('inv-') || word.startsWith('INV-') || word.length > 5) {
-                            searchTerm = word;
-                            break;
-                        }
-                    }
-                    if (!searchTerm) {
-                        // Look for customer name in query
-                        const customers = appData.customers.map(c => c.name.toLowerCase());
-                        for (const word of words) {
-                            if (word.length > 3 && customers.some(c => c.includes(word))) {
-                                searchTerm = word;
-                                break;
-                            }
-                        }
-                    }
-                    if (searchTerm) {
-                        const foundTx = appData.transactions.filter(t =>
-                            t.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            (t.customer && t.customer.toLowerCase().includes(searchTerm.toLowerCase()))
-                        );
-                        if (foundTx.length > 0) {
-                            const recent = foundTx.slice(0, 5);
-                            response =
-                                `🔍 **Found ${foundTx.length} transaction(s)** for "${searchTerm}"\n\n${recent.map(t => `• ${t.id} — ${t.customer} — ₱${t.total.toFixed(2)} — ${new Date(t.date).toLocaleDateString()}`).join('\n')}\n\n${foundTx.length > 5 ? `... and ${foundTx.length - 5} more` : ''}`;
-                        } else {
-                            response =
-                                `🔍 No transactions found for "${searchTerm}". Try a receipt number like INV-2024-000123 or customer name.`;
-                        }
-                    } else {
-                        response =
-                            `🔍 **Search Help**\n\nI can search for transactions by:\n• Receipt number (e.g., INV-2024-000123)\n• Customer name\n• Vehicle plate number\n\nTry: "Find transaction INV-2024-000123" or "Search customer Juan"`;
-                    }
-                }
-
-                // Check for customer queries
-                else if (q.includes('customer') || q.includes('buyer') || q.includes('client')) {
-                    const totalCustomers = appData.customers.length;
-                    const totalSpent = appData.customers.reduce((sum, c) => {
-                        const tx = appData.transactions.filter(t => t.customer === c.name);
-                        return sum + tx.reduce((s, t) => s + t.total, 0);
-                    }, 0);
-                    const avgSpent = totalCustomers > 0 ? totalSpent / totalCustomers : 0;
-                    const topCustomers = appData.customers.map(c => {
-                        const tx = appData.transactions.filter(t => t.customer === c.name);
-                        const spent = tx.reduce((s, t) => s + t.total, 0);
-                        return { name: c.name, spent, visits: tx.length };
-                    }).sort((a, b) => b.spent - a.spent).slice(0, 5);
-                    response =
-                        `👤 **Customer Overview**\n\n• Total Customers: ${totalCustomers}\n• Total Spending: ₱${totalSpent.toFixed(2)}\n• Average per Customer: ₱${avgSpent.toFixed(2)}\n\n🏆 **Top Customers**\n\n${topCustomers.map((c, i) => `${i+1}. ${c.name} — ₱${c.spent.toFixed(2)} (${c.visits} visits)`).join('\n')}`;
-                }
-
-                // Check for commission queries
-                else if (q.includes('commission')) {
-                    const weeklyData = getWeeklyCommission();
-                    const totalComm = appData.staff.reduce((sum, s) => sum + (s.totalCommission || 0), 0);
-                    const weeklyComm = weeklyData.totals?.commission || 0;
-                    const topStaff = appData.staff.sort((a, b) => (b.totalCommission || 0) - (a.totalCommission || 0))
-                        .slice(0, 3);
-                    response =
-                        `💰 **Commission Report**\n\n• Total Commission (All Time): ₱${totalComm.toFixed(2)}\n• Weekly Commission: ₱${weeklyComm.toFixed(2)}\n• Staff Count: ${appData.staff.length}\n\n🏆 **Top Earners**\n\n${topStaff.map((s, i) => `${i+1}. ${s.name} — ₱${(s.totalCommission||0).toFixed(2)}`).join('\n')}\n\n💡 Ask about staff performance for more details.`;
-                }
-
-                // Check for inventory queries
-                else if (q.includes('inventory') || q.includes('stock') || q.includes('supply')) {
-                    const totalItems = appData.inventory.length;
-                    const lowStock = appData.inventory.filter(i => i.quantity <= i.reorderLevel);
-                    const lowStockCount = lowStock.length;
-                    const totalQuantity = appData.inventory.reduce((sum, i) => sum + i.quantity, 0);
-                    response =
-                        `📦 **Inventory Overview**\n\n• Total Items: ${totalItems}\n• Total Stock Units: ${totalQuantity}\n• Low Stock Items: ${lowStockCount}\n\n${lowStockCount > 0 ? '⚠️ **Low Stock Alert**\n' + lowStock.map(i => `• ${i.name}: ${i.quantity} ${i.unit} (Reorder at ${i.reorderLevel})`).join('\n') : '✅ All items are well-stocked.'}\n\n💡 Ask about a specific item by name.`;
-                }
-
-                // Check for service queries
-                else if (q.includes('service') || q.includes('wash') || q.includes('detail')) {
-                    const serviceCount = {};
-                    appData.transactions.forEach(t => {
-                        t.items.forEach(item => {
-                            serviceCount[item.serviceName] = (serviceCount[item.serviceName] || 0) + item
-                                .quantity;
-                        });
-                    });
-                    const topServices = Object.entries(serviceCount).sort((a, b) => b[1] - a[1]).slice(0, 5);
-                    const totalServices = appData.services.length;
-                    response =
-                        `🧼 **Service Overview**\n\n• Total Services Offered: ${totalServices}\n• Most Popular Services:\n\n${topServices.map(([name, count], i) => `${i+1}. ${name} — ${count} times`).join('\n')}\n\n💡 Ask about specific service prices or details.`;
-                }
-
-                // Check for general help
-                else if (q.includes('help') || q.includes('what can you do') || q.includes('capabilities')) {
-                    response =
-                        `🤖 **AI Assistant Help**\n\nI can help you with:\n\n📊 **Sales & Revenue**\n• Today/Week/Month sales\n• Transaction analysis\n\n👤 **Staff**\n• Performance reports\n• Top earners\n• Staff list\n\n💰 **Commissions**\n• Total commission\n• Weekly breakdown\n\n👥 **Customers**\n• Customer overview\n• Top customers\n• Customer search\n\n📦 **Inventory**\n• Stock levels\n• Low stock alerts\n• Item search\n\n🧼 **Services**\n• Popular services\n• Service details\n\n🔍 **Search**\n• Find transactions by receipt, customer, or plate\n• Search staff, customers, or inventory\n\nJust ask in plain English!`;
-                }
-
-                // Default response with suggestion
-                else {
-                    response =
-                        `🤔 I'm not sure about that. Here are some things I can help with:\n\n• "What are today's sales?"\n• "Show me top performing staff"\n• "Find transaction INV-2024-000123"\n• "Customer overview"\n• "Commission report"\n• "Inventory status"\n• "Help" for all capabilities`;
-                }
-
-                // Add AI response
-                addAIMessage('assistant', response);
-
-            }, 500 + Math.random() * 500); // Simulate thinking time
-        }
-
-        function handleAIQuery() {
-            const input = document.getElementById('aiInput');
-            if (!input) return;
-            const query = input.value.trim();
-            if (!query) return;
-
-            input.value = '';
-            processAIQuery(query);
-        }
-
-        function handleAIKeyPress(e) {
-            if (e.key === 'Enter') {
-                handleAIQuery();
-            }
-        }
-
-        function aiSuggestion(query) {
-            document.getElementById('aiInput').value = query;
-            handleAIQuery();
-        }
-
-        // ================================================================
-        //  ENHANCED ADMIN DASHBOARD - WITH PANEL EDITOR FEATURE
+        //  ENHANCED ADMIN DASHBOARD - WITH PANEL EDITOR FEATURE & STAFF MANAGEMENT FULLY RESTORED
         // ================================================================
 
         // Panel customization storage
@@ -7365,6 +7150,437 @@
             saveToLocal();
         }
 
+        // ===== FULL STAFF MANAGEMENT - RESTORED WITH ADD, EDIT, DELETE, TOGGLE =====
+        function renderAdminUsers() {
+            if (showLogin) return renderLogin();
+            if (!hasRole(['Owner'])) {
+                return `<div class="card-premium p-8 text-center"><i class="fas fa-lock text-4xl text-red-400 mb-4"></i><p class="text-xl">Access Denied. Owner role required.</p></div>`;
+            }
+
+            // Staff stats
+            const totalStaff = appData.users.length;
+            const activeStaff = appData.users.filter(u => u.isActive).length;
+            const staffRoles = appData.users.reduce((acc, u) => {
+                acc[u.role] = (acc[u.role] || 0) + 1;
+                return acc;
+            }, {});
+
+            let staffRows = appData.users.map((u, idx) => {
+                const isCurrent = appData.currentUser && appData.currentUser.id === u.id;
+                const avatarColor = u.isActive ? 'active' : 'inactive';
+                const initial = u.name ? u.name.charAt(0).toUpperCase() : u.username.charAt(0).toUpperCase();
+
+                return `<tr class="border-b border-gray-700 hover:bg-gray-800 transition ${isCurrent ? 'bg-cyan-900/20' : ''}">
+                    <td class="py-3 px-2 text-center text-xs text-gray-400">${idx + 1}</td>
+                    <td class="py-3 px-2">
+                        <div class="flex items-center gap-3">
+                            <div class="staff-avatar ${avatarColor}">${initial}</div>
+                            <div>
+                                <div class="font-medium">${u.name}</div>
+                                <div class="text-xs text-gray-500">${u.username}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="py-3 px-2"><span class="role-badge role-${u.role.toLowerCase()} px-2 py-1 rounded text-xs bg-cyan-900/30 text-cyan-400 border border-cyan-400/30">${u.role}</span></td>
+                    <td class="py-3 px-2 text-center">
+                        <span class="status-badge ${u.isActive ? 'status-completed' : 'status-pending'}">${u.isActive ? 'Active' : 'Inactive'}</span>
+                        ${isCurrent ? '<span class="text-xs text-cyan-400 ml-2">(You)</span>' : ''}
+                    </td>
+                    <td class="py-3 px-2 text-center text-xs text-gray-400">${u.id || '—'}</td>
+                    <td class="py-3 px-2">
+                        <div class="flex items-center gap-1 flex-wrap">
+                            <button onclick="editStaffUser(${u.id})" class="action-btn bg-cyan-600 text-white hover:bg-cyan-700"><i class="fas fa-edit"></i></button>
+                            <button onclick="toggleUserStatus(${u.id})" class="action-btn ${u.isActive ? 'bg-yellow-600' : 'bg-green-600'} text-white hover:${u.isActive ? 'bg-yellow-700' : 'bg-green-700'}"><i class="fas ${u.isActive ? 'fa-pause' : 'fa-play'}"></i></button>
+                            ${u.id !== 1 && !isCurrent ? `<button onclick="deleteUser(${u.id})" class="action-btn bg-red-600 text-white hover:bg-red-700"><i class="fas fa-trash"></i></button>` : ''}
+                            ${u.id === 1 ? '<span class="text-xs text-yellow-400 ml-1"><i class="fas fa-crown"></i></span>' : ''}
+                        </div>
+                    </td>
+                </tr>`;
+            }).join('');
+
+            // Staff stats cards
+            const statsCards = `
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                    <div class="staff-stat-card">
+                        <div class="stat-value text-cyan-400">${totalStaff}</div>
+                        <div class="stat-label">Total Staff</div>
+                    </div>
+                    <div class="staff-stat-card">
+                        <div class="stat-value text-green-400">${activeStaff}</div>
+                        <div class="stat-label">Active</div>
+                    </div>
+                    <div class="staff-stat-card">
+                        <div class="stat-value text-yellow-400">${staffRoles.Owner || 0}</div>
+                        <div class="stat-label">Owners</div>
+                    </div>
+                    <div class="staff-stat-card">
+                        <div class="stat-value text-purple-400">${staffRoles.Manager || 0}</div>
+                        <div class="stat-label">Managers</div>
+                    </div>
+                </div>
+            `;
+
+            return `
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center flex-wrap gap-2">
+                        <div>
+                            <h3 class="text-xl font-bold"><i class="fas fa-user-shield"></i> Staff Management</h3>
+                            <p class="text-sm text-gray-400">Manage system users and their roles</p>
+                        </div>
+                        <div class="flex gap-2 flex-wrap">
+                            <button onclick="showAddStaffModal()" class="bg-green-600 px-4 py-2 rounded text-sm hover:bg-green-700 transition flex items-center gap-2"><i class="fas fa-plus"></i> Add Staff</button>
+                            <button onclick="exportStaffCSV()" class="csv-export-btn px-4 py-2 rounded text-sm text-white"><i class="fas fa-file-csv"></i> CSV</button>
+                            <button onclick="exportStaffExcel()" class="excel-export-btn px-4 py-2 rounded text-sm text-white"><i class="fas fa-file-excel"></i> Excel</button>
+                        </div>
+                    </div>
+                    
+                    ${statsCards}
+                    
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead class="border-b-2 border-cyan-400">
+                                <tr>
+                                    <th class="text-center py-2">#</th>
+                                    <th class="text-left py-2">User</th>
+                                    <th class="text-left py-2">Role</th>
+                                    <th class="text-center py-2">Status</th>
+                                    <th class="text-center py-2">ID</th>
+                                    <th class="text-center py-2">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${staffRows || '<tr><td colspan="6" class="text-center py-8 text-gray-400">No staff members found</td></tr>'}
+                            </tbody>
+                            <tfoot class="border-t-2 border-cyan-400 font-bold">
+                                <tr><td colspan="5" class="py-2 text-right">TOTAL STAFF:</td><td class="text-center text-cyan-400">${totalStaff}</td></tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    
+                    <div class="bg-gray-800/20 p-3 rounded-lg text-xs text-gray-400 border border-gray-700/30">
+                        <p><i class="fas fa-info-circle text-cyan-400"></i> Staff members can log in with their username and password. Roles control access levels.</p>
+                        <p class="mt-1"><span class="text-green-400">●</span> Active staff can log in and perform actions based on their role.</p>
+                        <p><span class="text-red-400">●</span> Inactive staff cannot log in.</p>
+                        <p class="mt-1"><i class="fas fa-crown text-yellow-400"></i> Owner role has full system access.</p>
+                        <p><i class="fas fa-user-tie text-cyan-400"></i> Manager can access admin panels and manage operations.</p>
+                        <p><i class="fas fa-user text-purple-400"></i> Cashier can process transactions and view reports.</p>
+                        <p><i class="fas fa-user text-gray-400"></i> Staff can view their own commission and weekly reports.</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ---- Show Add Staff Modal ----
+        window.showAddStaffModal = function() {
+            let modalHtml = `
+                <div id="adminModal" class="modal">
+                    <div class="modal-content" style="max-width: 500px;">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-xl font-bold"><i class="fas fa-user-plus"></i> Add New Staff</h3>
+                            <button onclick="closeAdminModal()" class="text-gray-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
+                        </div>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="text-gray-400 text-sm">Full Name *</label>
+                                <input type="text" id="staffNameInput" class="w-full bg-gray-800 p-2 rounded border border-gray-700 focus:border-cyan-400 outline-none" placeholder="e.g. Juan Dela Cruz">
+                            </div>
+                            <div>
+                                <label class="text-gray-400 text-sm">Username *</label>
+                                <input type="text" id="staffUsernameInput" class="w-full bg-gray-800 p-2 rounded border border-gray-700 focus:border-cyan-400 outline-none" placeholder="e.g. juandelacruz">
+                            </div>
+                            <div>
+                                <label class="text-gray-400 text-sm">Password *</label>
+                                <input type="password" id="staffPasswordInput" class="w-full bg-gray-800 p-2 rounded border border-gray-700 focus:border-cyan-400 outline-none" placeholder="Min 6 characters" value="password123">
+                            </div>
+                            <div>
+                                <label class="text-gray-400 text-sm">Role *</label>
+                                <select id="staffRoleInput" class="w-full bg-gray-800 p-2 rounded border border-gray-700 focus:border-cyan-400 outline-none">
+                                    <option value="Owner">Owner</option>
+                                    <option value="Manager">Manager</option>
+                                    <option value="Cashier" selected>Cashier</option>
+                                    <option value="Staff">Staff</option>
+                                </select>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" id="staffActiveInput" class="w-4 h-4 accent-cyan-500" checked>
+                                <label class="text-sm text-gray-400">Active (can log in)</label>
+                            </div>
+                            <div class="flex gap-3 mt-4">
+                                <button onclick="confirmAddStaff()" class="btn-neon flex-1 p-2 rounded"><i class="fas fa-save"></i> Add Staff</button>
+                                <button onclick="closeAdminModal()" class="bg-gray-700 flex-1 p-2 rounded hover:bg-gray-600 transition">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+        };
+
+        // ---- Confirm Add Staff ----
+        window.confirmAddStaff = function() {
+            const name = document.getElementById('staffNameInput')?.value?.trim();
+            const username = document.getElementById('staffUsernameInput')?.value?.trim();
+            const password = document.getElementById('staffPasswordInput')?.value?.trim();
+            const role = document.getElementById('staffRoleInput')?.value || 'Staff';
+            const isActive = document.getElementById('staffActiveInput')?.checked || false;
+
+            if (!name) { alert('Please enter the staff name.'); return; }
+            if (!username) { alert('Please enter a username.'); return; }
+            if (!password || password.length < 4) { alert('Please enter a password (min 4 characters).'); return; }
+
+            // Check if username already exists
+            if (appData.users.find(u => u.username.toLowerCase() === username.toLowerCase())) {
+                alert('Username already exists. Please choose a different username.');
+                return;
+            }
+
+            const newUser = {
+                id: Date.now(),
+                username: username.toLowerCase(),
+                password: password,
+                role: role,
+                name: name,
+                isActive: isActive
+            };
+
+            appData.users.push(newUser);
+            // Also add to staff array for commission tracking if not exists
+            if (!appData.staff.find(s => s.name === name)) {
+                appData.staff.push({
+                    id: newUser.id,
+                    name: name,
+                    position: role,
+                    contact: '',
+                    salesGenerated: 0,
+                    jobsCompleted: 0,
+                    commissionTier: role === 'Staff' ? 35 : 30,
+                    isActive: isActive,
+                    totalCommission: 0,
+                    weeklyBreakdown: { Sunday: 0, Monday: 0, Tuesday: 0, Wednesday: 0, Thursday: 0, Friday: 0,
+                        Saturday: 0 },
+                    weeklyCommission: 0,
+                    monthlyCommission: 0,
+                    yearlyCommission: 0
+                });
+            }
+
+            saveToLocal();
+            addActivityLog('Staff Added', `${name} (${role})`);
+            addAuditTrail('Staff Added', `${name} (${role})`, newUser.id, 'user');
+            closeAdminModal();
+            renderApp();
+            alert(`✅ Staff "${name}" added successfully!`);
+        };
+
+        // ---- Edit Staff User ----
+        window.editStaffUser = function(id) {
+            const user = appData.users.find(u => u.id === id);
+            if (!user) { alert('User not found.'); return; }
+
+            let modalHtml = `
+                <div id="adminModal" class="modal">
+                    <div class="modal-content" style="max-width: 500px;">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-xl font-bold"><i class="fas fa-user-edit"></i> Edit Staff</h3>
+                            <button onclick="closeAdminModal()" class="text-gray-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
+                        </div>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="text-gray-400 text-sm">Full Name *</label>
+                                <input type="text" id="editStaffName" class="w-full bg-gray-800 p-2 rounded border border-gray-700 focus:border-cyan-400 outline-none" value="${user.name}">
+                            </div>
+                            <div>
+                                <label class="text-gray-400 text-sm">Username *</label>
+                                <input type="text" id="editStaffUsername" class="w-full bg-gray-800 p-2 rounded border border-gray-700 focus:border-cyan-400 outline-none" value="${user.username}">
+                            </div>
+                            <div>
+                                <label class="text-gray-400 text-sm">Password (leave blank to keep current)</label>
+                                <input type="password" id="editStaffPassword" class="w-full bg-gray-800 p-2 rounded border border-gray-700 focus:border-cyan-400 outline-none" placeholder="Enter new password">
+                            </div>
+                            <div>
+                                <label class="text-gray-400 text-sm">Role *</label>
+                                <select id="editStaffRole" class="w-full bg-gray-800 p-2 rounded border border-gray-700 focus:border-cyan-400 outline-none">
+                                    <option value="Owner" ${user.role === 'Owner' ? 'selected' : ''}>Owner</option>
+                                    <option value="Manager" ${user.role === 'Manager' ? 'selected' : ''}>Manager</option>
+                                    <option value="Cashier" ${user.role === 'Cashier' ? 'selected' : ''}>Cashier</option>
+                                    <option value="Staff" ${user.role === 'Staff' ? 'selected' : ''}>Staff</option>
+                                </select>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" id="editStaffActive" class="w-4 h-4 accent-cyan-500" ${user.isActive ? 'checked' : ''}>
+                                <label class="text-sm text-gray-400">Active (can log in)</label>
+                            </div>
+                            <div class="flex gap-3 mt-4">
+                                <button onclick="confirmEditStaff(${id})" class="btn-neon flex-1 p-2 rounded"><i class="fas fa-save"></i> Update</button>
+                                <button onclick="closeAdminModal()" class="bg-gray-700 flex-1 p-2 rounded hover:bg-gray-600 transition">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+        };
+
+        // ---- Confirm Edit Staff ----
+        window.confirmEditStaff = function(id) {
+            const user = appData.users.find(u => u.id === id);
+            if (!user) { alert('User not found.'); return; }
+
+            const name = document.getElementById('editStaffName')?.value?.trim();
+            const username = document.getElementById('editStaffUsername')?.value?.trim();
+            const password = document.getElementById('editStaffPassword')?.value?.trim();
+            const role = document.getElementById('editStaffRole')?.value || 'Staff';
+            const isActive = document.getElementById('editStaffActive')?.checked || false;
+
+            if (!name) { alert('Please enter the staff name.'); return; }
+            if (!username) { alert('Please enter a username.'); return; }
+
+            // Check if username already exists (excluding current user)
+            if (username.toLowerCase() !== user.username.toLowerCase() && appData.users.find(u => u.username.toLowerCase() ===
+                    username.toLowerCase())) {
+                alert('Username already exists. Please choose a different username.');
+                return;
+            }
+
+            const oldName = user.name;
+            user.name = name;
+            user.username = username.toLowerCase();
+            if (password && password.length >= 4) {
+                user.password = password;
+            }
+            user.role = role;
+            user.isActive = isActive;
+
+            // Update staff array
+            const staffMember = appData.staff.find(s => s.id === id || s.name === oldName);
+            if (staffMember) {
+                staffMember.name = name;
+                staffMember.position = role;
+                staffMember.isActive = isActive;
+                // Update commission tier based on role
+                if (role === 'Staff') staffMember.commissionTier = 35;
+                else if (role === 'Cashier') staffMember.commissionTier = 30;
+                else staffMember.commissionTier = 30;
+            } else {
+                // Add to staff if not exists
+                appData.staff.push({
+                    id: id,
+                    name: name,
+                    position: role,
+                    contact: '',
+                    salesGenerated: 0,
+                    jobsCompleted: 0,
+                    commissionTier: role === 'Staff' ? 35 : 30,
+                    isActive: isActive,
+                    totalCommission: 0,
+                    weeklyBreakdown: { Sunday: 0, Monday: 0, Tuesday: 0, Wednesday: 0, Thursday: 0, Friday: 0,
+                        Saturday: 0 },
+                    weeklyCommission: 0,
+                    monthlyCommission: 0,
+                    yearlyCommission: 0
+                });
+            }
+
+            saveToLocal();
+            addActivityLog('Staff Updated', `${oldName} → ${name}`);
+            addAuditTrail('Staff Updated', `${oldName} → ${name}`, id, 'user');
+            closeAdminModal();
+            renderApp();
+            alert(`✅ Staff "${name}" updated successfully!`);
+        };
+
+        // ---- Toggle User Status ----
+        window.toggleUserStatus = function(id) {
+            const user = appData.users.find(u => u.id === id);
+            if (!user) { alert('User not found.'); return; }
+            if (user.id === 1) {
+                alert('Cannot deactivate the primary Owner account.');
+                return;
+            }
+            user.isActive = !user.isActive;
+            // Update staff array
+            const staffMember = appData.staff.find(s => s.id === id || s.name === user.name);
+            if (staffMember) {
+                staffMember.isActive = user.isActive;
+            }
+            saveToLocal();
+            addActivityLog('Staff Status Toggled', `${user.name} → ${user.isActive ? 'Active' : 'Inactive'}`);
+            renderApp();
+            alert(`✅ Staff "${user.name}" is now ${user.isActive ? 'Active' : 'Inactive'}.`);
+        };
+
+        // ---- Delete User ----
+        window.deleteUser = function(id) {
+            const user = appData.users.find(u => u.id === id);
+            if (!user) { alert('User not found.'); return; }
+            if (user.id === 1) {
+                alert('Cannot delete the primary Owner account.');
+                return;
+            }
+            if (appData.currentUser && appData.currentUser.id === id) {
+                alert('Cannot delete your own account.');
+                return;
+            }
+            if (confirm(`Delete staff "${user.name}"? This action cannot be undone.`)) {
+                appData.users = appData.users.filter(u => u.id !== id);
+                appData.staff = appData.staff.filter(s => s.id !== id && s.name !== user.name);
+                saveToLocal();
+                addActivityLog('Staff Deleted', `${user.name} (${user.role})`);
+                addAuditTrail('Staff Deleted', `${user.name} (${user.role})`, id, 'user');
+                renderApp();
+                alert(`✅ Staff "${user.name}" deleted.`);
+            }
+        };
+
+        // ---- Export Staff ----
+        window.exportStaffExcel = function() {
+            const data = appData.users.map(u => ({
+                Name: u.name,
+                Username: u.username,
+                Role: u.role,
+                Status: u.isActive ? 'Active' : 'Inactive',
+                ID: u.id
+            }));
+            const columns = [
+                { key: 'Name', header: 'Name' },
+                { key: 'Username', header: 'Username' },
+                { key: 'Role', header: 'Role' },
+                { key: 'Status', header: 'Status' },
+                { key: 'ID', header: 'ID' }
+            ];
+            generateExcel(data, columns, 'Staff Management', 'staff_list');
+        };
+
+        window.exportStaffCSV = function() {
+            let csv = "Name,Username,Role,Status,ID\n";
+            appData.users.forEach(u => {
+                csv += `"${u.name}","${u.username}","${u.role}","${u.isActive ? 'Active' : 'Inactive'}",${u.id}\n`;
+            });
+            const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `staff_list_${new Date().toISOString().slice(0, 10)}.csv`;
+            a.click();
+            alert('✅ Staff list exported as CSV!');
+        };
+
+        // ---- Edit Staff Commission Tier ----
+        window.editStaffCommissionTier = function(id) {
+            const staff = appData.staff.find(s => s.id === id);
+            if (!staff) { alert('Staff not found.'); return; }
+            const currentTier = staff.commissionTier || 35;
+            const newTier = parseInt(prompt(`Edit commission tier for ${staff.name}:`, currentTier));
+            if (newTier && [30, 35, 40].includes(newTier)) {
+                staff.commissionTier = newTier;
+                saveToLocal();
+                renderApp();
+                alert(`✅ Commission tier updated to ${newTier}%`);
+            } else if (newTier) {
+                alert('Please enter 30, 35, or 40.');
+            }
+        };
+
+        // ===== ENHANCED ADMIN DASHBOARD =====
         function renderAdminDashboard() {
             if (showLogin) return renderLogin();
             if (!hasRole(['Owner', 'Manager'])) {
@@ -7381,7 +7597,7 @@
                 { id: 'customers', icon: 'fa-user-friends', label: 'Customers' },
                 { id: 'services', icon: 'fa-concierge-bell', label: 'Services' },
                 { id: 'categories', icon: 'fa-tags', label: 'Categories' },
-                { id: 'staff', icon: 'fa-users', label: 'Staff' },
+                { id: 'staff', icon: 'fa-users', label: '👥 Staff Management' },
                 { id: 'inventory', icon: 'fa-boxes', label: 'Inventory' },
                 { id: 'expenses', icon: 'fa-money-bill-wave', label: 'Expenses' },
                 { id: 'commissions', icon: 'fa-percent', label: 'Commission Matrix' },
@@ -7395,7 +7611,6 @@
                 // Check if there's a custom panel content
                 const customContent = getPanelCustomization(currentAdminPanel);
                 if (customContent) {
-                    // Render custom content with edit button
                     content = `
                         <div class="relative">
                             <div class="flex justify-between items-center mb-4">
@@ -7410,7 +7625,6 @@
                         </div>
                     `;
                 } else {
-                    // Render default content
                     let defaultContent = '';
                     if (currentAdminPanel === 'dailytransactions') defaultContent = renderDailyTransactionManagement();
                     else if (currentAdminPanel === 'weeklycommission') defaultContent = renderWeeklyCommissionReport();
@@ -7420,7 +7634,7 @@
                     else if (currentAdminPanel === 'customers') defaultContent = renderCustomers();
                     else if (currentAdminPanel === 'services') defaultContent = renderAdminServices();
                     else if (currentAdminPanel === 'categories') defaultContent = renderAdminCategories();
-                    else if (currentAdminPanel === 'staff') defaultContent = renderStaffDashboard();
+                    else if (currentAdminPanel === 'staff') defaultContent = renderAdminUsers();
                     else if (currentAdminPanel === 'inventory') defaultContent = renderInventory();
                     else if (currentAdminPanel === 'expenses') defaultContent = renderAdminExpenses();
                     else if (currentAdminPanel === 'commissions') defaultContent = renderAdminCommissions();
@@ -7448,7 +7662,7 @@
             return `<div class="admin-grid">
             <div class="admin-sidebar">
                 <h3 class="text-lg font-bold mb-4 neon-glow p-2 rounded text-center"><i class="fas fa-crown"></i> ${appData.systemSettings.uiLabels.adminTitle || 'Admin Panel'}</h3>
-                <div class="text-xs text-gray-400 mb-2 px-2">v8.8.5 — AI Assistant</div>
+                <div class="text-xs text-gray-400 mb-2 px-2">v8.8.5 — Staff Management Restored</div>
                 ${adminPanels.map(p => `<div class="admin-sidebar-item ${currentAdminPanel === p.id ? 'active' : ''}" onclick="navigateAdmin('${p.id}')"><i class="fas ${p.icon}"></i> ${p.label}</div>`).join('')}
                 <div class="mt-6 p-3 bg-gray-800 rounded-lg text-xs">
                     <div class="text-gray-400">System Status</div>
@@ -7466,6 +7680,7 @@
                     <div class="mt-1 text-purple-400 text-[10px]">💬 QR Code Feedback: Active</div>
                     <div class="mt-1 text-purple-400 text-[10px]">📝 ${getAllFeedback().length} feedback entries</div>
                     <div class="mt-1 text-blue-400 text-[10px]">🤖 AI Assistant: Active</div>
+                    <div class="mt-1 text-cyan-400 text-[10px]">👥 Staff Management: ${appData.users.length} users</div>
                     <div class="mt-1 text-cyan-400 text-[10px]">🎨 Panel Customization: ${Object.keys(appData.adminPanelCustomizations || {}).length} custom panels</div>
                     ${firebaseInitialized && isFirebasePrimary ? `<div class="mt-1 text-green-400 text-[10px]">🌐 Online Mode | Real-time sync enabled</div>` : `<div class="mt-1 text-yellow-400 text-[10px]">⚠️ Offline Mode | Using local cache</div>`}
                     <div class="mt-1 text-cyan-400 text-[10px]">📊 Sunday-Saturday Weekly Commission Cycle</div>
@@ -7492,7 +7707,7 @@
                 customers: 'Customers',
                 services: 'Services',
                 categories: 'Categories',
-                staff: 'Staff',
+                staff: 'Staff Management',
                 inventory: 'Inventory',
                 expenses: 'Expenses',
                 commissions: 'Commission Matrix',
@@ -7539,7 +7754,6 @@
             `;
             document.body.insertAdjacentHTML('beforeend', modalHtml);
 
-            // Editor toolbar functions
             window.editorInsert = function(type) {
                 const editor = document.getElementById('panelEditorContent');
                 if (!editor) return;
@@ -8114,7 +8328,7 @@
         </div>`;
         }
 
-        // ===== ADMIN SERVICES, CATEGORIES, INVENTORY, EXPENSES, COMMISSIONS, USERS, SYSTEM =====
+        // ===== ADMIN SERVICES, CATEGORIES, INVENTORY, EXPENSES, COMMISSIONS =====
         function renderAdminServices() {
             if (showLogin) return renderLogin();
             return `<h3 class="text-xl font-bold mb-4"><i class="fas fa-concierge-bell"></i> Services Management</h3>
@@ -8551,41 +8765,6 @@
             }
         };
 
-        function renderAdminUsers() {
-            if (showLogin) return renderLogin();
-            if (!hasRole(['Owner'])) {
-                return `<div class="card-premium p-8 text-center"><i class="fas fa-lock text-4xl text-red-400 mb-4"></i><p class="text-xl">Access Denied. Owner role required.</p></div>`;
-            }
-            return `<h3 class="text-xl font-bold mb-4"><i class="fas fa-user-shield"></i> User Management</h3>
-            <button onclick="addUser()" class="bg-green-600 px-3 py-1 rounded mb-4">+ Add User</button>
-            <div class="overflow-x-auto"><table class="w-full text-sm"><thead class="border-b border-cyan-400"><tr><th>Username</th><th>Name</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead><tbody>
-            ${appData.users.map(u => `<tr class="border-b border-gray-700"><td class="py-2">${u.username}</td><td>${u.name}</td><td><span class="role-badge role-${u.role.toLowerCase()}">${u.role}</span></td><td><button onclick="toggleUserStatus(${u.id})" class="text-${u.isActive ? 'green' : 'red'}-400">${u.isActive ? 'Active' : 'Inactive'}</button></td><td><button onclick="deleteUser(${u.id})" class="text-red-400"><i class="fas fa-trash"></i></button></td></tr>`).join('')}</tbody></table></div>`;
-        }
-        window.addUser = () => {
-            let username = prompt("Username:");
-            if (!username) return;
-            let password = prompt("Password:") || "password123";
-            let name = prompt("Full name:") || username;
-            let role = prompt("Role (Owner/Manager/Cashier/Staff):") || "Staff";
-            appData.users.push({ id: Date.now(), username, password, role, name, isActive: true });
-            addActivityLog('User Added', name);
-            saveToLocal();
-            renderApp();
-        };
-        window.toggleUserStatus = (id) => { let u = appData.users.find(u => u.id === id); if (u) { u.isActive = !u
-                .isActive;
-                saveToLocal();
-                renderApp(); } };
-        window.deleteUser = (id) => {
-            if (confirm("Delete user?")) {
-                const u = appData.users.find(user => user.id === id);
-                if (u) addActivityLog('User Deleted', u.name);
-                appData.users = appData.users.filter(u => u.id !== id);
-                saveToLocal();
-                renderApp();
-            }
-        };
-
         // ===== SYSTEM SETTINGS =====
         function renderAdminSystem() {
             if (showLogin) return renderLogin();
@@ -8709,8 +8888,8 @@
                                 <span class="text-cyan-400 text-xs"><i class="fas fa-pen-fancy"></i> ${Object.keys(appData.adminPanelCustomizations || {}).length} custom panels</span>
                             </div>
                             <div class="flex items-center justify-between">
-                                <label class="text-gray-400 text-xs">AI Assistant</label>
-                                <span class="text-blue-400 text-xs"><i class="fas fa-robot"></i> Active</span>
+                                <label class="text-gray-400 text-xs">Staff Management</label>
+                                <span class="text-green-400 text-xs"><i class="fas fa-users"></i> ${appData.users.length} users</span>
                             </div>
                         </div>
                     </div>
@@ -8768,6 +8947,7 @@
                 <div class="mt-1 text-green-400">💰 All exports and commissions displayed in ₱ (Philippine Peso)</div>
                 <div class="mt-1 text-purple-400">🔒 Staff Role: Access to Weekly Commission Report only</div>
                 <div class="mt-1 text-purple-400">🖨️ Print Entire Dashboard feature</div>
+                <div class="mt-1 text-cyan-400">👥 Staff Management: Add, Edit, Delete, Toggle Active</div>
                 <div class="mt-1 text-cyan-400">🎨 Panel Customization: Edit any admin panel content</div>
                 <div class="mt-1 text-blue-400">🤖 AI Assistant: Search transactions, staff, inventory, and more</div>
                 ${firebaseInitialized && isFirebasePrimary ? `<div class="mt-1 text-green-400">🌐 Firebase: Connected (Online) - ${firebaseConfig.databaseURL || 'Custom'} | Auto-sync: ON</div>` : `<div class="mt-1 text-yellow-400">🌐 Firebase: Disconnected - Using local cache</div>`}
@@ -8777,2166 +8957,6 @@
             </div>
         </div>`;
         }
-
-        window.updateFeedbackUrl = function() {
-            const url = document.getElementById('feedbackUrlInput')?.value?.trim();
-            if (url) {
-                appData.systemSettings.feedbackUrl = url;
-                saveToLocal();
-                alert('✅ Feedback URL updated!');
-                renderApp();
-            } else {
-                alert('Please enter a valid URL.');
-            }
-        };
-
-        window.recalcAllReports = function() {
-            if (confirm("Rebuild all transaction reports from scratch? This may take a moment for large datasets.")) {
-                recalculateAllTransactionReports();
-                alert("✅ All transaction reports rebuilt successfully!");
-                renderApp();
-            }
-        };
-
-        window.archiveAllWeeks = function() {
-            if (confirm("Archive all completed weeks? This will preserve historical data.")) {
-                recalculateAllCommissions();
-                alert(`✅ All weeks archived! ${appData.commissionWeekly.archives.length} weeks in archive.`);
-                renderApp();
-            }
-        };
-
-        // ===== FIREBASE CONFIG MODAL =====
-        window.showFirebaseConfig = function() {
-            const currentConfig = firebaseConfig;
-            let modalHtml = `<div id="adminModal" class="modal"><div class="modal-content firebase-config-modal">
-            <h3 class="text-xl font-bold mb-4"><i class="fas fa-database"></i> Firebase Configuration v8.8.5</h3>
-            <p class="text-sm text-gray-400 mb-4">Enter your Firebase Realtime Database configuration. Get these from your Firebase console.</p>
-            <div class="space-y-3">
-                <div><label class="text-gray-400 text-sm">API Key</label><input type="text" id="fbApiKey" class="w-full bg-gray-800 p-2 rounded" value="${currentConfig.apiKey || ''}" placeholder="AIzaSy..."></div>
-                <div><label class="text-gray-400 text-sm">Auth Domain</label><input type="text" id="fbAuthDomain" class="w-full bg-gray-800 p-2 rounded" value="${currentConfig.authDomain || ''}" placeholder="project.firebaseapp.com"></div>
-                <div><label class="text-gray-400 text-sm">Database URL</label><input type="text" id="fbDbUrl" class="w-full bg-gray-800 p-2 rounded" value="${currentConfig.databaseURL || ''}" placeholder="https://project.firebaseio.com"></div>
-                <div><label class="text-gray-400 text-sm">Project ID</label><input type="text" id="fbProjectId" class="w-full bg-gray-800 p-2 rounded" value="${currentConfig.projectId || ''}" placeholder="project-id"></div>
-                <div><label class="text-gray-400 text-sm">Storage Bucket</label><input type="text" id="fbStorageBucket" class="w-full bg-gray-800 p-2 rounded" value="${currentConfig.storageBucket || ''}" placeholder="project.appspot.com"></div>
-                <div><label class="text-gray-400 text-sm">Messaging Sender ID</label><input type="text" id="fbMessagingSenderId" class="w-full bg-gray-800 p-2 rounded" value="${currentConfig.messagingSenderId || ''}" placeholder="123456789"></div>
-                <div><label class="text-gray-400 text-sm">App ID</label><input type="text" id="fbAppId" class="w-full bg-gray-800 p-2 rounded" value="${currentConfig.appId || ''}" placeholder="1:123:web:abc"></div>
-                <div class="flex gap-3 mt-4">
-                    <button onclick="saveFirebaseConfig()" class="btn-neon flex-1 p-2 rounded"><i class="fas fa-save"></i> Save & Connect</button>
-                    <button onclick="testFirebaseConfig()" class="bg-blue-600 flex-1 p-2 rounded"><i class="fas fa-vial"></i> Test Connection</button>
-                    <button onclick="closeAdminModal()" class="bg-gray-700 flex-1 p-2 rounded">Cancel</button>
-                </div>
-                <div class="text-xs text-gray-500 mt-2">
-                    <p class="text-yellow-400">⚠️ Your config is stored locally in your browser. Never share your config publicly.</p>
-                    <p class="text-cyan-400 mt-1">📖 Get your config from Firebase Console → Project Settings → Your Apps → Web App Config</p>
-                    <p class="text-green-400 mt-1">✅ v8.8.5: QR Code Feedback Integration</p>
-                    <p class="text-green-400 mt-1">🧾 Dual Receipts: Customer + Shop Copy with Cut Marker</p>
-                    <p class="text-green-400 mt-1">💬 Customers scan QR to leave feedback</p>
-                    <p class="text-green-400 mt-1">📊 All v8.8.2 Export Features Restored (Excel/PDF/CSV)</p>
-                    <p class="text-green-400 mt-1">🔄 All transactions and data synchronized in real-time</p>
-                    <p class="text-green-400 mt-1">⚡ Offline support - data syncs when connection is restored</p>
-                    <p class="text-purple-400 mt-1">🔒 Staff Role: Access to Weekly Commission Report only</p>
-                    <p class="text-purple-400 mt-1">🖨️ Print Entire Dashboard feature</p>
-                    <p class="text-cyan-400 mt-1">🎨 Panel Customization: Edit any admin panel content</p>
-                    <p class="text-blue-400 mt-1">🤖 AI Assistant: Intelligent search across all data</p>
-                </div>
-            </div>
-        </div></div>`;
-            document.body.insertAdjacentHTML('beforeend', modalHtml);
-        };
-
-        window.testFirebaseConfig = function() {
-            const config = {
-                apiKey: document.getElementById('fbApiKey')?.value?.trim() || '',
-                authDomain: document.getElementById('fbAuthDomain')?.value?.trim() || '',
-                databaseURL: document.getElementById('fbDbUrl')?.value?.trim() || '',
-                projectId: document.getElementById('fbProjectId')?.value?.trim() || '',
-                storageBucket: document.getElementById('fbStorageBucket')?.value?.trim() || '',
-                messagingSenderId: document.getElementById('fbMessagingSenderId')?.value?.trim() || '',
-                appId: document.getElementById('fbAppId')?.value?.trim() || ''
-            };
-
-            if (!config.apiKey || !config.databaseURL) {
-                alert("Please enter at least API Key and Database URL");
-                return;
-            }
-
-            addFirebaseLog('🔍 Testing connection...', 'info');
-
-            try {
-                let testApp;
-                try {
-                    testApp = firebase.initializeApp(config, 'testApp');
-                } catch (e) {
-                    if (e.message.includes('already exists')) {
-                        testApp = firebase.app('testApp');
-                    } else {
-                        throw e;
-                    }
-                }
-                const testDb = firebase.database(testApp);
-                const testRef = testDb.ref('_test_connection');
-
-                testRef.set({
-                    test: 'connection',
-                    timestamp: new Date().toISOString(),
-                    device: navigator.userAgent || 'unknown'
-                }).then(() => {
-                    addFirebaseLog('✅ Connection test successful!', 'success');
-                    alert('✅ Firebase connection successful! Your credentials are valid.');
-                    testDb.ref('_test_connection').remove();
-                    try { firebase.app('testApp').delete(); } catch (e) {}
-                }).catch((error) => {
-                    addFirebaseLog(`❌ Connection test failed: ${error.message}`, 'error');
-                    alert(`❌ Connection failed: ${error.message}\n\nCheck your Database URL and Security Rules.`);
-                    try { firebase.app('testApp').delete(); } catch (e) {}
-                });
-            } catch (e) {
-                addFirebaseLog(`❌ Test error: ${e.message}`, 'error');
-                alert(`❌ Error: ${e.message}`);
-            }
-        };
-
-        window.saveFirebaseConfig = function() {
-            const config = {
-                apiKey: document.getElementById('fbApiKey')?.value?.trim() || '',
-                authDomain: document.getElementById('fbAuthDomain')?.value?.trim() || '',
-                databaseURL: document.getElementById('fbDbUrl')?.value?.trim() || '',
-                projectId: document.getElementById('fbProjectId')?.value?.trim() || '',
-                storageBucket: document.getElementById('fbStorageBucket')?.value?.trim() || '',
-                messagingSenderId: document.getElementById('fbMessagingSenderId')?.value?.trim() || '',
-                appId: document.getElementById('fbAppId')?.value?.trim() || ''
-            };
-
-            if (!config.apiKey || !config.databaseURL) {
-                alert("Please enter at least API Key and Database URL");
-                return;
-            }
-
-            firebaseConfig = config;
-            localStorage.setItem("8068_firebase_config_v8", JSON.stringify(config));
-            isUsingDemoConfig = false;
-
-            try {
-                if (firebaseApp) {
-                    try { firebaseApp.delete(); } catch (e) {}
-                    firebaseApp = null;
-                    firebaseDb = null;
-                    firebaseInitialized = false;
-                    isFirebasePrimary = false;
-                    firebaseListeners.forEach(ref => { try { ref.off(); } catch (e) {} });
-                    firebaseListeners = [];
-                }
-
-                initFirebase().then((success) => {
-                    if (success) {
-                        setupFirebaseRealtimeListener();
-                        closeAdminModal();
-                        renderApp();
-                        alert('✅ Firebase connected successfully! All data will now sync in real-time.');
-                    } else {
-                        alert('❌ Failed to connect to Firebase. Check your configuration and try again.');
-                    }
-                });
-            } catch (e) {
-                alert('❌ Firebase error: ' + e.message);
-            }
-        };
-
-        // ===== TRANSACTION EDIT HELPERS =====
-        window.editTransactionCustomer = (id) => {
-            const t = appData.transactions.find(tx => tx.id === id);
-            if (t) {
-                const newName = prompt("Edit customer:", t.customer);
-                if (newName !== null) {
-                    t.customer = newName;
-                    saveToLocal();
-                    updateTransactionReports(t);
-                    renderApp();
-                    alert("✅ Customer updated!");
-                }
-            }
-        };
-        window.editTransactionVehicle = (id) => {
-            const t = appData.transactions.find(tx => tx.id === id);
-            if (t) {
-                const newVal = prompt("Edit vehicle model:", t.vehicle);
-                if (newVal !== null) {
-                    t.vehicle = newVal;
-                    saveToLocal();
-                    updateTransactionReports(t);
-                    renderApp();
-                }
-            }
-        };
-        window.editTransactionPlate = (id) => {
-            const t = appData.transactions.find(tx => tx.id === id);
-            if (t) {
-                const newVal = prompt("Edit plate number:", t.plate);
-                if (newVal !== null) {
-                    t.plate = newVal;
-                    saveToLocal();
-                    updateTransactionReports(t);
-                    renderApp();
-                }
-            }
-        };
-        window.editTransactionAmount = (id) => {
-            const t = appData.transactions.find(tx => tx.id === id);
-            if (t) {
-                const newAmt = parseFloat(prompt("Edit total amount:", t.total));
-                if (!isNaN(newAmt) && newAmt > 0) {
-                    t.total = newAmt;
-                    t.subtotal = newAmt;
-                    saveToLocal();
-                    updateTransactionReports(t);
-                    refreshAllCommissions();
-                    renderApp();
-                    alert("✅ Amount updated! Commissions and reports recalculated.");
-                }
-            }
-        };
-        window.editTransactionPayment = (id) => {
-            const t = appData.transactions.find(tx => tx.id === id);
-            if (t) {
-                const methods = appData.systemSettings.defaultPaymentMethods || ['Cash', 'GCash', 'Maya',
-                    'Credit Card', 'Bank Transfer', 'Credit (Utang)'
-                ];
-                const newVal = prompt("Edit payment method:", t.paymentMethod || 'Cash');
-                if (newVal && methods.includes(newVal)) {
-                    t.paymentMethod = newVal;
-                    if (newVal === 'Credit (Utang)') {
-                        t.isCredit = true;
-                        if (!appData.credits.some(c => c.transactionId === t.id)) {
-                            appData.credits.push({
-                                id: 'CR-' + new Date().getFullYear() + '-' + (appData.nextIds.credit++),
-                                customerName: t.customer,
-                                contact: '',
-                                transactionId: t.id,
-                                amount: t.total,
-                                paid: 0,
-                                balance: t.total,
-                                date: new Date(t.date).toISOString().slice(0, 10),
-                                status: 'pending'
-                            });
-                        }
-                    }
-                    saveToLocal();
-                    updateTransactionReports(t);
-                    renderApp();
-                } else if (newVal) {
-                    alert("Payment method must be one of: " + methods.join(', '));
-                }
-            }
-        };
-        window.openTransactionEdit = (id) => { editTransactionFull(id); };
-        window.editTransactionFull = (id) => {
-            const t = appData.transactions.find(tx => tx.id === id);
-            if (!t) return;
-            let modalHtml = `<div id="adminModal" class="modal"><div class="modal-content">
-            <h3 class="text-xl font-bold mb-4">Edit Transaction</h3>
-            <div class="space-y-3">
-                <div><label class="text-gray-400">Customer</label><input type="text" id="editTxCustomer" class="w-full bg-gray-800 p-2 rounded" value="${t.customer}"></div>
-                <div><label class="text-gray-400">Total Amount</label><input type="number" id="editTxAmount" class="w-full bg-gray-800 p-2 rounded" value="${t.total}" step="0.01"></div>
-                <div><label class="text-gray-400">Vehicle Model</label><input type="text" id="editTxVehicle" class="w-full bg-gray-800 p-2 rounded" value="${t.vehicle}"></div>
-                <div><label class="text-gray-400">Plate Number</label><input type="text" id="editTxPlate" class="w-full bg-gray-800 p-2 rounded" value="${t.plate}"></div>
-                <div><label class="text-gray-400">Payment Method</label><select id="editTxPayment" class="w-full bg-gray-800 p-2 rounded">
-                    ${appData.systemSettings.defaultPaymentMethods.map(m => `<option ${t.paymentMethod===m?"selected":""}>${m}</option>`).join('')}
-                </select></div>
-                <div><label class="text-gray-400">Remarks</label><input type="text" id="editTxRemarks" class="w-full bg-gray-800 p-2 rounded" value="${t.remarks || ''}"></div>
-                <div class="flex gap-3 mt-4">
-                    <button onclick="confirmEditTransaction('${id}')" class="btn-neon flex-1 p-2 rounded">Update</button>
-                    <button onclick="closeAdminModal()" class="bg-gray-700 flex-1 p-2 rounded">Cancel</button>
-                </div>
-            </div>
-        </div></div>`;
-            document.body.insertAdjacentHTML('beforeend', modalHtml);
-        };
-        window.confirmEditTransaction = (id) => {
-            const customer = document.getElementById('editTxCustomer')?.value;
-            const amount = parseFloat(document.getElementById('editTxAmount')?.value);
-            const vehicle = document.getElementById('editTxVehicle')?.value;
-            const plate = document.getElementById('editTxPlate')?.value;
-            const payment = document.getElementById('editTxPayment')?.value;
-            const remarks = document.getElementById('editTxRemarks')?.value;
-            const t = appData.transactions.find(tx => tx.id === id);
-            if (!t) return;
-            if (customer) t.customer = customer;
-            if (!isNaN(amount) && amount > 0) { t.total = amount;
-                t.subtotal = amount; }
-            if (vehicle) t.vehicle = vehicle;
-            if (plate) t.plate = plate;
-            if (payment) {
-                const oldPayment = t.paymentMethod;
-                t.paymentMethod = payment;
-                if (payment === 'Credit (Utang)' && oldPayment !== 'Credit (Utang)') {
-                    t.isCredit = true;
-                    if (!appData.credits.some(c => c.transactionId === t.id)) {
-                        appData.credits.push({
-                            id: 'CR-' + new Date().getFullYear() + '-' + (appData.nextIds.credit++),
-                            customerName: t.customer,
-                            contact: '',
-                            transactionId: t.id,
-                            amount: t.total,
-                            paid: 0,
-                            balance: t.total,
-                            date: new Date(t.date).toISOString().slice(0, 10),
-                            status: 'pending'
-                        });
-                    }
-                }
-            }
-            if (remarks !== undefined) t.remarks = remarks;
-            saveToLocal();
-            updateTransactionReports(t);
-            refreshAllCommissions();
-            closeAdminModal();
-            alert("✅ Transaction updated! Commissions and reports recalculated.");
-            renderApp();
-        };
-        window.deleteTransactionAndCommission = (id) => {
-            if (!confirm("Delete this transaction? This will remove associated commissions and reports.")) return;
-            const txIndex = appData.transactions.findIndex(t => t.id === id);
-            if (txIndex === -1) return;
-            const tx = appData.transactions[txIndex];
-            appData.credits = appData.credits.filter(c => c.transactionId !== id);
-            appData.transactions.splice(txIndex, 1);
-            if (tx) {
-                addActivityLog('Transaction Deleted', `${tx.id} - ₱${tx.total.toFixed(2)}`);
-                addAuditTrail('Transaction Deleted', `${tx.id} - ₱${tx.total.toFixed(2)}`, tx.id, 'transaction');
-            }
-            recalculateAllTransactionReports();
-            refreshAllCommissions();
-            saveToLocal();
-            renderApp();
-            alert("✅ Transaction deleted and all reports updated!");
-        };
-        window.printReceiptFromTransaction = (id) => {
-            const t = appData.transactions.find(tx => tx.id === id);
-            if (t) printDualReceipts(t);
-        };
-        window.viewTransactionDetails = (id) => {
-            const t = appData.transactions.find(tx => tx.id === id);
-            if (!t) return;
-            let details = `Transaction: ${t.id}\n`;
-            details += `Date: ${new Date(t.date).toLocaleString()}\n`;
-            details += `Customer: ${t.customer}\n`;
-            details += `Vehicle: ${t.vehicle} | ${t.plate}\n`;
-            details += `Payment: ${t.paymentMethod}\n`;
-            details += `Total: ₱${t.total.toFixed(2)}\n\nItems:\n`;
-            t.items.forEach((item, i) => {
-                details +=
-                    `  ${i+1}. ${item.serviceName} (${item.variant}) x${item.quantity} = ₱${(item.price * item.quantity).toFixed(2)}\n`;
-                if (item.assignedStaff?.length) {
-                    details += `     Staff: ${item.assignedStaff.map(s => s.name).join(', ')}\n`;
-                }
-            });
-            if (t.remarks) details += `\nRemarks: ${t.remarks}`;
-            alert(details);
-        };
-        window.exportSingleTransaction = (id) => {
-            const t = appData.transactions.find(tx => tx.id === id);
-            if (!t) return;
-            const data = [{
-                receipt: t.id,
-                date: new Date(t.date).toLocaleString(),
-                customer: t.customer,
-                vehicle: t.vehicle,
-                plate: t.plate,
-                items: t.items.map(i => `${i.serviceName} (${i.variant}) x${i.quantity}`).join(', '),
-                total: `₱${t.total.toFixed(2)}`,
-                payment: t.paymentMethod,
-                staff: t.items.flatMap(i => i.assignedStaff?.map(s => s.name) || []).filter((v, i, a) => a
-                    .indexOf(v) === i).join(', ')
-            }];
-            const columns = [
-                { key: 'receipt', header: 'Receipt' },
-                { key: 'date', header: 'Date & Time' },
-                { key: 'customer', header: 'Customer' },
-                { key: 'vehicle', header: 'Vehicle' },
-                { key: 'plate', header: 'Plate' },
-                { key: 'items', header: 'Items' },
-                { key: 'total', header: 'Total' },
-                { key: 'payment', header: 'Payment' },
-                { key: 'staff', header: 'Staff' }
-            ];
-            generateExcel(data, columns, `Transaction ${id}`, `transaction_${id}`);
-        };
-
-        // ===== EXPORT FILTERED =====
-        window.exportFilteredExcel = function() {
-            const filtered = getCurrentFilteredTransactions();
-            const data = filtered.map(t => ({
-                receipt: t.id,
-                date: new Date(t.date).toLocaleString(),
-                customer: t.customer,
-                vehicle: t.vehicle,
-                plate: t.plate,
-                services: t.items.map(i => i.serviceName).join(', '),
-                total: `₱${t.total.toFixed(2)}`,
-                payment: t.paymentMethod,
-                staff: t.items.flatMap(i => i.assignedStaff?.map(s => s.name) || []).filter((v, i, a) => a.indexOf(v) ===
-                    i).join(', '),
-                commission: t.staffCommissions ? `₱${Object.values(t.staffCommissions).reduce((s, st) => s + (st.commission || 0), 0).toFixed(2)}` :
-                    '₱0.00',
-                remarks: t.remarks || ''
-            }));
-            const columns = [
-                { key: 'receipt', header: 'Receipt' },
-                { key: 'date', header: 'Date & Time' },
-                { key: 'customer', header: 'Customer' },
-                { key: 'vehicle', header: 'Vehicle' },
-                { key: 'plate', header: 'Plate' },
-                { key: 'services', header: 'Services' },
-                { key: 'total', header: 'Total' },
-                { key: 'payment', header: 'Payment' },
-                { key: 'staff', header: 'Staff' },
-                { key: 'commission', header: 'Commission' },
-                { key: 'remarks', header: 'Remarks' }
-            ];
-            const label = transactionFilter === 'daily' ? 'Today' : transactionFilter;
-            generateExcel(data, columns, `Transactions (${label})`, `transactions_${label}`);
-        };
-
-        window.exportFilteredPDF = function() {
-            const filtered = getCurrentFilteredTransactions();
-            const data = filtered.map(t => ({
-                receipt: t.id,
-                date: new Date(t.date).toLocaleString(),
-                customer: t.customer,
-                vehicle: t.vehicle,
-                services: t.items.map(i => i.serviceName).join(', '),
-                total: `₱${t.total.toFixed(2)}`,
-                payment: t.paymentMethod
-            }));
-            const columns = [
-                { key: 'receipt', header: 'Receipt' },
-                { key: 'date', header: 'Date & Time' },
-                { key: 'customer', header: 'Customer' },
-                { key: 'vehicle', header: 'Vehicle' },
-                { key: 'services', header: 'Services' },
-                { key: 'total', header: 'Total' },
-                { key: 'payment', header: 'Payment' }
-            ];
-            const label = transactionFilter === 'daily' ? 'Today' : transactionFilter;
-            generatePDF(data, columns, `Transactions (${label})`, `transactions_${label}`, appData.systemSettings
-                .companyLogo, appData.systemSettings.logoSize);
-        };
-
-        window.exportFilteredCSV = function() {
-            const filtered = getCurrentFilteredTransactions();
-            const data = filtered.map(t => ({
-                receipt: t.id,
-                date: new Date(t.date).toLocaleString(),
-                customer: t.customer,
-                vehicle: t.vehicle,
-                services: t.items.map(i => i.serviceName).join(', '),
-                total: `₱${t.total.toFixed(2)}`,
-                payment: t.paymentMethod
-            }));
-            const columns = [
-                { key: 'receipt', header: 'Receipt' },
-                { key: 'date', header: 'Date & Time' },
-                { key: 'customer', header: 'Customer' },
-                { key: 'vehicle', header: 'Vehicle' },
-                { key: 'services', header: 'Services' },
-                { key: 'total', header: 'Total' },
-                { key: 'payment', header: 'Payment' }
-            ];
-            const label = transactionFilter === 'daily' ? 'Today' : transactionFilter;
-            generateCSV(data, columns, `transactions_${label}`);
-        };
-
-        window.printFilteredTransactions = function() {
-            const printContent = document.querySelector('.card-premium').cloneNode(true);
-            const win = window.open('', '_blank');
-            const logoHtml = appData.systemSettings.companyLogo ?
-                `<div class="center"><img src="${appData.systemSettings.companyLogo}" style="max-width:100px;max-height:70px;object-fit:contain;"></div>` :
-                '';
-            const label = transactionFilter === 'daily' ? 'Today' : transactionFilter;
-            win.document.write(`<html><head><title>Transactions - ${label}</title><style>
-                body{font-family:monospace;padding:20px;background:white;color:black;}
-                .center{text-align:center;}
-                table{width:100%;border-collapse:collapse;font-size:10px;}
-                th,td{border:1px solid #ddd;padding:4px;}
-                th{background:#f0f0f0;}
-                .header{margin-bottom:20px;}
-                .no-print{display:none;}
-                .summary-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:10px;}
-                .summary-item{border:1px solid #ddd;padding:6px;text-align:center;border-radius:4px;}
-                .s-label{font-size:9px;color:#666;}
-                .s-value{font-size:14px;font-weight:bold;}
-            </style></head><body>
-                ${logoHtml}
-                <div class="header"><h2>${appData.systemSettings.companyName}</h2><p>Transactions - ${label} | ${new Date().toLocaleString()}</p></div>
-                ${printContent.innerHTML}
-            </body></html>`);
-            win.document.close();
-            win.print();
-        };
-
-        // ===== EXPORT WRAPPERS =====
-        window.exportDailyExcel = function() {
-            const today = new Date().toISOString().slice(0, 10);
-            const dailyTx = appData.transactions.filter(t => t.date.startsWith(today));
-            const data = dailyTx.map(t => ({
-                receipt: t.id,
-                date: new Date(t.date).toLocaleString(),
-                customer: t.customer,
-                vehicle: t.vehicle,
-                plate: t.plate,
-                services: t.items.map(i => i.serviceName).join(', '),
-                total: `₱${t.total.toFixed(2)}`,
-                payment: t.paymentMethod
-            }));
-            const columns = [
-                { key: 'receipt', header: 'Receipt' },
-                { key: 'date', header: 'Date & Time' },
-                { key: 'customer', header: 'Customer' },
-                { key: 'vehicle', header: 'Vehicle' },
-                { key: 'plate', header: 'Plate' },
-                { key: 'services', header: 'Services' },
-                { key: 'total', header: 'Total' },
-                { key: 'payment', header: 'Payment' }
-            ];
-            generateExcel(data, columns, 'Daily Transactions', 'daily_transactions');
-        };
-
-        window.exportDailyPDF = function() {
-            const today = new Date().toISOString().slice(0, 10);
-            const dailyTx = appData.transactions.filter(t => t.date.startsWith(today));
-            const data = dailyTx.map(t => ({
-                receipt: t.id,
-                date: new Date(t.date).toLocaleString(),
-                customer: t.customer,
-                vehicle: t.vehicle,
-                services: t.items.map(i => i.serviceName).join(', '),
-                total: `₱${t.total.toFixed(2)}`,
-                payment: t.paymentMethod
-            }));
-            const columns = [
-                { key: 'receipt', header: 'Receipt' },
-                { key: 'date', header: 'Date & Time' },
-                { key: 'customer', header: 'Customer' },
-                { key: 'vehicle', header: 'Vehicle' },
-                { key: 'services', header: 'Services' },
-                { key: 'total', header: 'Total' },
-                { key: 'payment', header: 'Payment' }
-            ];
-            generatePDF(data, columns, 'Daily Transactions Report', 'daily_transactions', appData.systemSettings
-                .companyLogo, appData.systemSettings.logoSize);
-        };
-
-        window.exportDailyCSV = function() {
-            const today = new Date().toISOString().slice(0, 10);
-            const dailyTx = appData.transactions.filter(t => t.date.startsWith(today));
-            const data = dailyTx.map(t => ({
-                receipt: t.id,
-                date: new Date(t.date).toLocaleString(),
-                customer: t.customer,
-                vehicle: t.vehicle,
-                services: t.items.map(i => i.serviceName).join(', '),
-                total: `₱${t.total.toFixed(2)}`,
-                payment: t.paymentMethod
-            }));
-            const columns = [
-                { key: 'receipt', header: 'Receipt' },
-                { key: 'date', header: 'Date & Time' },
-                { key: 'customer', header: 'Customer' },
-                { key: 'vehicle', header: 'Vehicle' },
-                { key: 'services', header: 'Services' },
-                { key: 'total', header: 'Total' },
-                { key: 'payment', header: 'Payment' }
-            ];
-            generateCSV(data, columns, 'daily_transactions');
-        };
-
-        window.printDailyTransactions = function() {
-            const printContent = document.querySelector('.card-premium').cloneNode(true);
-            const win = window.open('', '_blank');
-            const logoHtml = appData.systemSettings.companyLogo ?
-                `<div class="center"><img src="${appData.systemSettings.companyLogo}" style="max-width:100px;max-height:70px;object-fit:contain;"></div>` :
-                '';
-            win.document.write(`<html><head><title>Daily Transactions</title><style>
-                body{font-family:monospace;padding:20px;background:white;color:black;}
-                .center{text-align:center;}
-                table{width:100%;border-collapse:collapse;font-size:10px;}
-                th,td{border:1px solid #ddd;padding:4px;}
-                th{background:#f0f0f0;}
-                .header{margin-bottom:20px;}
-                .no-print{display:none;}
-            </style></head><body>
-                ${logoHtml}
-                <div class="header"><h2>${appData.systemSettings.companyName}</h2><p>Daily Transactions - ${new Date().toISOString().slice(0,10)}</p></div>
-                ${printContent.innerHTML}
-            </body></html>`);
-            win.document.close();
-            win.print();
-        };
-
-        window.exportWeeklyCommissionExcel = function() {
-            recalculateAllCommissions();
-            const weeklyData = getWeeklyCommission();
-            const staffData = weeklyData.staff || {};
-            const data = Object.values(staffData).map(s => ({
-                name: s.name,
-                position: s.position,
-                tier: `${s.tier}%`,
-                jobs: s.jobs || 0,
-                sunday: `₱${(s.daily?.Sunday || 0).toFixed(2)}`,
-                monday: `₱${(s.daily?.Monday || 0).toFixed(2)}`,
-                tuesday: `₱${(s.daily?.Tuesday || 0).toFixed(2)}`,
-                wednesday: `₱${(s.daily?.Wednesday || 0).toFixed(2)}`,
-                thursday: `₱${(s.daily?.Thursday || 0).toFixed(2)}`,
-                friday: `₱${(s.daily?.Friday || 0).toFixed(2)}`,
-                saturday: `₱${(s.daily?.Saturday || 0).toFixed(2)}`,
-                part1: `₱${((s.daily?.Sunday || 0) + (s.daily?.Monday || 0) + (s.daily?.Tuesday || 0)).toFixed(2)}`,
-                part2: `₱${((s.daily?.Wednesday || 0) + (s.daily?.Thursday || 0) + (s.daily?.Friday || 0) + (s.daily?.Saturday || 0)).toFixed(2)}`,
-                total: `₱${(s.commission||0).toFixed(2)}`
-            }));
-            const columns = [
-                { key: 'name', header: 'Staff Name' },
-                { key: 'position', header: 'Position' },
-                { key: 'tier', header: 'Tier' },
-                { key: 'jobs', header: 'Jobs Count' },
-                { key: 'sunday', header: 'Sunday' },
-                { key: 'monday', header: 'Monday' },
-                { key: 'tuesday', header: 'Tuesday' },
-                { key: 'wednesday', header: 'Wednesday' },
-                { key: 'thursday', header: 'Thursday' },
-                { key: 'friday', header: 'Friday' },
-                { key: 'saturday', header: 'Saturday' },
-                { key: 'part1', header: 'Sun-Tue' },
-                { key: 'part2', header: 'Wed-Sat' },
-                { key: 'total', header: 'Grand Total' }
-            ];
-            generateExcel(data, columns, 'Weekly Commission', 'weekly_commission');
-        };
-
-        window.exportWeeklyCommissionPDF = function() {
-            recalculateAllCommissions();
-            const weeklyData = getWeeklyCommission();
-            const staffData = weeklyData.staff || {};
-            const data = Object.values(staffData).map(s => ({
-                name: s.name,
-                position: s.position,
-                tier: `${s.tier}%`,
-                jobs: s.jobs || 0,
-                sunday: `₱${(s.daily?.Sunday || 0).toFixed(2)}`,
-                monday: `₱${(s.daily?.Monday || 0).toFixed(2)}`,
-                tuesday: `₱${(s.daily?.Tuesday || 0).toFixed(2)}`,
-                wednesday: `₱${(s.daily?.Wednesday || 0).toFixed(2)}`,
-                thursday: `₱${(s.daily?.Thursday || 0).toFixed(2)}`,
-                friday: `₱${(s.daily?.Friday || 0).toFixed(2)}`,
-                saturday: `₱${(s.daily?.Saturday || 0).toFixed(2)}`,
-                part1: `₱${((s.daily?.Sunday || 0) + (s.daily?.Monday || 0) + (s.daily?.Tuesday || 0)).toFixed(2)}`,
-                part2: `₱${((s.daily?.Wednesday || 0) + (s.daily?.Thursday || 0) + (s.daily?.Friday || 0) + (s.daily?.Saturday || 0)).toFixed(2)}`,
-                total: `₱${(s.commission||0).toFixed(2)}`
-            }));
-            const columns = [
-                { key: 'name', header: 'Staff Name' },
-                { key: 'position', header: 'Position' },
-                { key: 'tier', header: 'Tier' },
-                { key: 'jobs', header: 'Jobs Count' },
-                { key: 'sunday', header: 'Sunday' },
-                { key: 'monday', header: 'Monday' },
-                { key: 'tuesday', header: 'Tuesday' },
-                { key: 'wednesday', header: 'Wednesday' },
-                { key: 'thursday', header: 'Thursday' },
-                { key: 'friday', header: 'Friday' },
-                { key: 'saturday', header: 'Saturday' },
-                { key: 'part1', header: 'Sun-Tue' },
-                { key: 'part2', header: 'Wed-Sat' },
-                { key: 'total', header: 'Grand Total' }
-            ];
-            generatePDF(data, columns, 'Weekly Commission Report', 'weekly_commission', appData.systemSettings
-                .companyLogo, appData.systemSettings.logoSize);
-        };
-
-        window.exportWeeklyCommissionCSV = function() {
-            recalculateAllCommissions();
-            const weeklyData = getWeeklyCommission();
-            const staffData = weeklyData.staff || {};
-            const data = Object.values(staffData).map(s => ({
-                name: s.name,
-                position: s.position,
-                tier: `${s.tier}%`,
-                jobs: s.jobs || 0,
-                sunday: `₱${(s.daily?.Sunday || 0).toFixed(2)}`,
-                monday: `₱${(s.daily?.Monday || 0).toFixed(2)}`,
-                tuesday: `₱${(s.daily?.Tuesday || 0).toFixed(2)}`,
-                wednesday: `₱${(s.daily?.Wednesday || 0).toFixed(2)}`,
-                thursday: `₱${(s.daily?.Thursday || 0).toFixed(2)}`,
-                friday: `₱${(s.daily?.Friday || 0).toFixed(2)}`,
-                saturday: `₱${(s.daily?.Saturday || 0).toFixed(2)}`,
-                part1: `₱${((s.daily?.Sunday || 0) + (s.daily?.Monday || 0) + (s.daily?.Tuesday || 0)).toFixed(2)}`,
-                part2: `₱${((s.daily?.Wednesday || 0) + (s.daily?.Thursday || 0) + (s.daily?.Friday || 0) + (s.daily?.Saturday || 0)).toFixed(2)}`,
-                total: `₱${(s.commission||0).toFixed(2)}`
-            }));
-            const columns = [
-                { key: 'name', header: 'Staff Name' },
-                { key: 'position', header: 'Position' },
-                { key: 'tier', header: 'Tier' },
-                { key: 'jobs', header: 'Jobs Count' },
-                { key: 'sunday', header: 'Sunday' },
-                { key: 'monday', header: 'Monday' },
-                { key: 'tuesday', header: 'Tuesday' },
-                { key: 'wednesday', header: 'Wednesday' },
-                { key: 'thursday', header: 'Thursday' },
-                { key: 'friday', header: 'Friday' },
-                { key: 'saturday', header: 'Saturday' },
-                { key: 'part1', header: 'Sun-Tue' },
-                { key: 'part2', header: 'Wed-Sat' },
-                { key: 'total', header: 'Grand Total' }
-            ];
-            generateCSV(data, columns, 'weekly_commission');
-        };
-
-        window.printWeeklyCommission = function() {
-            const printContent = document.querySelector('.card-premium').cloneNode(true);
-            const win = window.open('', '_blank');
-            const logoHtml = appData.systemSettings.companyLogo ?
-                `<div class="center"><img src="${appData.systemSettings.companyLogo}" style="max-width:100px;max-height:70px;object-fit:contain;"></div>` :
-                '';
-            win.document.write(`<html><head><title>Weekly Commission</title><style>
-                body{font-family:monospace;padding:20px;background:white;color:black;}
-                .center{text-align:center;}
-                table{width:100%;border-collapse:collapse;font-size:10px;}
-                th,td{border:1px solid #ddd;padding:4px;text-align:center;}
-                th{background:#f0f0f0;}
-                .header{margin-bottom:20px;}
-                .no-print{display:none;}
-            </style></head><body>
-                ${logoHtml}
-                <div class="header"><h2>${appData.systemSettings.companyName}</h2><p>Weekly Commission Report</p></div>
-                ${printContent.innerHTML}
-            </body></html>`);
-            win.document.close();
-            win.print();
-        };
-
-        window.exportCustomers = function() {
-            const data = appData.customers.map(c => ({
-                name: c.name,
-                mobile: c.mobile || '—',
-                vehicle: c.vehicleInfo || '—',
-                plate: c.plate || '—',
-                points: c.loyaltyPoints || 0
-            }));
-            const columns = [
-                { key: 'name', header: 'Name' },
-                { key: 'mobile', header: 'Contact' },
-                { key: 'vehicle', header: 'Vehicle' },
-                { key: 'plate', header: 'Plate' },
-                { key: 'points', header: 'Loyalty Points' }
-            ];
-            generateExcel(data, columns, 'Customers', 'customers');
-            generatePDF(data, columns, 'Customer Database', 'customers', appData.systemSettings.companyLogo,
-                appData.systemSettings.logoSize);
-            generateCSV(data, columns, 'customers');
-        };
-
-        window.exportCustomerPDF = function() {
-            const data = appData.customers.map(c => ({
-                name: c.name,
-                mobile: c.mobile || '—',
-                vehicle: c.vehicleInfo || '—',
-                plate: c.plate || '—',
-                points: c.loyaltyPoints || 0
-            }));
-            const columns = [
-                { key: 'name', header: 'Name' },
-                { key: 'mobile', header: 'Contact' },
-                { key: 'vehicle', header: 'Vehicle' },
-                { key: 'plate', header: 'Plate' },
-                { key: 'points', header: 'Loyalty Points' }
-            ];
-            generatePDF(data, columns, 'Customer Database', 'customers', appData.systemSettings.companyLogo,
-                appData.systemSettings.logoSize);
-        };
-
-        window.printCustomers = function() {
-            const printContent = document.querySelector('.card-premium').cloneNode(true);
-            const win = window.open('', '_blank');
-            const logoHtml = appData.systemSettings.companyLogo ?
-                `<div class="center"><img src="${appData.systemSettings.companyLogo}" style="max-width:100px;max-height:70px;object-fit:contain;"></div>` :
-                '';
-            win.document.write(`<html><head><title>Customers</title><style>
-                body{font-family:monospace;padding:20px;background:white;color:black;}
-                .center{text-align:center;}
-                table{width:100%;border-collapse:collapse;font-size:10px;}
-                th,td{border:1px solid #ddd;padding:4px;}
-                th{background:#f0f0f0;}
-                .header{margin-bottom:20px;}
-                .no-print{display:none;}
-            </style></head><body>
-                ${logoHtml}
-                <div class="header"><h2>${appData.systemSettings.companyName}</h2><p>Customer Database - ${new Date().toISOString().slice(0,10)}</p></div>
-                ${printContent.innerHTML}
-            </body></html>`);
-            win.document.close();
-            win.print();
-        };
-
-        window.exportCommissionReport = function() {
-            recalculateAllCommissions();
-            const data = appData.staff.map(s => ({
-                name: s.name,
-                position: s.position,
-                tier: `${s.commissionTier}%`,
-                jobs: s.jobsCompleted || 0,
-                sales: `₱${(s.salesGenerated || 0).toFixed(2)}`,
-                commission: `₱${(s.totalCommission || 0).toFixed(2)}`
-            }));
-            const columns = [
-                { key: 'name', header: 'Staff Name' },
-                { key: 'position', header: 'Position' },
-                { key: 'tier', header: 'Tier' },
-                { key: 'jobs', header: 'Jobs' },
-                { key: 'sales', header: 'Sales' },
-                { key: 'commission', header: 'Commission' }
-            ];
-            generateExcel(data, columns, 'Commission Report', 'commission_report');
-            generatePDF(data, columns, 'Commission Report', 'commission_report', appData.systemSettings.companyLogo,
-                appData.systemSettings.logoSize);
-            generateCSV(data, columns, 'commission_report');
-        };
-
-        window.exportCommissionPDF = function() {
-            recalculateAllCommissions();
-            const data = appData.staff.map(s => ({
-                name: s.name,
-                position: s.position,
-                tier: `${s.commissionTier}%`,
-                jobs: s.jobsCompleted || 0,
-                sales: `₱${(s.salesGenerated || 0).toFixed(2)}`,
-                commission: `₱${(s.totalCommission || 0).toFixed(2)}`
-            }));
-            const columns = [
-                { key: 'name', header: 'Staff Name' },
-                { key: 'position', header: 'Position' },
-                { key: 'tier', header: 'Tier' },
-                { key: 'jobs', header: 'Jobs' },
-                { key: 'sales', header: 'Sales' },
-                { key: 'commission', header: 'Commission' }
-            ];
-            generatePDF(data, columns, 'Commission Report', 'commission_report', appData.systemSettings.companyLogo,
-                appData.systemSettings.logoSize);
-        };
-
-        window.exportStaffCSV = () => {
-            let csv =
-                "Staff Name,Position,Commission Tier,Jobs Completed,Sales Generated,Total Commission,Status\n";
-            appData.staff.forEach(s => {
-                csv +=
-                    `"${s.name}","${s.position}","${s.commissionTier}%",${s.jobsCompleted || 0},${(s.salesGenerated || 0).toFixed(2)},${(s.totalCommission || 0).toFixed(2)},"${s.isActive ? 'Active' : 'Inactive'}"\n`;
-            });
-            const totalCommission = appData.staff.reduce((sum, s) => sum + (s.totalCommission || 0), 0);
-            const totalSales = appData.staff.reduce((sum, s) => sum + (s.salesGenerated || 0), 0);
-            const totalJobs = appData.staff.reduce((sum, s) => sum + (s.jobsCompleted || 0), 0);
-            csv += `\n"TOTALS","","",${totalJobs},${totalSales.toFixed(2)},${totalCommission.toFixed(2)},""\n`;
-            const blob = new Blob([csv], { type: "text/csv" });
-            const a = document.createElement("a");
-            a.href = URL.createObjectURL(blob);
-            a.download = `staff_report_${new Date().toISOString().slice(0, 10)}.csv`;
-            a.click();
-            alert("✅ Staff report exported as CSV!");
-        };
-
-        window.exportOpenServices = function() {
-            const data = appData.openServices.filter(s => s.status === 'pending' || s.status === 'in-progress').map(
-            s => ({
-                id: s.id,
-                customer: s.customer,
-                vehicle: s.vehicle,
-                plate: s.plate,
-                total: `₱${s.total.toFixed(2)}`,
-                status: s.status,
-                createdAt: new Date(s.createdAt).toLocaleString()
-            }));
-            const columns = [
-                { key: 'id', header: 'Service ID' },
-                { key: 'customer', header: 'Customer' },
-                { key: 'vehicle', header: 'Vehicle' },
-                { key: 'plate', header: 'Plate' },
-                { key: 'total', header: 'Total' },
-                { key: 'status', header: 'Status' },
-                { key: 'createdAt', header: 'Date Created' }
-            ];
-            generateExcel(data, columns, 'Open Services', 'open_services');
-            generatePDF(data, columns, 'Open Services Report', 'open_services', appData.systemSettings.companyLogo,
-                appData.systemSettings.logoSize);
-            generateCSV(data, columns, 'open_services');
-        };
-
-        window.printOpenServices = function() {
-            const printContent = document.querySelector('.card-premium').cloneNode(true);
-            const win = window.open('', '_blank');
-            const logoHtml = appData.systemSettings.companyLogo ?
-                `<div class="center"><img src="${appData.systemSettings.companyLogo}" style="max-width:100px;max-height:70px;object-fit:contain;"></div>` :
-                '';
-            win.document.write(`<html><head><title>Open Services</title><style>
-                body{font-family:monospace;padding:20px;background:white;color:black;}
-                .center{text-align:center;}
-                table{width:100%;border-collapse:collapse;font-size:10px;}
-                th,td{border:1px solid #ddd;padding:4px;}
-                th{background:#f0f0f0;}
-                .header{margin-bottom:20px;}
-                .no-print{display:none;}
-            </style></head><body>
-                ${logoHtml}
-                <div class="header"><h2>${appData.systemSettings.companyName}</h2><p>Open Services Report - ${new Date().toISOString().slice(0,10)}</p></div>
-                ${printContent.innerHTML}
-            </body></html>`);
-            win.document.close();
-            win.print();
-        };
-
-        // ===== PRINT FUNCTIONS =====
-        window.printCommissionReport = function() {
-            const printContent = document.querySelector('.card-premium').cloneNode(true);
-            const win = window.open('', '_blank');
-            const logoHtml = appData.systemSettings.companyLogo ?
-                `<div class="center"><img src="${appData.systemSettings.companyLogo}" style="max-width:100px;max-height:70px;object-fit:contain;"></div>` :
-                '';
-            win.document.write(`<html><head><title>Commission Report</title><style>
-                body{font-family:monospace;padding:20px;background:white;color:black;}
-                .center{text-align:center;}
-                table{width:100%;border-collapse:collapse;font-size:10px;}
-                th,td{border:1px solid #ddd;padding:4px;}
-                th{background:#f0f0f0;}
-                .header{margin-bottom:20px;}
-                .no-print{display:none;}
-            </style></head><body>
-                ${logoHtml}
-                <div class="header"><h2>${appData.systemSettings.companyName}</h2><p>Commission Report - ${new Date().toLocaleDateString()}</p></div>
-                ${printContent.innerHTML}
-            </body></html>`);
-            win.document.close();
-            win.print();
-        };
-
-        window.printCommissionSummary = function() {
-            const printContent = document.querySelector('.card-premium').cloneNode(true);
-            const win = window.open('', '_blank');
-            const logoHtml = appData.systemSettings.companyLogo ?
-                `<div class="center"><img src="${appData.systemSettings.companyLogo}" style="max-width:100px;max-height:70px;object-fit:contain;"></div>` :
-                '';
-            win.document.write(`<html><head><title>Commission Summary</title><style>
-                body{font-family:monospace;padding:20px;background:white;color:black;}
-                .center{text-align:center;}
-                table{width:100%;border-collapse:collapse;font-size:10px;}
-                th,td{border:1px solid #ddd;padding:4px;}
-                th{background:#f0f0f0;}
-                .header{margin-bottom:20px;}
-                .no-print{display:none;}
-                .stat-number{font-size:22px;font-weight:bold;}
-                .stat-label{font-size:10px;color:#666;text-transform:uppercase;}
-            </style></head><body>
-                ${logoHtml}
-                <div class="header"><h2>${appData.systemSettings.companyName}</h2><p>Commission Summary - ${new Date().toLocaleDateString()}</p></div>
-                ${printContent.innerHTML}
-            </body></html>`);
-            win.document.close();
-            win.print();
-        };
-
-        window.printStaffDashboard = function() {
-            const printContent = document.querySelector('.card-premium').cloneNode(true);
-            const win = window.open('', '_blank');
-            const logoHtml = appData.systemSettings.companyLogo ?
-                `<div class="center"><img src="${appData.systemSettings.companyLogo}" style="max-width:100px;max-height:70px;object-fit:contain;"></div>` :
-                '';
-            win.document.write(`<html><head><title>Staff Dashboard</title><style>
-                body{font-family:monospace;padding:20px;background:white;color:black;}
-                .center{text-align:center;}
-                table{width:100%;border-collapse:collapse;font-size:10px;}
-                th,td{border:1px solid #ddd;padding:4px;}
-                th{background:#f0f0f0;}
-                .header{margin-bottom:20px;}
-                .no-print{display:none;}
-            </style></head><body>
-                ${logoHtml}
-                <div class="header"><h2>${appData.systemSettings.companyName}</h2><p>Staff Dashboard - ${new Date().toLocaleDateString()}</p></div>
-                ${printContent.innerHTML}
-            </body></html>`);
-            win.document.close();
-            win.print();
-        };
-
-        window.printReportSummary = function() {
-            const printContent = document.querySelector('.card-premium').cloneNode(true);
-            const win = window.open('', '_blank');
-            const logoHtml = appData.systemSettings.companyLogo ?
-                `<div class="center"><img src="${appData.systemSettings.companyLogo}" style="max-width:100px;max-height:70px;object-fit:contain;"></div>` :
-                '';
-            win.document.write(`<html><head><title>Report Summary</title><style>
-                body{font-family:monospace;padding:20px;background:white;color:black;}
-                .center{text-align:center;}
-                table{width:100%;border-collapse:collapse;font-size:10px;}
-                th,td{border:1px solid #ddd;padding:4px;}
-                th{background:#f0f0f0;}
-                .header{margin-bottom:20px;}
-                .no-print{display:none;}
-                .stat-number{font-size:22px;font-weight:bold;}
-                .stat-label{font-size:10px;color:#666;text-transform:uppercase;}
-            </style></head><body>
-                ${logoHtml}
-                <div class="header"><h2>${appData.systemSettings.companyName}</h2><p>Report Summary - ${new Date().toLocaleDateString()}</p></div>
-                ${printContent.innerHTML}
-            </body></html>`);
-            win.document.close();
-            win.print();
-        };
-
-        window.exportReportSummaryExcel = () => {
-            const wb = XLSX.utils.book_new();
-            const today = new Date();
-            let data = [
-                [`${appData.systemSettings.companyName} - Report Summary`],
-                [`Generated: ${new Date().toLocaleString()}`],
-                [`Period: ${reportPeriod.toUpperCase()}`],
-                [],
-                ['Summary'],
-                ['Metric', 'Amount'],
-                ['Total Sales', appData.transactions.reduce((s, t) => s + t.total, 0)],
-                ['Total Expenses', appData.expenses.reduce((s, e) => s + e.amount, 0)],
-                ['Net Profit', appData.transactions.reduce((s, t) => s + t.total, 0) - appData.expenses.reduce((s,
-                    e) => s + e.amount, 0)],
-                ['Total Commission', appData.staff.reduce((sum, s) => sum + (s.totalCommission || 0), 0)],
-                [],
-                ['Daily Breakdown'],
-                ['Date', 'Sales', 'Expenses', 'Commission']
-            ];
-            for (let i = 29; i >= 0; i--) {
-                const d = new Date(today);
-                d.setDate(today.getDate() - i);
-                const dateStr = d.toISOString().slice(0, 10);
-                const daySales = appData.transactions.filter(t => t.date.startsWith(dateStr)).reduce((s, t) => s + t
-                    .total, 0);
-                const dayExpenses = appData.expenses.filter(e => e.date === dateStr).reduce((s, e) => s + e.amount,
-                0);
-                const dayCommission = appData.transactions.filter(t => t.date.startsWith(dateStr) && t
-                    .staffCommissions)
-                    .reduce((sum, t) => sum + Object.values(t.staffCommissions).reduce((s, st) => s + (st
-                        .commission || 0), 0), 0);
-                data.push([d.toLocaleDateString(), daySales, dayExpenses, dayCommission]);
-            }
-            const ws = XLSX.utils.aoa_to_sheet(data);
-            ws['!cols'] = data[0].map(() => ({ wch: 20 }));
-            XLSX.utils.book_append_sheet(wb, ws, 'Report Summary');
-            XLSX.writeFile(wb, `report_summary_${new Date().toISOString().slice(0, 10)}.xlsx`);
-            alert('✅ Report Summary exported to Excel!');
-        };
-
-        window.exportReportSummaryPDF = function() {
-            const today = new Date();
-            const currentMonth = today.getMonth();
-            const currentYear = today.getFullYear();
-            const todayStr = today.toISOString().slice(0, 10);
-            const dailyTx = appData.transactions.filter(t => t.date.startsWith(todayStr));
-            const dailySales = dailyTx.reduce((s, t) => s + t.total, 0);
-            const dailyExpenses = appData.expenses.filter(e => e.date === todayStr).reduce((s, e) => s + e.amount, 0);
-            const weekStart = getCurrentWeekStart();
-            const weekStartStr = weekStart.toISOString().slice(0, 10);
-            const weekEndStr = getCurrentWeekEnd().toISOString().slice(0, 10);
-            const weekTx = appData.transactions.filter(t => t.date >= weekStartStr && t.date <= weekEndStr);
-            const weeklySales = weekTx.reduce((s, t) => s + t.total, 0);
-            const weeklyExpenses = appData.expenses.filter(e => e.date >= weekStartStr && e.date <= weekEndStr).reduce((s,
-                e) => s + e.amount, 0);
-            const monthTx = appData.transactions.filter(t => new Date(t.date).getMonth() === currentMonth && new Date(t
-                .date).getFullYear() === currentYear);
-            const monthlySales = monthTx.reduce((s, t) => s + t.total, 0);
-            const monthlyExpenses = appData.expenses.filter(e => new Date(e.date).getMonth() === currentMonth && new Date(
-                e.date).getFullYear() === currentYear).reduce((s, e) => s + e.amount, 0);
-            const yearTx = appData.transactions.filter(t => new Date(t.date).getFullYear() === currentYear);
-            const yearlySales = yearTx.reduce((s, t) => s + t.total, 0);
-            const yearlyExpenses = appData.expenses.filter(e => new Date(e.date).getFullYear() === currentYear).reduce(
-                (s, e) => s + e.amount, 0);
-            const data = [
-                { metric: 'Daily Sales', amount: `₱${dailySales.toFixed(2)}` },
-                { metric: 'Daily Expenses', amount: `₱${dailyExpenses.toFixed(2)}` },
-                { metric: 'Weekly Sales', amount: `₱${weeklySales.toFixed(2)}` },
-                { metric: 'Weekly Expenses', amount: `₱${weeklyExpenses.toFixed(2)}` },
-                { metric: 'Monthly Sales', amount: `₱${monthlySales.toFixed(2)}` },
-                { metric: 'Monthly Expenses', amount: `₱${monthlyExpenses.toFixed(2)}` },
-                { metric: 'Yearly Sales', amount: `₱${yearlySales.toFixed(2)}` },
-                { metric: 'Yearly Expenses', amount: `₱${yearlyExpenses.toFixed(2)}` }
-            ];
-            const columns = [
-                { key: 'metric', header: 'Metric' },
-                { key: 'amount', header: 'Amount' }
-            ];
-            generatePDF(data, columns, 'Report Summary', 'report_summary', appData.systemSettings.companyLogo,
-                appData.systemSettings.logoSize);
-        };
-
-        // ===== PRINT ENTIRE DASHBOARD =====
-        window.printEntireDashboard = function() {
-            const printWindow = window.open('', '_blank');
-            if (!printWindow) {
-                alert("Please allow pop-ups to print the dashboard.");
-                return;
-            }
-
-            const dashboardContent = document.querySelector('.dashboard-grid')?.parentElement;
-            if (!dashboardContent) {
-                alert("Dashboard content not found.");
-                return;
-            }
-
-            const logoHtml = appData.systemSettings.companyLogo ?
-                `<div class="center"><img src="${appData.systemSettings.companyLogo}" style="max-width:120px;max-height:80px;object-fit:contain;"></div>` :
-                '';
-
-            const cloneContent = dashboardContent.cloneNode(true);
-
-            const removeSelectors = [
-                '.action-btn', '.pagination-btn', '.quick-action-btn', '.chart-period-btn',
-                '.filter-panel', '.search-input', '.nav-btn', '.logout-btn', '.mobile-nav-toggle',
-                '.admin-sidebar', '.no-print', '.chart-period-selector', '.quick-actions-grid',
-                '.activity-feed', '.dashboard-stat-card .stat-icon', '.editable-field'
-            ];
-            removeSelectors.forEach(sel => {
-                cloneContent.querySelectorAll(sel).forEach(el => el.remove());
-            });
-
-            const printBtn = cloneContent.querySelector('[onclick="printEntireDashboard()"]');
-            if (printBtn) printBtn.remove();
-
-            printWindow.document.write(`
-                <html>
-                <head>
-                    <title>Dashboard - ${appData.systemSettings.companyName}</title>
-                    <style>
-                        body { font-family: 'Inter', sans-serif; padding: 20px; background: white; color: black; }
-                        .center { text-align: center; }
-                        .grid { display: grid; gap: 16px; }
-                        .grid-cols-2 { grid-template-columns: 1fr 1fr; }
-                        .grid-cols-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
-                        .card { border: 1px solid #ddd; padding: 16px; margin-bottom: 16px; border-radius: 8px; background: white; }
-                        .stat-number { font-size: 24px; font-weight: bold; }
-                        .stat-label { font-size: 12px; color: #666; text-transform: uppercase; }
-                        .table-container { max-height: none !important; overflow: visible !important; }
-                        table { width: 100%; border-collapse: collapse; }
-                        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-                        th { background: #f0f0f0; }
-                        .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-                        .quick-stat-card { border: 1px solid #eee; padding: 12px; text-align: center; border-radius: 8px; background: #fafafa; }
-                        .quick-stat-card .value { font-size: 22px; font-weight: 700; }
-                        .quick-stat-card .label { font-size: 11px; color: #888; text-transform: uppercase; }
-                        .card-premium { border: 1px solid #ddd; padding: 20px; border-radius: 12px; background: white; margin-bottom: 16px; }
-                        .commission-live-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; background: #f0f0f0; }
-                        .bg-gray-800\\/30 { background: #f5f5f5; }
-                        .border-purple-500\\/20 { border-color: #ddd; }
-                        .text-gray-400 { color: #666; }
-                        .text-gray-500 { color: #888; }
-                        .text-cyan-400 { color: #00b4d8; }
-                        .text-green-400 { color: #28a745; }
-                        .text-yellow-400 { color: #ffc107; }
-                        .text-red-400 { color: #dc3545; }
-                        .text-blue-400 { color: #007bff; }
-                        .text-purple-400 { color: #6f42c1; }
-                        .text-pink-400 { color: #e83e8c; }
-                        .text-orange-400 { color: #fd7e14; }
-                        .bg-gray-800\\/50 { background: #f5f5f5; }
-                        .border-b { border-bottom: 1px solid #eee; }
-                        .py-1 { padding-top: 4px; padding-bottom: 4px; }
-                        .mb-4 { margin-bottom: 16px; }
-                        .mb-6 { margin-bottom: 24px; }
-                        .mt-4 { margin-top: 16px; }
-                        .mt-3 { margin-top: 12px; }
-                        .flex { display: flex; }
-                        .justify-between { justify-content: space-between; }
-                        .items-center { align-items: center; }
-                        .gap-2 { gap: 8px; }
-                        .gap-3 { gap: 12px; }
-                        .flex-wrap { flex-wrap: wrap; }
-                        .p-3 { padding: 12px; }
-                        .p-5 { padding: 20px; }
-                        .rounded-lg { border-radius: 8px; }
-                        .text-sm { font-size: 14px; }
-                        .text-xs { font-size: 12px; }
-                        .text-2xl { font-size: 24px; font-weight: bold; }
-                        .text-lg { font-size: 18px; font-weight: bold; }
-                        .font-bold { font-weight: bold; }
-                        .text-center { text-align: center; }
-                        .max-h-32 { max-height: 128px; overflow-y: auto; }
-                        .max-h-52 { max-height: 208px; overflow-y: auto; }
-                        .activity-item { padding: 8px 12px; border-bottom: 1px solid #eee; display: flex; gap: 10px; }
-                        .activity-item .time { color: #888; font-size: 11px; min-width: 60px; }
-                        @media print { body { margin: 0; padding: 10px; } .no-print { display: none; } }
-                        .chart-container { height: 280px; width: 100%; }
-                        canvas { max-width: 100%; }
-                    </style>
-                </head>
-                <body>
-                    ${logoHtml}
-                    <h2>${appData.systemSettings.companyName} - Dashboard</h2>
-                    <p>Generated: ${new Date().toLocaleString()}</p>
-                    <hr/>
-                    ${cloneContent.innerHTML}
-                    <script>
-                        document.querySelectorAll('canvas').forEach(c => {
-                            c.style.display = 'block';
-                            c.style.maxWidth = '100%';
-                        });
-                        document.querySelectorAll('.action-btn, .pagination-btn, .quick-action-btn, .chart-period-btn, .filter-panel, .search-input, .nav-btn, .logout-btn, .mobile-nav-toggle, .admin-sidebar, .no-print, [onclick]').forEach(el => {
-                            el.removeAttribute('onclick');
-                            el.style.cursor = 'default';
-                        });
-                        window.onload = function() {
-                            window.print();
-                            window.onafterprint = function() { window.close(); };
-                        };
-                    <\/script>
-                </body>
-                </html>
-            `);
-            printWindow.document.close();
-        };
-
-        // ===== UTILITY FUNCTIONS =====
-        window.updateDailySearch = (value) => {
-            searchQuery = value;
-            currentPage = 1;
-            renderApp();
-        };
-        window.updateDateRange = () => {
-            dateRangeStart = document.getElementById('dateStartInput')?.value || '';
-            dateRangeEnd = document.getElementById('dateEndInput')?.value || '';
-            currentPage = 1;
-            renderApp();
-        };
-        window.setTransactionFilter = (filter) => {
-            transactionFilter = filter;
-            renderApp();
-        };
-        window.setReportPeriod = (period) => {
-            reportPeriod = period;
-            renderApp();
-        };
-        window.updateReceiptSize = (size) => {
-            appData.systemSettings.receiptSize = size;
-            saveToLocal();
-            renderApp();
-            alert(`✅ Receipt size updated to ${size}`);
-        };
-        window.updateShowVAT = (checked) => {
-            appData.systemSettings.showVAT = checked;
-            saveToLocal();
-            renderApp();
-            alert(`✅ VAT display ${checked ? 'enabled' : 'disabled'}`);
-        };
-        window.editPaymentMethods = () => {
-            const current = appData.systemSettings.defaultPaymentMethods.join(', ');
-            const newMethods = prompt("Edit payment methods (comma separated):", current);
-            if (newMethods) {
-                appData.systemSettings.defaultPaymentMethods = newMethods.split(',').map(m => m.trim()).filter(m => m);
-                saveToLocal();
-                renderApp();
-            }
-        };
-        window.uploadLogo = () => {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = 'image/*';
-            input.onchange = function(e) {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = function(event) {
-                        appData.systemSettings.companyLogo = event.target.result;
-                        saveToLocal();
-                        const container = document.getElementById('headerLogoContainer');
-                        if (container) {
-                            container.innerHTML =
-                                `<img src="${appData.systemSettings.companyLogo}" alt="Company Logo" class="w-full h-full object-contain">`;
-                        }
-                        renderApp();
-                        alert('Logo uploaded successfully!');
-                    };
-                    reader.readAsDataURL(file);
-                }
-            };
-            input.click();
-        };
-        window.removeLogo = function() {
-            if (confirm('Remove company logo?')) {
-                appData.systemSettings.companyLogo = null;
-                saveToLocal();
-                const container = document.getElementById('headerLogoContainer');
-                if (container) {
-                    container.innerHTML =
-                        `<div class="w-full h-full flex items-center justify-center text-cyan-400 font-bold text-lg border border-cyan-400/30 rounded-lg bg-gray-900">CS</div>`;
-                }
-                renderApp();
-                alert('Logo removed.');
-            }
-        };
-        window.uploadAppIcon = () => {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = 'image/*';
-            input.onchange = function(e) {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = function(event) {
-                        appData.systemSettings.appIcon = event.target.result;
-                        saveToLocal();
-                        renderApp();
-                        alert('App icon uploaded successfully!');
-                    };
-                    reader.readAsDataURL(file);
-                }
-            };
-            input.click();
-        };
-        window.removeAppIcon = function() {
-            if (confirm('Remove app icon?')) {
-                appData.systemSettings.appIcon = null;
-                saveToLocal();
-                renderApp();
-                alert('App icon removed.');
-            }
-        };
-        window.updateLogoSize = () => {
-            const val = parseInt(document.getElementById('logoSizeInput')?.value);
-            if (val && val > 0) {
-                appData.systemSettings.logoSize = val;
-                saveToLocal();
-                renderApp();
-                alert(`✅ Logo size updated to ${val}px`);
-            }
-        };
-        window.editSetting = (key) => {
-            const val = prompt(`Edit ${key}:`, appData.systemSettings[key]);
-            if (val !== null) { appData.systemSettings[key] = val;
-                saveToLocal();
-                renderApp(); }
-        };
-        window.editUILabel = (key) => {
-            if (!appData.systemSettings.uiLabels) appData.systemSettings.uiLabels = {};
-            const val = prompt(`Edit ${key}:`, appData.systemSettings.uiLabels[key] || '');
-            if (val !== null) { appData.systemSettings.uiLabels[key] = val;
-                saveToLocal();
-                renderApp(); }
-        };
-        window.editLoyalty = () => {
-            const val = parseInt(prompt("Loyalty points per ₱1000 spent:", appData.systemSettings.loyaltyPointsPerPeso *
-                1000));
-            if (!isNaN(val)) { appData.systemSettings.loyaltyPointsPerPeso = val / 1000;
-                saveToLocal();
-                renderApp(); }
-        };
-        window.editTax = () => {
-            const val = parseFloat(prompt("Tax rate (%):", appData.systemSettings.taxRate));
-            if (!isNaN(val)) { appData.systemSettings.taxRate = val;
-                saveToLocal();
-                renderApp(); }
-        };
-        window.updateNotificationSetting = (checked) => {
-            appData.systemSettings.enableNotifications = checked;
-            saveToLocal();
-            renderApp();
-        };
-        window.updateChartDefaultPeriod = (period) => {
-            appData.systemSettings.chartDefaultPeriod = period;
-            saveToLocal();
-            renderApp();
-        };
-        window.updateTimeout = () => {
-            const val = parseInt(document.getElementById('timeoutInput')?.value);
-            if (val && val > 0) {
-                appData.systemSettings.inactivityTimeout = val;
-                saveToLocal();
-                renderApp();
-                alert(`✅ Inactivity timeout updated to ${val} minutes`);
-            }
-        };
-        window.backupData = () => {
-            const dataStr = JSON.stringify(appData);
-            localStorage.setItem("system_backup_8068_v8", dataStr);
-            const blob = new Blob([dataStr], { type: "application/json" });
-            const a = document.createElement("a");
-            a.href = URL.createObjectURL(blob);
-            a.download = `8068_backup_v8_${new Date().toISOString().slice(0, 10)}.json`;
-            a.click();
-            alert("Backup created!");
-        };
-        window.restoreData = () => {
-            const backup = localStorage.getItem("system_backup_8068_v8");
-            if (backup) { try { Object.assign(appData, JSON.parse(backup));
-                    saveToLocal();
-                    alert("Restored!");
-                    renderApp(); } catch (e) { alert("Backup corrupted!"); } } else { alert("No backup found!"); }
-        };
-        window.exportAllData = () => {
-            const blob = new Blob([JSON.stringify(appData, null, 2)], { type: "application/json" });
-            const a = document.createElement("a");
-            a.href = URL.createObjectURL(blob);
-            a.download = `8068_full_export_v8_${new Date().toISOString().slice(0, 10)}.json`;
-            a.click();
-        };
-        window.resetSystem = () => {
-            if (confirm("WARNING: This will erase ALL data and reset to factory defaults. Continue?")) {
-                if (confirm("Are you absolutely sure? This cannot be undone!")) { location.reload(); }
-            }
-        };
-        window.clearActivityLog = () => {
-            if (confirm("Clear all activity logs?")) {
-                appData.systemSettings.activityLog = [];
-                saveToLocal();
-                renderApp();
-                alert("Activity log cleared!");
-            }
-        };
-        window.pullFromFirebase = function() {
-            if (confirm("Pull latest data from Firebase? This will overwrite local changes.")) {
-                loadAllDataFromFirebase();
-            }
-        };
-        window.testFirebaseConnection = function() {
-            if (firebaseDb) {
-                const ref = firebaseDb.ref('.info/connected');
-                ref.once('value').then(snap => {
-                    if (snap.val() === true) {
-                        alert('✅ Firebase is connected!');
-                    } else {
-                        alert('❌ Firebase is not connected. Check your network and configuration.');
-                    }
-                }).catch(err => {
-                    alert('❌ Firebase error: ' + err.message);
-                });
-            } else {
-                alert('❌ Firebase not initialized. Configure Firebase first.');
-            }
-        };
-
-        // ===== ADD MANUAL TRANSACTION =====
-        window.showAddTransactionModal = () => {
-            const paymentMethods = appData.systemSettings.defaultPaymentMethods || ['Cash', 'GCash', 'Maya',
-                'Credit Card', 'Bank Transfer', 'Credit (Utang)'
-            ];
-            const methodOptions = paymentMethods.map(m => `<option>${m}</option>`).join('');
-            let modalHtml = `<div id="adminModal" class="modal"><div class="modal-content">
-            <h3 class="text-xl font-bold mb-4">Add Manual Transaction</h3>
-            <div class="space-y-3">
-                <div><label class="text-gray-400">Customer</label><input type="text" id="txCustomerInput" class="w-full bg-gray-800 p-2 rounded" value="Walk-in Customer"></div>
-                <div><label class="text-gray-400">Amount</label><input type="number" id="txAmountInput" class="w-full bg-gray-800 p-2 rounded" step="0.01"></div>
-                <div><label class="text-gray-400">Vehicle Model</label><input type="text" id="txVehicleInput" class="w-full bg-gray-800 p-2 rounded" placeholder="Toyota Vios"></div>
-                <div><label class="text-gray-400">Plate Number</label><input type="text" id="txPlateInput" class="w-full bg-gray-800 p-2 rounded"></div>
-                <div><label class="text-gray-400">Payment Method</label><select id="txPaymentInput" class="w-full bg-gray-800 p-2 rounded">${methodOptions}</select></div>
-                <div><label class="text-gray-400">Remarks</label><input type="text" id="txRemarksInput" class="w-full bg-gray-800 p-2 rounded"></div>
-                <div><label class="text-gray-400">Staff Assigned</label><input type="text" id="txStaffInput" class="w-full bg-gray-800 p-2 rounded" placeholder="Staff names (comma separated)"></div>
-                <div class="flex gap-3 mt-4">
-                    <button onclick="confirmAddTransaction()" class="btn-neon flex-1 p-2 rounded">Add</button>
-                    <button onclick="closeAdminModal()" class="bg-gray-700 flex-1 p-2 rounded">Cancel</button>
-                </div>
-            </div>
-        </div></div>`;
-            document.body.insertAdjacentHTML('beforeend', modalHtml);
-        };
-
-        window.confirmAddTransaction = () => {
-            const customer = document.getElementById('txCustomerInput')?.value || "Walk-in Customer";
-            const amount = parseFloat(document.getElementById('txAmountInput')?.value);
-            const vehicle = document.getElementById('txVehicleInput')?.value || "N/A";
-            const plate = document.getElementById('txPlateInput')?.value || "N/A";
-            const payment = document.getElementById('txPaymentInput')?.value || "Cash";
-            const remarks = document.getElementById('txRemarksInput')?.value || "";
-            const staffNames = document.getElementById('txStaffInput')?.value?.split(',').map(s => s.trim()).filter(Boolean) ||
-                [];
-
-            if (isNaN(amount) || amount <= 0) { alert("Valid amount required!"); return; }
-
-            const assignedStaff = staffNames.map(name => {
-                let staff = appData.staff.find(s => s.name.toLowerCase() === name.toLowerCase());
-                if (!staff) {
-                    staff = { id: Date.now() + Math.random() * 1000, name, position: 'Staff', contact: '',
-                        salesGenerated: 0, jobsCompleted: 0, commissionTier: 35, isActive: true,
-                        totalCommission: 0 };
-                    appData.staff.push(staff);
-                }
-                return staff;
-            });
-
-            const receiptNo = generateReceiptNo();
-            const transaction = {
-                id: receiptNo,
-                date: new Date().toISOString(),
-                customer: customer,
-                vehicle: vehicle,
-                plate: plate,
-                items: [{
-                    serviceName: "Manual Entry",
-                    variant: "Standard",
-                    price: amount,
-                    quantity: 1,
-                    total: amount,
-                    assignedStaff: assignedStaff.map(s => ({
-                        id: s.id,
-                        name: s.name,
-                        commissionTier: s.commissionTier,
-                        fullCommission: getCommissionAmount("Manual Entry", "Standard", s.commissionTier),
-                        splitCommission: assignedStaff.length === 1 ? getCommissionAmount("Manual Entry",
-                            "Standard", s.commissionTier) : getCommissionAmount("Manual Entry", "Standard",
-                            s.commissionTier) / assignedStaff.length
-                    })),
-                    remarks: "Manual transaction"
-                }],
-                subtotal: amount,
-                discount: 0,
-                loyaltyUsed: 0,
-                total: amount,
-                paymentMethod: payment,
-                isCredit: payment === 'Credit (Utang)',
-                cashTendered: payment === 'Cash' ? amount : 0,
-                change: 0,
-                remarks: remarks + (payment === 'Credit (Utang)' ? ' (CREDIT - PENDING)' : '')
-            };
-
-            appData.transactions.unshift(transaction);
-            updateTransactionReports(transaction);
-
-            const staffMap = {};
-            assignedStaff.forEach(s => {
-                const comm = assignedStaff.length === 1 ? getCommissionAmount("Manual Entry", "Standard", s
-                    .commissionTier) : getCommissionAmount("Manual Entry", "Standard", s.commissionTier) /
-                    assignedStaff.length;
-                staffMap[s.id] = { commission: comm, jobs: 1, name: s.name, tier: s.commissionTier };
-                const staffMember = appData.staff.find(st => st.id === s.id);
-                if (staffMember) {
-                    staffMember.totalCommission = (staffMember.totalCommission || 0) + comm;
-                    staffMember.jobsCompleted = (staffMember.jobsCompleted || 0) + 1;
-                    staffMember.salesGenerated = (staffMember.salesGenerated || 0) + amount;
-                }
-            });
-            transaction.staffCommissions = staffMap;
-
-            if (payment === 'Credit (Utang)') {
-                appData.credits.push({
-                    id: 'CR-' + new Date().getFullYear() + '-' + (appData.nextIds.credit++),
-                    customerName: customer,
-                    contact: '',
-                    transactionId: transaction.id,
-                    amount: amount,
-                    paid: 0,
-                    balance: amount,
-                    date: new Date().toISOString().slice(0, 10),
-                    status: 'pending'
-                });
-            }
-
-            saveToLocal();
-            recalculateAllTransactionReports();
-            refreshAllCommissions();
-            addActivityLog('Manual Transaction Added', `${transaction.id} - ₱${amount.toFixed(2)}`);
-            addAuditTrail('Manual Transaction Added', `${transaction.id} - ₱${amount.toFixed(2)}`, transaction.id,
-                'transaction');
-            closeAdminModal();
-            updateDashboardStats();
-            renderApp();
-            alert("✅ Transaction added!");
-        };
-
-        // ================================================================
-        //  WEEKLY COMMISSION REPORT (Full Render)
-        // ================================================================
-
-        function renderWeeklyCommissionReport() {
-            if (showLogin) return renderLogin();
-            recalculateAllCommissions();
-
-            const weeklyData = getWeeklyCommission();
-            const staffData = weeklyData.staff || {};
-            const totals = weeklyData.totals || { commission: 0, sales: 0, jobs: 0, transactions: 0 };
-            const weekLabel = weeklyData.weekLabel || getWeekLabel(new Date());
-            const dailyBreakdown = weeklyData.dailyBreakdown || {};
-
-            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-            let dailyRows = days.map(day => {
-                const data = dailyBreakdown[day] || { commission: 0, sales: 0, jobs: 0 };
-                return `<div class="flex justify-between items-center border-b border-gray-700/30 py-1 text-xs">
-                <span class="text-gray-400">${day}</span>
-                <span class="text-cyan-300">₱${data.sales.toFixed(2)}</span>
-                <span class="text-purple-400">₱${data.commission.toFixed(2)}</span>
-                <span class="text-yellow-400">${data.jobs}</span>
-            </div>`;
-            }).join('');
-
-            let tableRows = '';
-            let grandTotal = 0;
-            let grandJobs = 0;
-            let grandSales = 0;
-            let grandSunday = 0,
-                grandMonday = 0,
-                grandTuesday = 0,
-                grandWednesday = 0,
-                grandThursday = 0,
-                grandFriday = 0,
-                grandSaturday = 0;
-            let grandPart1 = 0,
-                grandPart2 = 0;
-
-            Object.values(staffData).forEach(s => {
-                const total = s.commission || 0;
-                const jobs = s.jobs || 0;
-                const sales = s.sales || 0;
-                grandTotal += total;
-                grandJobs += jobs;
-                grandSales += sales;
-                const sunday = s.daily?.Sunday || 0;
-                const monday = s.daily?.Monday || 0;
-                const tuesday = s.daily?.Tuesday || 0;
-                const wednesday = s.daily?.Wednesday || 0;
-                const thursday = s.daily?.Thursday || 0;
-                const friday = s.daily?.Friday || 0;
-                const saturday = s.daily?.Saturday || 0;
-                grandSunday += sunday;
-                grandMonday += monday;
-                grandTuesday += tuesday;
-                grandWednesday += wednesday;
-                grandThursday += thursday;
-                grandFriday += friday;
-                grandSaturday += saturday;
-                const part1 = sunday + monday + tuesday;
-                const part2 = wednesday + thursday + friday + saturday;
-                grandPart1 += part1;
-                grandPart2 += part2;
-
-                tableRows += `<tr class="border-b border-gray-700 hover:bg-gray-800 transition">
-                <td class="py-2 font-semibold text-left">${s.name}</td>
-                <td class="text-center">${s.position}</td>
-                <td class="text-center"><span class="commission-badge">${s.tier}%</span></td>
-                <td class="text-center">${jobs}</td>
-                <td class="text-center text-cyan-300">₱${sunday.toFixed(2)}</td>
-                <td class="text-center text-cyan-300">₱${monday.toFixed(2)}</td>
-                <td class="text-center text-cyan-300">₱${tuesday.toFixed(2)}</td>
-                <td class="text-center text-cyan-300">₱${wednesday.toFixed(2)}</td>
-                <td class="text-center text-cyan-300">₱${thursday.toFixed(2)}</td>
-                <td class="text-center text-cyan-300">₱${friday.toFixed(2)}</td>
-                <td class="text-center text-cyan-300">₱${saturday.toFixed(2)}</td>
-                <td class="text-center text-yellow-400 font-bold">₱${part1.toFixed(2)}</td>
-                <td class="text-center text-yellow-400 font-bold">₱${part2.toFixed(2)}</td>
-                <td class="text-center text-green-400 font-bold">₱${total.toFixed(2)}</td>
-            </tr>`;
-            });
-
-            if (Object.keys(staffData).length > 0) {
-                tableRows += `
-                <tr class="grand-total-row">
-                    <td colspan="3" class="text-right font-bold text-cyan-400">GRAND TOTALS:</td>
-                    <td class="font-bold">${grandJobs}</td>
-                    <td class="font-bold text-cyan-300">₱${grandSunday.toFixed(2)}</td>
-                    <td class="font-bold text-cyan-300">₱${grandMonday.toFixed(2)}</td>
-                    <td class="font-bold text-cyan-300">₱${grandTuesday.toFixed(2)}</td>
-                    <td class="font-bold text-cyan-300">₱${grandWednesday.toFixed(2)}</td>
-                    <td class="font-bold text-cyan-300">₱${grandThursday.toFixed(2)}</td>
-                    <td class="font-bold text-cyan-300">₱${grandFriday.toFixed(2)}</td>
-                    <td class="font-bold text-cyan-300">₱${grandSaturday.toFixed(2)}</td>
-                    <td class="font-bold text-yellow-400">₱${grandPart1.toFixed(2)}</td>
-                    <td class="font-bold text-yellow-400">₱${grandPart2.toFixed(2)}</td>
-                    <td class="font-bold text-green-400">₱${grandTotal.toFixed(2)}</td>
-                </tr>
-            `;
-            }
-
-            const archives = appData.commissionWeekly.archives || [];
-            let archiveHtml = '';
-            if (archives.length > 0) {
-                const sortedArchives = [...archives].reverse().slice(0, 12);
-                archiveHtml = `<div class="mt-4">
-                <h4 class="text-sm font-bold text-cyan-400 mb-2"><i class="fas fa-archive"></i> Archived Weekly Reports (${archives.length})</h4>
-                <div class="archive-grid">
-                    ${sortedArchives.map(a => {
-                        const total = a.totals?.commission || 0;
-                        const staffCount = Object.keys(a.staff || {}).length;
-                        return `<div class="report-archive-card" onclick="viewArchivedWeek('${a.weekStart}')">
-                            <div class="archive-title">${a.weekLabel || a.weekStart}</div>
-                            <div class="archive-date">${new Date(a.archivedAt).toLocaleDateString()}</div>
-                            <div class="archive-total">₱${total.toFixed(2)}</div>
-                            <div class="archive-stats">${staffCount} staff | ${a.totals?.jobs || 0} jobs</div>
-                        </div>`;
-                    }).join('')}
-                </div>
-            </div>`;
-            }
-
-            const monthlyReport = getPeriodicReport('monthly');
-            const yearlyReport = getPeriodicReport('yearly');
-
-            return `<div class="card-premium p-6">
-            <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
-                <div>
-                    <h3 class="text-2xl font-bold"><i class="fas fa-calendar-week"></i> Weekly Commission Report</h3>
-                    <p class="text-sm text-cyan-400">${weekLabel}</p>
-                    <p class="text-xs text-gray-400"><i class="fas fa-info-circle"></i> Sunday to Saturday Payroll Cycle</p>
-                    <p class="text-xs text-green-400"><i class="fas fa-sync"></i> Auto-synced from all transactions & open services</p>
-                    ${firebaseInitialized && isFirebasePrimary ? `<p class="text-xs text-cyan-400"><i class="fas fa-cloud"></i> Online Mode</p>` : ''}
-                </div>
-                <div class="flex gap-2 flex-wrap">
-                    <span class="text-xs text-purple-400 bg-purple-900/30 px-3 py-1 rounded-full"><i class="fas fa-circle text-green-400 text-[8px] mr-1"></i> Live</span>
-                    <button onclick="refreshAllCommissions(); renderApp();" class="bg-purple-600 px-3 py-1 rounded text-sm hover:bg-purple-700 transition"><i class="fas fa-sync"></i> Refresh</button>
-                    <button onclick="exportWeeklyCommissionExcel()" class="excel-export-btn px-4 py-2 rounded text-sm text-white"><i class="fas fa-file-excel"></i> Excel</button>
-                    <button onclick="exportWeeklyCommissionPDF()" class="pdf-export-btn px-4 py-2 rounded text-sm text-white"><i class="fas fa-file-pdf"></i> PDF</button>
-                    <button onclick="exportWeeklyCommissionCSV()" class="csv-export-btn px-4 py-2 rounded text-sm text-white"><i class="fas fa-file-csv"></i> CSV</button>
-                    <button onclick="printWeeklyCommission()" class="bg-cyan-600 px-4 py-2 rounded text-sm"><i class="fas fa-print"></i> Print</button>
-                </div>
-            </div>
-            
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-                <div class="bg-gray-800/30 p-3 rounded-lg text-center">
-                    <div class="text-xs text-gray-400">Total Commission</div>
-                    <div class="text-2xl font-bold text-green-400">₱${grandTotal.toFixed(2)}</div>
-                </div>
-                <div class="bg-gray-800/30 p-3 rounded-lg text-center">
-                    <div class="text-xs text-gray-400">Total Sales</div>
-                    <div class="text-2xl font-bold text-cyan-400">₱${grandSales.toFixed(2)}</div>
-                </div>
-                <div class="bg-gray-800/30 p-3 rounded-lg text-center">
-                    <div class="text-xs text-gray-400">Total Jobs</div>
-                    <div class="text-2xl font-bold text-yellow-400">${grandJobs}</div>
-                </div>
-                <div class="bg-gray-800/30 p-3 rounded-lg text-center">
-                    <div class="text-xs text-gray-400">Transactions</div>
-                    <div class="text-2xl font-bold text-purple-400">${totals.transactions || 0}</div>
-                </div>
-            </div>
-            
-            <div class="grid grid-cols-2 gap-3 mb-4">
-                <div class="bg-gray-800/20 p-2 rounded-lg text-center">
-                    <div class="text-xs text-gray-400">Monthly Commission (${monthlyReport?.month || 'N/A'})</div>
-                    <div class="text-lg font-bold text-blue-400">₱${(monthlyReport?.totals?.commission || 0).toFixed(2)}</div>
-                </div>
-                <div class="bg-gray-800/20 p-2 rounded-lg text-center">
-                    <div class="text-xs text-gray-400">Yearly Commission (${yearlyReport?.year || 'N/A'})</div>
-                    <div class="text-lg font-bold text-indigo-400">₱${(yearlyReport?.totals?.commission || 0).toFixed(2)}</div>
-                </div>
-            </div>
-            
-            <div class="grid md:grid-cols-4 gap-4 mb-4">
-                <div class="bg-gray-800/20 p-3 rounded-lg">
-                    <div class="text-xs text-gray-400 mb-1">Daily Breakdown</div>
-                    ${dailyRows}
-                </div>
-                <div class="md:col-span-3 overflow-x-auto max-h-96 overflow-y-auto">
-                    <table class="w-full text-sm commission-report-grid">
-                        <thead>
-                            <tr>
-                                <th class="text-left">Staff</th>
-                                <th>Position</th>
-                                <th>Tier</th>
-                                <th>Jobs</th>
-                                <th>Sunday</th>
-                                <th>Monday</th>
-                                <th>Tuesday</th>
-                                <th>Wednesday</th>
-                                <th>Thursday</th>
-                                <th>Friday</th>
-                                <th>Saturday</th>
-                                <th class="text-yellow-400">Sun-Tue</th>
-                                <th class="text-yellow-400">Wed-Sat</th>
-                                <th class="text-green-400">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${tableRows || '<tr><td colspan="14" class="text-center py-4 text-gray-400">No data for this week</td></tr>'}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            
-            ${archiveHtml}
-        </div>`;
-        }
-
-        window.viewArchivedWeek = function(weekStart) {
-            const archives = appData.commissionWeekly.archives || [];
-            const archive = archives.find(a => a.weekStart === weekStart);
-            if (!archive) {
-                alert('Archived week not found.');
-                return;
-            }
-
-            const staffData = archive.staff || {};
-            const totals = archive.totals || { commission: 0, sales: 0, jobs: 0 };
-            const weekLabel = archive.weekLabel || weekStart;
-
-            let tableRows = '';
-            let grandTotal = 0;
-            let grandJobs = 0;
-            let grandSales = 0;
-
-            Object.values(staffData).forEach(s => {
-                const total = s.commission || 0;
-                const jobs = s.jobs || 0;
-                const sales = s.sales || 0;
-                grandTotal += total;
-                grandJobs += jobs;
-                grandSales += sales;
-                const sunday = s.daily?.Sunday || 0;
-                const monday = s.daily?.Monday || 0;
-                const tuesday = s.daily?.Tuesday || 0;
-                const wednesday = s.daily?.Wednesday || 0;
-                const thursday = s.daily?.Thursday || 0;
-                const friday = s.daily?.Friday || 0;
-                const saturday = s.daily?.Saturday || 0;
-                const part1 = sunday + monday + tuesday;
-                const part2 = wednesday + thursday + friday + saturday;
-
-                tableRows += `<tr class="border-b border-gray-700 hover:bg-gray-800 transition">
-                <td class="py-2 font-semibold text-left">${s.name}</td>
-                <td class="text-center">${s.position}</td>
-                <td class="text-center"><span class="commission-badge">${s.tier}%</span></td>
-                <td class="text-center">${jobs}</td>
-                <td class="text-center text-cyan-300">₱${sunday.toFixed(2)}</td>
-                <td class="text-center text-cyan-300">₱${monday.toFixed(2)}</td>
-                <td class="text-center text-cyan-300">₱${tuesday.toFixed(2)}</td>
-                <td class="text-center text-cyan-300">₱${wednesday.toFixed(2)}</td>
-                <td class="text-center text-cyan-300">₱${thursday.toFixed(2)}</td>
-                <td class="text-center text-cyan-300">₱${friday.toFixed(2)}</td>
-                <td class="text-center text-cyan-300">₱${saturday.toFixed(2)}</td>
-                <td class="text-center text-yellow-400 font-bold">₱${part1.toFixed(2)}</td>
-                <td class="text-center text-yellow-400 font-bold">₱${part2.toFixed(2)}</td>
-                <td class="text-center text-green-400 font-bold">₱${total.toFixed(2)}</td>
-            </tr>`;
-            });
-
-            if (Object.keys(staffData).length > 0) {
-                tableRows += `
-                <tr class="grand-total-row">
-                    <td colspan="3" class="text-right font-bold text-cyan-400">GRAND TOTALS:</td>
-                    <td class="font-bold">${grandJobs}</td>
-                    <td colspan="10" class="text-right font-bold text-green-400">₱${grandTotal.toFixed(2)}</td>
-                </tr>
-            `;
-            }
-
-            let modalHtml = `<div id="adminModal" class="modal"><div class="modal-content">
-            <h3 class="text-xl font-bold mb-2">Archived Week: ${weekLabel}</h3>
-            <p class="text-sm text-gray-400 mb-4">Archived on: ${new Date(archive.archivedAt).toLocaleString()}</p>
-            <div class="grid grid-cols-3 gap-3 mb-4">
-                <div class="bg-gray-800/30 p-2 rounded text-center">
-                    <div class="text-xs text-gray-400">Total Commission</div>
-                    <div class="text-lg font-bold text-green-400">₱${grandTotal.toFixed(2)}</div>
-                </div>
-                <div class="bg-gray-800/30 p-2 rounded text-center">
-                    <div class="text-xs text-gray-400">Total Sales</div>
-                    <div class="text-lg font-bold text-cyan-400">₱${grandSales.toFixed(2)}</div>
-                </div>
-                <div class="bg-gray-800/30 p-2 rounded text-center">
-                    <div class="text-xs text-gray-400">Total Jobs</div>
-                    <div class="text-lg font-bold text-yellow-400">${grandJobs}</div>
-                </div>
-            </div>
-            <div class="overflow-x-auto max-h-96 overflow-y-auto">
-                <table class="w-full text-sm commission-report-grid">
-                    <thead>
-                        <tr>
-                            <th class="text-left">Staff</th>
-                            <th>Position</th>
-                            <th>Tier</th>
-                            <th>Jobs</th>
-                            <th>Sun</th><th>Mon</th><th>Tue</th>
-                            <th>Wed</th><th>Thu</th><th>Fri</th><th>Sat</th>
-                            <th class="text-yellow-400">Sun-Tue</th>
-                            <th class="text-yellow-400">Wed-Sat</th>
-                            <th class="text-green-400">Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${tableRows || '<tr><td colspan="14" class="text-center py-4 text-gray-400">No data for this week</td></tr>'}
-                    </tbody>
-                </table>
-            </div>
-            <div class="flex gap-3 mt-4">
-                <button onclick="closeAdminModal()" class="bg-gray-700 flex-1 p-2 rounded">Close</button>
-            </div>
-        </div></div>`;
-            document.body.insertAdjacentHTML('beforeend', modalHtml);
-        };
-
-        // ===== REPORT SUMMARIES =====
-        function renderReportSummaries() {
-            if (showLogin) return renderLogin();
-            recalculateAllCommissions();
-
-            const today = new Date();
-            const currentMonth = today.getMonth();
-            const currentYear = today.getFullYear();
-            const todayStr = today.toISOString().slice(0, 10);
-            const dailyTx = appData.transactions.filter(t => t.date.startsWith(todayStr));
-            const dailySales = dailyTx.reduce((s, t) => s + t.total, 0);
-            const dailyExpenses = appData.expenses.filter(e => e.date === todayStr).reduce((s, e) => s + e.amount, 0);
-            const dailyCommission = appData.transactions
-                .filter(t => t.date.startsWith(todayStr) && t.staffCommissions)
-                .reduce((sum, t) => sum + Object.values(t.staffCommissions).reduce((s, st) => s + (st.commission || 0),
-                0), 0);
-
-            const weekStart = getCurrentWeekStart();
-            const weekStartStr = weekStart.toISOString().slice(0, 10);
-            const weekEndStr = getCurrentWeekEnd().toISOString().slice(0, 10);
-            const weekTx = appData.transactions.filter(t => t.date >= weekStartStr && t.date <= weekEndStr);
-            const weeklySales = weekTx.reduce((s, t) => s + t.total, 0);
-            const weeklyExpenses = appData.expenses.filter(e => e.date >= weekStartStr && e.date <= weekEndStr).reduce((s,
-                e) => s + e.amount, 0);
-            const weeklyCommission = appData.staff.reduce((sum, s) => sum + (s.weeklyCommission || 0), 0);
-
-            const monthTx = appData.transactions.filter(t => new Date(t.date).getMonth() === currentMonth && new Date(t
-                .date).getFullYear() === currentYear);
-            const monthlySales = monthTx.reduce((s, t) => s + t.total, 0);
-            const monthlyExpenses = appData.expenses.filter(e => new Date(e.date).getMonth() === currentMonth && new Date(
-                e.date).getFullYear() === currentYear).reduce((s, e) => s + e.amount, 0);
-            const monthlyCommission = appData.staff.reduce((sum, s) => sum + (s.monthlyCommission || 0), 0);
-
-            const yearTx = appData.transactions.filter(t => new Date(t.date).getFullYear() === currentYear);
-            const yearlySales = yearTx.reduce((s, t) => s + t.total, 0);
-            const yearlyExpenses = appData.expenses.filter(e => new Date(e.date).getFullYear() === currentYear).reduce(
-                (s, e) => s + e.amount, 0);
-            const yearlyCommission = appData.staff.reduce((sum, s) => sum + (s.yearlyCommission || 0), 0);
-
-            const weekLabel = getWeekLabel(today);
-
-            return `<div class="grid lg:grid-cols-2 gap-6">
-            <div class="card-premium p-6">
-                <h2 class="text-2xl font-bold mb-4"><i class="fas fa-chart-line"></i> ${appData.systemSettings.uiLabels.reportsTitle || 'Report Summaries'}</h2>
-                <div class="flex gap-2 mb-4 flex-wrap">
-                    <button onclick="setReportPeriod('daily')" class="px-3 py-1 rounded ${reportPeriod === 'daily' ? 'bg-cyan-600' : 'bg-gray-700'} text-sm">Daily</button>
-                    <button onclick="setReportPeriod('weekly')" class="px-3 py-1 rounded ${reportPeriod === 'weekly' ? 'bg-cyan-600' : 'bg-gray-700'} text-sm">Weekly</button>
-                    <button onclick="setReportPeriod('monthly')" class="px-3 py-1 rounded ${reportPeriod === 'monthly' ? 'bg-cyan-600' : 'bg-gray-700'} text-sm">Monthly</button>
-                    <button onclick="setReportPeriod('yearly')" class="px-3 py-1 rounded ${reportPeriod === 'yearly' ? 'bg-cyan-600' : 'bg-gray-700'} text-sm">Yearly</button>
-                </div>
-                <div class="grid grid-cols-2 gap-3 mb-4">
-                    <div class="bg-gray-800 p-3 rounded-lg text-center">
-                        <div class="stat-label">${reportPeriod === 'daily' ? 'Today' : reportPeriod === 'weekly' ? weekLabel : reportPeriod === 'monthly' ? `This Month (${today.toLocaleString('default', { month: 'long' })})` : `This Year (${currentYear})`} Sales</div>
-                        <div class="stat-number text-green-400">₱${reportPeriod === 'daily' ? dailySales : reportPeriod === 'weekly' ? weeklySales : reportPeriod === 'monthly' ? monthlySales : yearlySales}</div>
-                    </div>
-                    <div class="bg-gray-800 p-3 rounded-lg text-center">
-                        <div class="stat-label">${reportPeriod === 'daily' ? 'Today' : reportPeriod === 'weekly' ? weekLabel : reportPeriod === 'monthly' ? `This Month (${today.toLocaleString('default', { month: 'long' })})` : `This Year (${currentYear})`} Expenses</div>
-                        <div class="stat-number text-red-400">₱${reportPeriod === 'daily' ? dailyExpenses : reportPeriod === 'weekly' ? weeklyExpenses : reportPeriod === 'monthly' ? monthlyExpenses : yearlyExpenses}</div>
-                    </div>
-                    <div class="bg-gray-800 p-3 rounded-lg text-center">
-                        <div class="stat-label">${reportPeriod === 'daily' ? 'Today' : reportPeriod === 'weekly' ? weekLabel : reportPeriod === 'monthly' ? `This Month (${today.toLocaleString('default', { month: 'long' })})` : `This Year (${currentYear})`} Commission</div>
-                        <div class="stat-number text-purple-400">₱${reportPeriod === 'daily' ? dailyCommission : reportPeriod === 'weekly' ? weeklyCommission : reportPeriod === 'monthly' ? monthlyCommission : yearlyCommission}</div>
-                    </div>
-                    <div class="bg-gray-800 p-3 rounded-lg text-center">
-                        <div class="stat-label">${reportPeriod === 'daily' ? 'Today' : reportPeriod === 'weekly' ? weekLabel : reportPeriod === 'monthly' ? `This Month (${today.toLocaleString('default', { month: 'long' })})` : `This Year (${currentYear})`} Profit</div>
-                        <div class="stat-number text-cyan-400">₱${(reportPeriod === 'daily' ? dailySales - dailyExpenses : reportPeriod === 'weekly' ? weeklySales - weeklyExpenses : reportPeriod === 'monthly' ? monthlySales - monthlyExpenses : yearlySales - yearlyExpenses).toFixed(2)}</div>
-                    </div>
-                </div>
-                <div class="flex gap-2 mt-4 flex-wrap">
-                    <button onclick="printReportSummary()" class="bg-cyan-600 px-4 py-2 rounded text-sm"><i class="fas fa-print"></i> Print Report</button>
-                    <button onclick="exportReportSummaryExcel()" class="excel-export-btn px-4 py-2 rounded text-sm text-white"><i class="fas fa-file-excel"></i> Excel</button>
-                    <button onclick="exportReportSummaryPDF()" class="pdf-export-btn px-4 py-2 rounded text-sm text-white"><i class="fas fa-file-pdf"></i> PDF</button>
-                </div>
-            </div>
-            <div class="card-premium p-6">
-                <h2 class="text-2xl font-bold mb-4"><i class="fas fa-file-invoice-dollar"></i> Staff Commission Report</h2>
-                <div class="grid grid-cols-2 gap-3 mb-4">
-                    <div class="bg-gray-800 p-3 rounded-lg text-center">
-                        <div class="stat-label">Total Staff</div>
-                        <div class="stat-number text-cyan-400">${appData.staff.length}</div>
-                    </div>
-                    <div class="bg-gray-800 p-3 rounded-lg text-center">
-                        <div class="stat-label">Total Commission</div>
-                        <div class="stat-number text-yellow-400">₱${appData.staff.reduce((sum, s) => sum + (s.totalCommission || 0), 0).toFixed(2)}</div>
-                    </div>
-                </div>
-                <div class="mt-4 max-h-48 overflow-y-auto">
-                    <table class="w-full text-sm">
-                        <thead class="sticky top-0 bg-gray-900 border-b border-yellow-400">
-                            <tr><th class="text-left py-1">Staff</th><th class="text-center py-1">Tier</th><th class="text-right py-1">Jobs</th><th class="text-right py-1">Commission</th></tr>
-                        </thead>
-                        <tbody>
-                            ${appData.staff.map(s => `
-                                <tr class="border-b border-gray-700">
-                                    <td class="py-1">${s.name}</td>
-                                    <td class="text-center"><span class="commission-badge">${s.commissionTier}%</span></td>
-                                    <td class="text-right">${s.jobsCompleted || 0}</td>
-                                    <td class="text-right text-green-400">₱${(s.totalCommission || 0).toFixed(2)}</td>
-                                </tr>
-                            `).join('')}
-                            <tr class="border-t-2 border-yellow-400 font-bold">
-                                <td colspan="3" class="py-1 text-right">TOTAL:</td>
-                                <td class="text-right text-green-400">₱${appData.staff.reduce((sum, s) => sum + (s.totalCommission || 0), 0).toFixed(2)}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div class="flex gap-2 mt-4 flex-wrap">
-                    <button onclick="printCommissionReport()" class="bg-cyan-600 px-4 py-2 rounded text-sm"><i class="fas fa-print"></i> Print Commission</button>
-                    <button onclick="exportCommissionReport()" class="excel-export-btn px-4 py-2 rounded text-sm text-white"><i class="fas fa-file-excel"></i> Excel</button>
-                    <button onclick="exportCommissionPDF()" class="pdf-export-btn px-4 py-2 rounded text-sm text-white"><i class="fas fa-file-pdf"></i> PDF</button>
-                </div>
-            </div>
-        </div>`;
-        }
-
-        // ===== COMMISSION REPORTS =====
-        function renderCommissionReports() {
-            if (showLogin) return renderLogin();
-            recalculateAllCommissions();
-
-            const weeklyReport = getPeriodicReport('weekly');
-            const monthlyReport = getPeriodicReport('monthly');
-            const yearlyReport = getPeriodicReport('yearly');
-            const totalCommission = appData.staff.reduce((s, st) => s + (st.totalCommission || 0), 0);
-            const totalSales = appData.transactions.reduce((s, t) => s + t.total, 0);
-            const totalJobs = appData.staff.reduce((s, st) => s + (st.jobsCompleted || 0), 0);
-
-            let staffSummaryRows = appData.staff.map(s => {
-                const commission = s.totalCommission || 0;
-                const jobs = s.jobsCompleted || 0;
-                const sales = s.salesGenerated || 0;
-                return `<tr class="border-b border-gray-700 hover:bg-gray-800 transition">
-                <td class="py-2 font-semibold">${s.name}</td>
-                <td class="text-center">${s.position}</td>
-                <td class="text-center"><span class="commission-badge">${s.commissionTier}%</span></td>
-                <td class="text-center">${jobs}</td>
-                <td class="text-right text-cyan-400">₱${sales.toFixed(2)}</td>
-                <td class="text-right text-green-400 font-bold">₱${commission.toFixed(2)}</td>
-            </tr>`;
-            }).join('');
-
-            const archives = appData.commissionWeekly.archives || [];
-            const archiveStats = archives.length > 0 ?
-                `<div class="text-xs text-gray-400 mt-2">${archives.length} archived weeks available</div>` : '';
-
-            return `<div class="space-y-6">
-            <div class="card-premium p-6">
-                <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
-                    <div>
-                        <h3 class="text-2xl font-bold"><i class="fas fa-percent"></i> Staff Commission Summary</h3>
-                        <p class="text-sm text-gray-400">Total Commission: <span class="text-green-400 font-bold">₱${totalCommission.toFixed(2)}</span></p>
-                        <p class="text-xs text-cyan-400">Sunday-Saturday Payroll Cycle</p>
-                        ${archiveStats}
-                    </div>
-                    <div class="flex gap-2 flex-wrap">
-                        <button onclick="exportCommissionReport()" class="excel-export-btn px-3 py-1 rounded text-sm text-white"><i class="fas fa-file-excel"></i> Excel</button>
-                        <button onclick="exportCommissionPDF()" class="pdf-export-btn px-3 py-1 rounded text-sm text-white"><i class="fas fa-file-pdf"></i> PDF</button>
-                        <button onclick="printCommissionSummary()" class="bg-cyan-600 px-3 py-1 rounded text-sm"><i class="fas fa-print"></i> Print</button>
-                        <button onclick="refreshAllCommissions(); renderApp();" class="bg-purple-600 px-3 py-1 rounded text-sm"><i class="fas fa-sync"></i> Refresh</button>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-                    <div class="bg-gray-800 p-3 rounded-lg text-center">
-                        <div class="stat-label">Total Staff</div>
-                        <div class="stat-number text-cyan-400">${appData.staff.length}</div>
-                    </div>
-                    <div class="bg-gray-800 p-3 rounded-lg text-center">
-                        <div class="stat-label">Total Jobs</div>
-                        <div class="stat-number text-yellow-400">${totalJobs}</div>
-                    </div>
-                    <div class="bg-gray-800 p-3 rounded-lg text-center">
-                        <div class="stat-label">Total Sales</div>
-                        <div class="stat-number text-cyan-400">₱${totalSales.toFixed(2)}</div>
-                    </div>
-                    <div class="bg-gray-800 p-3 rounded-lg text-center">
-                        <div class="stat-label">Total Commission</div>
-                        <div class="stat-number text-green-400">₱${totalCommission.toFixed(2)}</div>
-                    </div>
-                </div>
-                <div class="overflow-x-auto max-h-64 overflow-y-auto">
-                    <table class="w-full text-sm">
-                        <thead class="sticky top-0 bg-gray-900 border-b-2 border-cyan-400">
-                            <tr>
-                                <th class="text-left py-2">Staff Name</th>
-                                <th class="text-center py-2">Position</th>
-                                <th class="text-center py-2">Tier</th>
-                                <th class="text-center py-2">Jobs</th>
-                                <th class="text-right py-2">Sales Generated</th>
-                                <th class="text-right py-2 text-green-400">Commission</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${staffSummaryRows || '<tr><td colspan="6" class="text-center py-4 text-gray-400">No staff members found</td></tr>'}
-                        </tbody>
-                        <tfoot class="sticky bottom-0 bg-gray-900 border-t-2 border-cyan-400 font-bold">
-                            <tr>
-                                <td colspan="4" class="py-2 text-right">TOTALS:</td>
-                                <td class="text-right text-cyan-400">₱${totalSales.toFixed(2)}</td>
-                                <td class="text-right text-green-400">₱${totalCommission.toFixed(2)}</td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-            </div>
-            <div class="grid md:grid-cols-3 gap-4">
-                <div class="card-premium p-4">
-                    <h4 class="font-bold text-cyan-400 mb-2"><i class="fas fa-calendar-week"></i> Weekly Report</h4>
-                    <div class="text-sm space-y-1">
-                        <div>Period: <span class="text-gray-400">${weeklyReport?.weekLabel || 'N/A'}</span></div>
-                        <div>Transactions: <span class="text-yellow-400">${weeklyReport?.totals?.transactions || 0}</span></div>
-                        <div>Sales: <span class="text-green-400">₱${(weeklyReport?.totals?.sales || 0).toFixed(2)}</span></div>
-                        <div>Commission: <span class="text-blue-400">₱${(weeklyReport?.totals?.commission || 0).toFixed(2)}</span></div>
-                        <button onclick="exportPeriodicReport('weekly')" class="excel-export-btn mt-2 px-2 py-1 rounded text-xs text-white"><i class="fas fa-file-excel"></i> Export</button>
-                    </div>
-                </div>
-                <div class="card-premium p-4">
-                    <h4 class="font-bold text-yellow-400 mb-2"><i class="fas fa-calendar-alt"></i> Monthly Report</h4>
-                    <div class="text-sm space-y-1">
-                        <div>Period: <span class="text-gray-400">${monthlyReport?.month || 'N/A'}</span></div>
-                        <div>Transactions: <span class="text-yellow-400">${monthlyReport?.totals?.transactions || 0}</span></div>
-                        <div>Sales: <span class="text-green-400">₱${(monthlyReport?.totals?.sales || 0).toFixed(2)}</span></div>
-                        <div>Commission: <span class="text-blue-400">₱${(monthlyReport?.totals?.commission || 0).toFixed(2)}</span></div>
-                        <button onclick="exportPeriodicReport('monthly')" class="excel-export-btn mt-2 px-2 py-1 rounded text-xs text-white"><i class="fas fa-file-excel"></i> Export</button>
-                    </div>
-                </div>
-                <div class="card-premium p-4">
-                    <h4 class="font-bold text-purple-400 mb-2"><i class="fas fa-calendar"></i> Yearly Report</h4>
-                    <div class="text-sm space-y-1">
-                        <div>Period: <span class="text-gray-400">${yearlyReport?.year || 'N/A'}</span></div>
-                        <div>Transactions: <span class="text-yellow-400">${yearlyReport?.totals?.transactions || 0}</span></div>
-                        <div>Sales: <span class="text-green-400">₱${(yearlyReport?.totals?.sales || 0).toFixed(2)}</span></div>
-                        <div>Commission: <span class="text-blue-400">₱${(yearlyReport?.totals?.commission || 0).toFixed(2)}</span></div>
-                        <button onclick="exportPeriodicReport('yearly')" class="excel-export-btn mt-2 px-2 py-1 rounded text-xs text-white"><i class="fas fa-file-excel"></i> Export</button>
-                    </div>
-                </div>
-            </div>
-            <div class="flex gap-2 justify-center">
-                <button onclick="refreshAllCommissions(); renderApp();" class="bg-cyan-600 px-4 py-2 rounded text-sm"><i class="fas fa-sync"></i> Refresh All Reports</button>
-            </div>
-        </div>`;
-        }
-
-        window.exportPeriodicReport = (period) => {
-            const report = getPeriodicReport(period);
-            if (!report || !report.staff) {
-                alert('No report data available. Generate report first.');
-                return;
-            }
-            const data = Object.values(report.staff).map(s => ({
-                name: s.name || 'Unknown',
-                position: s.position || 'Staff',
-                tier: `${s.tier || 0}%`,
-                jobs: s.jobs || 0,
-                sales: `₱${(s.sales || 0).toFixed(2)}`,
-                commission: `₱${(s.commission || 0).toFixed(2)}`
-            }));
-            data.push({
-                name: 'TOTAL',
-                position: '',
-                tier: '',
-                jobs: data.reduce((sum, d) => sum + (d.jobs || 0), 0),
-                sales: `₱${(report.totals?.sales || 0).toFixed(2)}`,
-                commission: `₱${(report.totals?.commission || 0).toFixed(2)}`
-            });
-            const columns = [
-                { key: 'name', header: 'Staff Name' },
-                { key: 'position', header: 'Position' },
-                { key: 'tier', header: 'Tier' },
-                { key: 'jobs', header: 'Jobs' },
-                { key: 'sales', header: 'Sales' },
-                { key: 'commission', header: 'Commission' }
-            ];
-            const periodLabel = period.charAt(0).toUpperCase() + period.slice(1);
-            const filename = `${period}_commission`;
-            generateExcel(data, columns, `${periodLabel} Commission Report`, filename);
-            generatePDF(data, columns, `${periodLabel} Commission Report`, filename, appData.systemSettings
-                .companyLogo, appData.systemSettings.logoSize);
-            generateCSV(data, columns, filename);
-        };
 
         // ================================================================
         //  GENERATE EXCEL / PDF / CSV HELPERS
@@ -11036,8 +9056,177 @@
         }
 
         // ================================================================
-        //  AI ASSISTANT UI - Add to body
+        //  AI ASSISTANT UI
         // ================================================================
+
+        let aiAssistantOpen = false;
+        let aiChatHistory = [];
+
+        function toggleAIAssistant() {
+            aiAssistantOpen = !aiAssistantOpen;
+            const window = document.getElementById('aiAssistantWindow');
+            if (window) {
+                window.classList.toggle('open');
+                if (aiAssistantOpen && aiChatHistory.length === 0) {
+                    addAIMessage('assistant', '👋 Hi! I\'m your POS Assistant. I can help you with:\n\n• Viewing sales and revenue insights\n• Checking staff performance\n• Finding specific transactions\n• Analyzing customer data\n• Commission reports\n• Inventory status\n\nTry asking something like "What are today\'s sales?" or "Show me top performing staff"');
+                }
+            }
+            if (aiAssistantOpen) {
+                document.getElementById('aiInput')?.focus();
+            }
+        }
+
+        function addAIMessage(role, content) {
+            const chat = document.getElementById('aiChat');
+            if (!chat) return;
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `ai-message ${role}`;
+            let formatted = content;
+            formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            formatted = formatted.replace(/\n/g, '<br>');
+            formatted = formatted.replace(/• (.*?)(<br>|$)/g, '• $1<br>');
+            formatted = formatted.replace(/₱([\d,]+\.\d{2})/g, '<span class="highlight-green">₱$1</span>');
+            formatted = formatted.replace(/(\d+)★/g, '<span class="highlight-yellow">$1★</span>');
+            formatted = formatted.replace(/⚠️/g, '<span class="highlight-red">⚠️</span>');
+            formatted = formatted.replace(/✅/g, '<span class="highlight-green">✅</span>');
+            msgDiv.innerHTML = formatted;
+            chat.appendChild(msgDiv);
+            chat.scrollTop = chat.scrollHeight;
+            aiChatHistory.push({ role, content });
+        }
+
+        function showTypingIndicator() {
+            const chat = document.getElementById('aiChat');
+            if (!chat) return;
+            const indicator = document.createElement('div');
+            indicator.className = 'typing-indicator';
+            indicator.id = 'aiTyping';
+            indicator.innerHTML = '<span></span><span></span><span></span>';
+            chat.appendChild(indicator);
+            chat.scrollTop = chat.scrollHeight;
+        }
+
+        function hideTypingIndicator() {
+            const indicator = document.getElementById('aiTyping');
+            if (indicator) indicator.remove();
+        }
+
+        function processAIQuery(query) {
+            const q = query.toLowerCase().trim();
+            addAIMessage('user', query);
+            showTypingIndicator();
+
+            setTimeout(() => {
+                hideTypingIndicator();
+                let response = '';
+
+                if (q.includes('today') && (q.includes('sales') || q.includes('revenue') || q.includes('transaction'))) {
+                    const today = new Date().toISOString().slice(0, 10);
+                    const todayTx = appData.transactions.filter(t => t.date.startsWith(today));
+                    const total = todayTx.reduce((s, t) => s + t.total, 0);
+                    const count = todayTx.length;
+                    const avg = count > 0 ? total / count : 0;
+                    const commissions = todayTx.filter(t => t.staffCommissions).reduce((sum, t) => sum + Object.values(t
+                        .staffCommissions).reduce((s, st) => s + (st.commission || 0), 0), 0);
+                    response = `📊 **Today's Sales Summary**\n\n• Total Sales: ₱${total.toFixed(2)}\n• Transactions: ${count}\n• Average per Transaction: ₱${avg.toFixed(2)}\n• Staff Commission: ₱${commissions.toFixed(2)}\n\n${count > 0 ? '✅ Activity is healthy today!' : '⚠️ No transactions recorded today yet.'}`;
+                } else if (q.includes('week') && (q.includes('sales') || q.includes('revenue') || q.includes(
+                    'transaction'))) {
+                    const weekStart = getCurrentWeekStart();
+                    const weekStartStr = weekStart.toISOString().slice(0, 10);
+                    const weekEndStr = getCurrentWeekEnd().toISOString().slice(0, 10);
+                    const weekTx = appData.transactions.filter(t => t.date >= weekStartStr && t.date <= weekEndStr);
+                    const total = weekTx.reduce((s, t) => s + t.total, 0);
+                    const count = weekTx.length;
+                    const avg = count > 0 ? total / count : 0;
+                    const weeklyData = getWeeklyCommission();
+                    const commissions = weeklyData.totals?.commission || 0;
+                    const weekLabel = getWeekLabel(new Date());
+                    response =
+                        `📈 **Weekly Sales Summary**\n\n${weekLabel}\n• Total Sales: ₱${total.toFixed(2)}\n• Transactions: ${count}\n• Average per Transaction: ₱${avg.toFixed(2)}\n• Staff Commission: ₱${commissions.toFixed(2)}\n\n📊 ${count > 0 ? 'This week is active!' : 'No transactions this week yet.'}`;
+                } else if (q.includes('staff') || q.includes('employee') || q.includes('top')) {
+                    if (q.includes('top') || q.includes('best') || q.includes('performing')) {
+                        const staffData = appData.staff.map(s => ({
+                            name: s.name,
+                            commission: s.totalCommission || 0,
+                            jobs: s.jobsCompleted || 0,
+                            sales: s.salesGenerated || 0
+                        }));
+                        staffData.sort((a, b) => b.commission - a.commission);
+                        const top = staffData.slice(0, 3);
+                        if (top.length === 0) {
+                            response = '👤 No staff data available yet.';
+                        } else {
+                            response =
+                                `🏆 **Top Performing Staff**\n\n${top.map((s, i) => `${i+1}. **${s.name}** — ₱${s.commission.toFixed(2)} commission, ${s.jobs} jobs, ₱${s.sales.toFixed(2)} sales`).join('\n')}\n\n💡 Total Staff: ${appData.staff.length}`;
+                        }
+                    } else {
+                        const staffList = appData.staff.map(s =>
+                            `• ${s.name} — ${s.position || 'Staff'} | ₱${(s.totalCommission||0).toFixed(2)} commission | ${s.jobsCompleted||0} jobs`
+                            ).join('\n');
+                        response =
+                            `👤 **Staff Members**\n\n${staffList || 'No staff members added yet.'}\n\n💡 Ask about top performers or total stats.`;
+                    }
+                } else if (q.includes('customer') || q.includes('buyer') || q.includes('client')) {
+                    const totalCustomers = appData.customers.length;
+                    const totalSpent = appData.customers.reduce((sum, c) => {
+                        const tx = appData.transactions.filter(t => t.customer === c.name);
+                        return sum + tx.reduce((s, t) => s + t.total, 0);
+                    }, 0);
+                    const avgSpent = totalCustomers > 0 ? totalSpent / totalCustomers : 0;
+                    const topCustomers = appData.customers.map(c => {
+                        const tx = appData.transactions.filter(t => t.customer === c.name);
+                        const spent = tx.reduce((s, t) => s + t.total, 0);
+                        return { name: c.name, spent, visits: tx.length };
+                    }).sort((a, b) => b.spent - a.spent).slice(0, 5);
+                    response =
+                        `👤 **Customer Overview**\n\n• Total Customers: ${totalCustomers}\n• Total Spending: ₱${totalSpent.toFixed(2)}\n• Average per Customer: ₱${avgSpent.toFixed(2)}\n\n🏆 **Top Customers**\n\n${topCustomers.map((c, i) => `${i+1}. ${c.name} — ₱${c.spent.toFixed(2)} (${c.visits} visits)`).join('\n')}`;
+                } else if (q.includes('commission')) {
+                    const weeklyData = getWeeklyCommission();
+                    const totalComm = appData.staff.reduce((sum, s) => sum + (s.totalCommission || 0), 0);
+                    const weeklyComm = weeklyData.totals?.commission || 0;
+                    const topStaff = appData.staff.sort((a, b) => (b.totalCommission || 0) - (a.totalCommission || 0))
+                        .slice(0, 3);
+                    response =
+                        `💰 **Commission Report**\n\n• Total Commission (All Time): ₱${totalComm.toFixed(2)}\n• Weekly Commission: ₱${weeklyComm.toFixed(2)}\n• Staff Count: ${appData.staff.length}\n\n🏆 **Top Earners**\n\n${topStaff.map((s, i) => `${i+1}. ${s.name} — ₱${(s.totalCommission||0).toFixed(2)}`).join('\n')}`;
+                } else if (q.includes('inventory') || q.includes('stock') || q.includes('supply')) {
+                    const totalItems = appData.inventory.length;
+                    const lowStock = appData.inventory.filter(i => i.quantity <= i.reorderLevel);
+                    const lowStockCount = lowStock.length;
+                    const totalQuantity = appData.inventory.reduce((sum, i) => sum + i.quantity, 0);
+                    response =
+                        `📦 **Inventory Overview**\n\n• Total Items: ${totalItems}\n• Total Stock Units: ${totalQuantity}\n• Low Stock Items: ${lowStockCount}\n\n${lowStockCount > 0 ? '⚠️ **Low Stock Alert**\n' + lowStock.map(i => `• ${i.name}: ${i.quantity} ${i.unit} (Reorder at ${i.reorderLevel})`).join('\n') : '✅ All items are well-stocked.'}`;
+                } else if (q.includes('help') || q.includes('what can you do')) {
+                    response =
+                        `🤖 **AI Assistant Help**\n\nI can help you with:\n\n📊 **Sales & Revenue**\n• Today/Week/Month sales\n\n👤 **Staff**\n• Performance reports\n• Top earners\n\n💰 **Commissions**\n• Total commission\n• Weekly breakdown\n\n👥 **Customers**\n• Customer overview\n• Top customers\n\n📦 **Inventory**\n• Stock levels\n• Low stock alerts\n\n🔍 **Search**\n• Find transactions by receipt, customer, or plate\n\nJust ask in plain English!`;
+                } else {
+                    response =
+                        `🤔 I'm not sure about that. Here are some things I can help with:\n\n• "What are today's sales?"\n• "Show me top performing staff"\n• "Customer overview"\n• "Commission report"\n• "Inventory status"\n• "Help" for all capabilities`;
+                }
+
+                addAIMessage('assistant', response);
+
+            }, 500 + Math.random() * 500);
+        }
+
+        function handleAIQuery() {
+            const input = document.getElementById('aiInput');
+            if (!input) return;
+            const query = input.value.trim();
+            if (!query) return;
+            input.value = '';
+            processAIQuery(query);
+        }
+
+        function handleAIKeyPress(e) {
+            if (e.key === 'Enter') {
+                handleAIQuery();
+            }
+        }
+
+        function aiSuggestion(query) {
+            document.getElementById('aiInput').value = query;
+            handleAIQuery();
+        }
 
         function renderAIAssistant() {
             return `
@@ -11057,7 +9246,7 @@
                             <button onclick="aiSuggestion('Help')">Help</button>
                         </div>
                         <div class="ai-assistant-input">
-                            <input type="text" id="aiInput" placeholder="Ask me anything about your business..." onkeypress="handleAIKeyPress(event)">
+                            <input type="text" id="aiInput" placeholder="Ask me anything..." onkeypress="handleAIKeyPress(event)">
                             <button onclick="handleAIQuery()"><i class="fas fa-paper-plane"></i></button>
                         </div>
                     </div>
@@ -11076,7 +9265,6 @@
         function renderApp() {
             if (showLogin) {
                 document.getElementById("mainContent").innerHTML = renderLogin();
-                // Keep AI assistant visible on login
                 if (!document.getElementById('aiAssistantContainer')) {
                     document.body.insertAdjacentHTML('beforeend', renderAIAssistant());
                 }
@@ -11091,7 +9279,6 @@
             if (!main) return;
             let content = "";
 
-            // Check if we're in feedback mode from URL
             const params = new URLSearchParams(window.location.search);
             const feedbackParam = params.get('feedback');
             const receiptParam = params.get('receipt');
@@ -11100,7 +9287,6 @@
                     receiptParam)) {
                 content = renderFeedbackForm(receiptParam || '');
                 main.innerHTML = content;
-                // Ensure AI assistant is rendered
                 if (!document.getElementById('aiAssistantContainer')) {
                     document.body.insertAdjacentHTML('beforeend', renderAIAssistant());
                 }
@@ -11142,12 +9328,10 @@
 
             main.innerHTML = content;
 
-            // Ensure AI assistant is rendered
             if (!document.getElementById('aiAssistantContainer')) {
                 document.body.insertAdjacentHTML('beforeend', renderAIAssistant());
             }
 
-            // Initialize AI chat if not already done
             const chat = document.getElementById('aiChat');
             if (chat && aiChatHistory.length === 0) {
                 addAIMessage('assistant', '👋 Hi! I\'m your POS Assistant. I can help you with:\n\n• Viewing sales and revenue insights\n• Checking staff performance\n• Finding specific transactions\n• Analyzing customer data\n• Commission reports\n• Inventory status\n\nTry asking something like "What are today\'s sales?" or "Show me top performing staff"');
@@ -11307,39 +9491,34 @@
         </div>
     `;
 
-        // Add AI Assistant
         document.body.insertAdjacentHTML('beforeend', renderAIAssistant());
 
         renderApp();
         saveToLocal();
 
         console.log(
-            '%c8068 CAR SQUARE - Enterprise Management System v8.8.5 (AI-Powered Edition)',
+            '%c8068 CAR SQUARE - Enterprise Management System v8.8.5 (Staff Management Restored)',
             'color: #00d4ff; font-size: 20px; font-weight: bold;');
         console.log(
             `%cRecords: ${appData.transactions.length} TX | ${appData.customers.length} Customers | ${appData.staff.length} Staff | ${getAllFeedback().length} Feedback`,
             'color: #00ff88;');
+        console.log('%c✅ Staff Management: Add, Edit, Delete, Toggle Active - Fully Restored', 'color: #00ff88;');
         console.log('%c✅ All Export (Excel/PDF/CSV) & Print Functions Fully Restored', 'color: #00ff88;');
         console.log('%c🧾 Dual Receipts: Customer + Shop Copy with Cut Marker', 'color: #00ff88;');
         console.log('%c💬 QR Code Feedback System - Scan to leave feedback', 'color: #a78bfa;');
         console.log('%c🤖 AI Assistant - Intelligent search across all data', 'color: #00d4ff;');
-        console.log('%c📊 Auto Transaction Reports: Daily, Weekly, Monthly, Yearly', 'color: #00d4ff;');
-        console.log('%c🚗 Vehicle History Search by Plate Number', 'color: #00d4ff;');
-        console.log('%c📈 Transaction Summary with 10 key metrics', 'color: #00d4ff;');
         console.log('%c📊 Sunday-Saturday Weekly Commission Cycle (Auto-Sync)', 'color: #00d4ff;');
+        console.log('%c🎨 Panel Customization: Edit any admin panel content', 'color: #00d4ff;');
         console.log('%c🔒 Staff Role: Access to Weekly Commission Report only', 'color: #a78bfa;');
-        console.log('%c🖨️ Print Entire Dashboard feature', 'color: #a78bfa;');
         console.log('%c💰 All exports and commissions displayed in ₱ (Philippine Peso)', 'color: #00d4ff;');
-        console.log('%c📝 Feedback System: ${getAllFeedback().length} entries | Staff Performance | Service Analytics',
-            'color: #00ff88;');
-        console.log('%c🎨 Panel Customization: Edit any admin panel content via the "Customize" button', 'color: #00d4ff;');
         if (!firebaseInitialized || !isFirebasePrimary) {
             console.log('%c⚠️ Click "Admin" → "System Settings" → "Configure Firebase" to connect online',
                 'color: #ff6b6b;');
         } else {
             console.log('%c✅ Auto-sync enabled - all data saved to Firebase in real-time', 'color: #00ff88;');
         }
-        console.log('%c🔍 Search: Plate, Receipt, Customer, Vehicle, Staff, Date Range', 'color: #00d4ff;');
+        console.log('%c👥 Staff Management: ${appData.users.length} users | ${appData.staff.filter(s=>s.isActive!==false).length} active',
+            'color: #00d4ff;');
         console.log('%c🤖 Try the AI Assistant: Click the robot icon in the bottom-right corner!', 'color: #00d4ff;');
     </script>
 </body>
