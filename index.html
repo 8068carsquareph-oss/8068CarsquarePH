@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>8068 CAR SQUARE | POS System v8.8.5</title>
+    <title>8068 CAR SQUARE | POS System v8.8.6</title>
     <script src="https://cdn.tailwindcss.com">
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -2293,8 +2293,8 @@
 
     <script>
         // ============================================================================================
-        // 8068 CAR SQUARE - Enterprise Management System v8.8.5
-        // FULLY FUNCTIONAL - Fixed Admin Staff, Transaction Tracking, AI Assistant
+        // 8068 CAR SQUARE - Enterprise Management System v8.8.6
+        // ENHANCED STAFF MANAGEMENT & INTERACTIVE DASHBOARD
         // ============================================================================================
 
         // ======================== FIREBASE CONFIGURATION ========================
@@ -2769,7 +2769,7 @@
                 feedback: appData.feedback || [],
                 adminPanelCustomizations: appData.adminPanelCustomizations || {},
                 lastUpdated: new Date().toISOString(),
-                version: '8.8.5'
+                version: '8.8.6'
             };
 
             const dataToSync = sanitizeDataForFirebase(rawData);
@@ -3881,7 +3881,7 @@
                     ${appData.systemSettings.appIcon ? `<img src="${appData.systemSettings.appIcon}" class="mx-auto max-h-20 mb-4 rounded-lg">` : ''}
                     <h2 class="text-3xl font-bold glow-text">${appData.systemSettings.companyName}</h2>
                     <p class="text-gray-400 text-sm">${appData.systemSettings.tagline}</p>
-                    <p class="text-cyan-400 text-xs mt-2">Enterprise POS System v8.8.5</p>
+                    <p class="text-cyan-400 text-xs mt-2">Enterprise POS System v8.8.6</p>
                     <p class="text-xs text-green-400 mt-1"><i class="fas fa-check-circle"></i> QR Code Feedback</p>
                     <p class="text-xs text-cyan-400 mt-1"><i class="fas fa-cloud"></i> ${firebaseInitialized && isFirebasePrimary ? 'Online Mode' : 'Offline Mode'}</p>
                     <p class="text-xs text-purple-400 mt-1"><i class="fas fa-calendar-week"></i> Sunday-Saturday Cycle</p>
@@ -5147,51 +5147,199 @@
             alert(msg);
         };
 
-        // ===== STAFF DASHBOARD (FIXED) =====
-        function renderStaffDashboard() {
-            if (showLogin) return renderLogin();
-            if (appData.currentUser?.role !== 'Staff') {
-                currentView = 'dashboard';
-                return renderDashboard();
-            }
+        // ===== ENHANCED STAFF DASHBOARD =====
+        function recalculateStaffCommissions() {
+            // Recalculate staff totals from transactions
+            appData.staff.forEach(s => {
+                s.totalCommission = 0;
+                s.jobsCompleted = 0;
+                s.salesGenerated = 0;
+            });
 
-            // Get staff member's own data
-            const staffMember = appData.staff.find(s => s.name === appData.currentUser.name);
-            const staffCommissions = staffMember ? staffMember.totalCommission || 0 : 0;
-            const staffJobs = staffMember ? staffMember.jobsCompleted || 0 : 0;
-            const staffSales = staffMember ? staffMember.salesGenerated || 0 : 0;
-
-            return `
-            <div class="max-w-7xl mx-auto px-4 py-6">
-                <div class="flex justify-between items-center mb-4">
-                    <div>
-                        <h2 class="text-2xl font-bold"><i class="fas fa-user-shield"></i> Staff Portal</h2>
-                        <p class="text-sm text-gray-400">Welcome, ${appData.currentUser.name}. Here is your personal performance overview.</p>
-                    </div>
-                    <span class="text-xs text-cyan-400"><i class="fas fa-clock"></i> ${new Date().toLocaleString()}</span>
-                </div>
-                
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    <div class="bg-gray-800/30 p-4 rounded-lg text-center border border-cyan-400/20">
-                        <div class="text-xs text-gray-400">Your Total Commission</div>
-                        <div class="text-2xl font-bold text-green-400">₱${staffCommissions.toFixed(2)}</div>
-                    </div>
-                    <div class="bg-gray-800/30 p-4 rounded-lg text-center border border-cyan-400/20">
-                        <div class="text-xs text-gray-400">Jobs Completed</div>
-                        <div class="text-2xl font-bold text-yellow-400">${staffJobs}</div>
-                    </div>
-                    <div class="bg-gray-800/30 p-4 rounded-lg text-center border border-cyan-400/20">
-                        <div class="text-xs text-gray-400">Sales Generated</div>
-                        <div class="text-2xl font-bold text-cyan-400">₱${staffSales.toFixed(2)}</div>
-                    </div>
-                </div>
-
-                ${renderWeeklyCommissionReport()}
-            </div>
-            `;
+            appData.transactions.forEach(t => {
+                if (t.staffCommissions) {
+                    Object.entries(t.staffCommissions).forEach(([staffId, data]) => {
+                        const staff = appData.staff.find(s => s.id === parseInt(staffId));
+                        if (staff) {
+                            staff.totalCommission = (staff.totalCommission || 0) + (data.commission || 0);
+                            staff.jobsCompleted = (staff.jobsCompleted || 0) + (data.jobs || 0);
+                            staff.salesGenerated = (staff.salesGenerated || 0) + (t.total || 0);
+                        }
+                    });
+                }
+            });
         }
 
-        // ===== DASHBOARD =====
+        function renderStaffDashboard() {
+            if (showLogin) return renderLogin();
+            recalculateStaffCommissions();
+            const totalCommission = appData.staff.reduce((s, st) => s + (st.totalCommission || 0), 0);
+            const totalJobs = appData.staff.reduce((s, st) => s + (st.jobsCompleted || 0), 0);
+            const totalSales = appData.staff.reduce((s, st) => s + (st.salesGenerated || 0), 0);
+
+            return `<div class="card-premium p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-bold"><i class="fas fa-id-badge"></i> Staff Dashboard</h2>
+                    <div class="flex gap-2 flex-wrap">
+                        <button onclick="exportStaffCSV()" class="csv-export-btn px-4 py-2 rounded text-sm text-white"><i class="fas fa-file-csv"></i> CSV</button>
+                        <button onclick="exportCommissionReport()" class="excel-export-btn px-4 py-2 rounded text-sm text-white"><i class="fas fa-file-excel"></i> Excel</button>
+                        <button onclick="exportCommissionPDF()" class="pdf-export-btn px-4 py-2 rounded text-sm text-white"><i class="fas fa-file-pdf"></i> PDF</button>
+                        <button onclick="printStaffDashboard()" class="bg-cyan-600 px-4 py-2 rounded text-sm"><i class="fas fa-print"></i> Print</button>
+                        <button onclick="addStaffPopup()" class="bg-green-600 px-4 py-2 rounded text-sm"><i class="fas fa-plus"></i> Add Staff</button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-gray-800 p-4 rounded-lg text-center">
+                        <div class="text-gray-400 text-sm">Total Staff</div>
+                        <div class="text-2xl font-bold text-cyan-400">${appData.staff.length}</div>
+                    </div>
+                    <div class="bg-gray-800 p-4 rounded-lg text-center">
+                        <div class="text-gray-400 text-sm">Total Jobs Completed</div>
+                        <div class="text-2xl font-bold text-green-400">${totalJobs}</div>
+                    </div>
+                    <div class="bg-gray-800 p-4 rounded-lg text-center">
+                        <div class="text-gray-400 text-sm">Total Sales Generated</div>
+                        <div class="text-2xl font-bold text-yellow-400">₱${totalSales.toFixed(2)}</div>
+                    </div>
+                    <div class="bg-gray-800 p-4 rounded-lg text-center">
+                        <div class="text-gray-400 text-sm">Total Commissions Paid</div>
+                        <div class="text-2xl font-bold text-purple-400">₱${totalCommission.toFixed(2)}</div>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm" id="staffTable">
+                        <thead class="border-b-2 border-cyan-400">
+                            <tr>
+                                <th class="text-left py-2">#</th>
+                                <th class="text-left py-2">Staff Name</th>
+                                <th class="text-left py-2">Position</th>
+                                <th class="text-center py-2">Tier</th>
+                                <th class="text-center py-2">Jobs Done</th>
+                                <th class="text-right py-2">Sales Generated</th>
+                                <th class="text-right py-2">Commission</th>
+                                <th class="text-center py-2">Status</th>
+                                <th class="text-center py-2">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${appData.staff.map((s, idx) => `
+                                <tr class="border-b border-gray-700 hover:bg-gray-800 transition">
+                                    <td class="py-2">${idx + 1}</td>
+                                    <td class="editable-field cursor-pointer" onclick="editStaffName(${s.id})">${s.name}</td>
+                                    <td class="editable-field cursor-pointer" onclick="editStaffPosition(${s.id})">${s.position}</td>
+                                    <td class="text-center"><span class="commission-badge editable-field cursor-pointer" onclick="editStaffCommission(${s.id})">${s.commissionTier}%</span></td>
+                                    <td class="text-center editable-field cursor-pointer" onclick="editStaffJobs(${s.id})">${s.jobsCompleted || 0}</td>
+                                    <td class="text-right editable-field cursor-pointer" onclick="editStaffSales(${s.id})">₱${(s.salesGenerated || 0).toFixed(2)}</td>
+                                    <td class="text-right text-green-400">₱${(s.totalCommission || 0).toFixed(2)}</td>
+                                    <td class="text-center"><button onclick="toggleStaffStatus(${s.id})" class="text-${s.isActive ? 'green' : 'red'}-400 text-sm">${s.isActive ? 'Active' : 'Inactive'}</button></td>
+                                    <td class="text-center">
+                                        <button onclick="deleteStaffMember(${s.id})" class="text-red-400"><i class="fas fa-trash"></i></button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                            ${appData.staff.length === 0 ? '<tr><td colspan="9" class="text-center py-4 text-gray-400">No staff members added yet</td></tr>' : ''}
+                        </tbody>
+                        <tfoot class="border-t-2 border-cyan-400 bg-gray-800 font-bold">
+                            <tr>
+                                <td colspan="4" class="py-2 text-right">TOTALS:</td>
+                                <td class="text-center">${totalJobs}</td>
+                                <td class="text-right">₱${totalSales.toFixed(2)}</td>
+                                <td class="text-right text-green-400">₱${totalCommission.toFixed(2)}</td>
+                                <td colspan="2"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>`;
+        }
+
+        // Staff helper functions
+        window.editStaffName = (id) => {
+            const staff = appData.staff.find(s => s.id === id);
+            if (staff) {
+                const newName = prompt("Edit staff name:", staff.name);
+                if (newName) { staff.name = newName;
+                    saveToLocal();
+                    renderApp(); }
+            }
+        };
+        window.editStaffPosition = (id) => {
+            const staff = appData.staff.find(s => s.id === id);
+            if (staff) {
+                const newPos = prompt("Edit position:", staff.position);
+                if (newPos) { staff.position = newPos;
+                    saveToLocal();
+                    renderApp(); }
+            }
+        };
+        window.editStaffCommission = (id) => {
+            const staff = appData.staff.find(s => s.id === id);
+            if (staff) {
+                const newTier = parseInt(prompt("Edit commission tier (30, 35, 40):", staff.commissionTier));
+                if ([30, 35, 40].includes(newTier)) { staff.commissionTier = newTier;
+                    saveToLocal();
+                    renderApp(); }
+            }
+        };
+        window.editStaffJobs = (id) => {
+            const staff = appData.staff.find(s => s.id === id);
+            if (staff) {
+                const newJobs = parseInt(prompt("Edit jobs completed:", staff.jobsCompleted || 0));
+                if (!isNaN(newJobs) && newJobs >= 0) { staff.jobsCompleted = newJobs;
+                    saveToLocal();
+                    renderApp(); }
+            }
+        };
+        window.editStaffSales = (id) => {
+            const staff = appData.staff.find(s => s.id === id);
+            if (staff) {
+                const newSales = parseFloat(prompt("Edit sales generated:", staff.salesGenerated || 0));
+                if (!isNaN(newSales) && newSales >= 0) { staff.salesGenerated = newSales;
+                    saveToLocal();
+                    renderApp(); }
+            }
+        };
+        window.toggleStaffStatus = (id) => {
+            const staff = appData.staff.find(s => s.id === id);
+            if (staff) { staff.isActive = !staff.isActive;
+                saveToLocal();
+                renderApp(); }
+        };
+        window.deleteStaffMember = (id) => {
+            if (confirm("Delete this staff member?")) {
+                const staff = appData.staff.find(s => s.id === id);
+                if (staff) addActivityLog('Staff Deleted', staff.name);
+                appData.staff = appData.staff.filter(s => s.id !== id);
+                saveToLocal();
+                renderApp();
+            }
+        };
+        window.addStaffPopup = () => {
+            let name = prompt("Staff Name:");
+            if (!name) return;
+            let pos = prompt("Position:") || "Staff";
+            let tier = parseInt(prompt("Commission Tier (30, 35, 40):", "35"));
+            if ([30, 35, 40].includes(tier)) {
+                appData.staff.push({
+                    id: Date.now(),
+                    name,
+                    position: pos,
+                    contact: "",
+                    salesGenerated: 0,
+                    jobsCompleted: 0,
+                    commissionTier: tier,
+                    isActive: true,
+                    totalCommission: 0
+                });
+                addActivityLog('Staff Added', name);
+                saveToLocal();
+                renderApp();
+            }
+        };
+
+        // ======================== ENHANCED DASHBOARD WITH INTERACTIVE CHART ========================
         function getChartData(period) {
             const now = new Date();
             let labels = [];
@@ -5212,13 +5360,14 @@
             } else if (period === 'weekly') {
                 const weeks = 12;
                 for (let i = weeks - 1; i >= 0; i--) {
-                    const weekStart = getWeekStart(new Date(now.getTime() - 7 * i * 24 * 60 * 60 * 1000));
-                    const weekEnd = getWeekEnd(weekStart);
+                    const weekStart = new Date(now);
+                    weekStart.setDate(now.getDate() - (now.getDay() + 7 * i));
+                    const weekEnd = new Date(weekStart);
+                    weekEnd.setDate(weekStart.getDate() + 6);
                     const weekStartStr = weekStart.toISOString().slice(0, 10);
                     const weekEndStr = weekEnd.toISOString().slice(0, 10);
                     labels.push(`W${weeks - i}`);
-                    const weekTx = appData.transactions.filter(t => t.date >= weekStartStr && t.date <=
-                    weekEndStr);
+                    const weekTx = appData.transactions.filter(t => t.date >= weekStartStr && t.date <= weekEndStr);
                     data.push(weekTx.reduce((s, t) => s + t.total, 0));
                 }
                 periodLabel = 'Weekly (12 Weeks)';
@@ -5242,35 +5391,28 @@
             return { labels, data, periodLabel };
         }
 
-        function updateDashboardStats() {
-            if (currentView === 'dashboard') {
-                renderApp();
-            }
-        }
-
         function renderDashboard() {
             if (showLogin) return renderLogin();
 
-            recalculateAllCommissions();
-
             const today = new Date().toISOString().slice(0, 10);
             const todayTx = appData.transactions.filter(t => t.date.startsWith(today));
-            const weekStart = getCurrentWeekStart();
+            const weekStart = new Date();
+            weekStart.setDate(weekStart.getDate() - weekStart.getDay());
             const weekStartStr = weekStart.toISOString().slice(0, 10);
-            const weekEndStr = getCurrentWeekEnd().toISOString().slice(0, 10);
-            const weekTx = appData.transactions.filter(t => t.date >= weekStartStr && t.date <= weekEndStr);
+            const weekTx = appData.transactions.filter(t => t.date >= weekStartStr);
             const monthTx = appData.transactions.filter(t => new Date(t.date).getMonth() === new Date().getMonth());
 
             const dailySales = todayTx.reduce((s, t) => s + t.total, 0);
             const weeklySales = weekTx.reduce((s, t) => s + t.total, 0);
             const monthlySales = monthTx.reduce((s, t) => s + t.total, 0);
-            const yearlySales = appData.transactions.reduce((s, t) => s + t.total, 0);
 
+            // TODAY'S COMMISSION - ONLY from today's transactions
             const dailyCommission = appData.transactions
                 .filter(t => t.date.startsWith(today) && t.staffCommissions)
                 .reduce((sum, t) => sum + Object.values(t.staffCommissions).reduce((s, st) => s + (st.commission || 0),
-                0), 0);
+                    0), 0);
 
+            // Get weekly commission from auto-calculated data
             const weeklyData = getWeeklyCommission();
             const weeklyCommission = weeklyData.totals?.commission || 0;
             const weeklySalesTotal = weeklyData.totals?.sales || 0;
@@ -5283,41 +5425,12 @@
             const totalRevenue = appData.transactions.reduce((s, t) => s + t.total, 0);
             const totalExpenses = appData.expenses.reduce((s, e) => s + e.amount, 0);
             const totalCommissionAll = appData.staff.reduce((sum, s) => sum + (s.totalCommission || 0), 0);
-            const totalTransactions = appData.transactions.length;
-            const totalFeedback = appData.feedback ? appData.feedback.length : 0;
-            const feedbackStats = getFeedbackStats();
-
-            const serviceCount = {};
-            appData.transactions.forEach(t => { t.items.forEach(item => { serviceCount[item.serviceName] = (serviceCount[
-                        item.serviceName] || 0) + item.quantity; }); });
-            const topServices = Object.entries(serviceCount).sort((a, b) => b[1] - a[1]).slice(0, 5);
-
-            const staffCount = {};
-            appData.transactions.forEach(t => {
-                t.items.forEach(item => {
-                    if (item.assignedStaff) {
-                        item.assignedStaff.forEach(s => {
-                            staffCount[s.name] = (staffCount[s.name] || 0) + 1;
-                        });
-                    }
-                });
-            });
-            const topStaff = Object.entries(staffCount).sort((a, b) => b[1] - a[1]).slice(0, 5);
-
-            const customerCount = {};
-            appData.transactions.forEach(t => {
-                if (t.customer && t.customer !== 'Walk-in Customer') {
-                    customerCount[t.customer] = (customerCount[t.customer] || 0) + 1;
-                }
-            });
-            const topCustomers = Object.entries(customerCount).sort((a, b) => b[1] - a[1]).slice(0, 5);
-
-            const returningCustomers = Object.values(customerCount).filter(c => c > 1).length;
 
             const logoHtml = appData.systemSettings.companyLogo ?
                 `<img src="${appData.systemSettings.companyLogo}" class="company-logo inline-block mr-2" alt="Logo" style="max-height:40px;">` :
                 '';
 
+            // Activity Feed
             const activities = (appData.systemSettings.activityLog || []).slice(0, 10);
             const activityHtml = activities.map(a => `
             <div class="activity-item">
@@ -5327,6 +5440,7 @@
             </div>
         `).join('') || '<div class="text-center text-gray-500 py-4 text-sm">No recent activity</div>';
 
+            // Quick Actions
             const quickActions = `
             <div class="quick-actions-grid">
                 <div class="quick-action-btn" onclick="navigate('pos')">
@@ -5341,14 +5455,6 @@
                     <i class="fas fa-user-plus"></i>
                     Add Customer
                 </div>
-                <div class="quick-action-btn" onclick="navigateAdmin('transactiontracking')">
-                    <i class="fas fa-exchange-alt"></i>
-                    Transactions
-                </div>
-                <div class="quick-action-btn" onclick="navigateAdmin('feedback')">
-                    <i class="fas fa-comment-dots"></i>
-                    Feedback
-                </div>
                 <div class="quick-action-btn" onclick="navigate('admin')">
                     <i class="fas fa-cog"></i>
                     Settings
@@ -5357,63 +5463,32 @@
                     <i class="fas fa-file-export"></i>
                     Export Today
                 </div>
+                <div class="quick-action-btn" onclick="window.printDailyTransactions()">
+                    <i class="fas fa-print"></i>
+                    Print Report
+                </div>
             </div>
         `;
 
+            // Chart - Get initial data
             const defaultPeriod = appData.systemSettings.chartDefaultPeriod || 'weekly';
             const chartData = getChartData(defaultPeriod);
             const chartLabels = JSON.stringify(chartData.labels);
             const chartValues = JSON.stringify(chartData.data);
             const chartPeriodLabel = chartData.periodLabel;
 
+            // Weekly commission staff breakdown for quick view
             const weeklyStaffData = weeklyData.staff || {};
-            const topCommissionStaff = Object.values(weeklyStaffData)
+            const topStaff = Object.values(weeklyStaffData)
                 .sort((a, b) => b.commission - a.commission)
                 .slice(0, 3);
 
-            const topCommissionHtml = topCommissionStaff.map(s => `
+            const topStaffHtml = topStaff.map(s => `
             <div class="flex justify-between items-center border-b border-gray-700/50 py-1">
                 <span class="text-sm">${s.name}</span>
                 <span class="text-sm text-purple-400">₱${s.commission.toFixed(2)}</span>
             </div>
         `).join('') || '<div class="text-gray-400 text-center py-2 text-sm">No commission data</div>';
-
-            const weekLabel = weeklyData.weekLabel || getWeekLabel(new Date());
-
-            const feedbackStatsHtml = `
-                <div class="grid grid-cols-3 md:grid-cols-6 gap-2 mb-4">
-                    <div class="feedback-stat-card">
-                        <div class="stat-icon text-purple-400"><i class="fas fa-comment-dots"></i></div>
-                        <div class="stat-number text-purple-400">${feedbackStats.total}</div>
-                        <div class="stat-label">Total Feedback</div>
-                    </div>
-                    <div class="feedback-stat-card">
-                        <div class="stat-icon text-yellow-400"><i class="fas fa-star"></i></div>
-                        <div class="stat-number text-yellow-400">${feedbackStats.average ? feedbackStats.average.toFixed(1) : '0'}★</div>
-                        <div class="stat-label">Average Rating</div>
-                    </div>
-                    <div class="feedback-stat-card">
-                        <div class="stat-icon text-green-400"><i class="fas fa-smile"></i></div>
-                        <div class="stat-number text-green-400">${feedbackStats.positive}</div>
-                        <div class="stat-label">Positive (4-5★)</div>
-                    </div>
-                    <div class="feedback-stat-card">
-                        <div class="stat-icon text-red-400"><i class="fas fa-frown"></i></div>
-                        <div class="stat-number text-red-400">${feedbackStats.negative}</div>
-                        <div class="stat-label">Negative (1-2★)</div>
-                    </div>
-                    <div class="feedback-stat-card">
-                        <div class="stat-icon text-orange-400"><i class="fas fa-clock"></i></div>
-                        <div class="stat-number text-orange-400">${feedbackStats.pending}</div>
-                        <div class="stat-label">Pending</div>
-                    </div>
-                    <div class="feedback-stat-card">
-                        <div class="stat-icon text-cyan-400"><i class="fas fa-calendar-day"></i></div>
-                        <div class="stat-number text-cyan-400">${feedbackStats.today}</div>
-                        <div class="stat-label">Today</div>
-                    </div>
-                </div>
-            `;
 
             return `
             <div class="flex justify-between items-center mb-4">
@@ -5430,13 +5505,8 @@
                 <div class="text-sm text-gray-400">${appData.systemSettings.businessHours}</div>
             </div>
 
-            <div class="flex justify-end mb-4 no-print">
-                <button onclick="printEntireDashboard()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded text-sm transition flex items-center gap-2">
-                    <i class="fas fa-print"></i> Print Entire Dashboard
-                </button>
-            </div>
-            
-            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-9 gap-3 mb-6">
+            <!-- Quick Stats Row -->
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3 mb-6">
                 <div class="quick-stat-card text-center">
                     <div class="icon text-green-400"><i class="fas fa-coins"></i></div>
                     <div class="value text-green-400">₱${dailySales.toFixed(2)}</div>
@@ -5477,29 +5547,25 @@
                     <div class="value text-pink-400">${openCount}</div>
                     <div class="label">Open Services</div>
                 </div>
-                <div class="quick-stat-card text-center">
-                    <div class="icon text-purple-400"><i class="fas fa-comment-dots"></i></div>
-                    <div class="value text-purple-400">${totalFeedback}</div>
-                    <div class="label">Feedback</div>
-                </div>
             </div>
 
-            ${feedbackStatsHtml}
-
+            <!-- Weekly Commission Live Badge -->
             <div class="bg-gray-800/30 border border-purple-500/20 rounded-lg p-3 mb-4 flex items-center justify-between flex-wrap gap-2">
                 <div class="flex items-center gap-3">
                     <span class="commission-live-badge text-purple-400"><i class="fas fa-sync fa-spin"></i> Live</span>
-                    <span class="text-sm text-gray-400">Weekly Commission (${weekLabel}):</span>
+                    <span class="text-sm text-gray-400">Weekly Commission Auto-Sync:</span>
                     <span class="text-sm font-bold text-purple-400">₱${weeklyCommission.toFixed(2)}</span>
                     <span class="text-xs text-gray-500">(${Object.keys(weeklyStaffData).length} staff active)</span>
                 </div>
                 <div class="flex gap-2">
                     <button onclick="navigateAdmin('weeklycommission')" class="bg-purple-600 px-3 py-1 rounded text-xs hover:bg-purple-700 transition">View Full Report</button>
-                    <button onclick="refreshAllCommissions(); renderApp();" class="bg-cyan-600 px-3 py-1 rounded text-xs hover:bg-cyan-700 transition"><i class="fas fa-sync"></i> Refresh</button>
+                    <button onclick="calculateWeeklyCommission(); renderApp();" class="bg-cyan-600 px-3 py-1 rounded text-xs hover:bg-cyan-700 transition"><i class="fas fa-sync"></i> Refresh</button>
                 </div>
             </div>
 
+            <!-- Main Dashboard Grid -->
             <div class="dashboard-grid">
+                <!-- Left: Sales Chart with Period Selector -->
                 <div class="card-premium p-5">
                     <div class="flex justify-between items-center mb-3 flex-wrap gap-2">
                         <h3 class="text-lg font-bold"><i class="fas fa-chart-line"></i> Sales Overview</h3>
@@ -5518,23 +5584,29 @@
                         <span>${chartData.labels.length} periods</span>
                     </div>
                 </div>
-                
+
+                <!-- Right: Top Services & Quick Actions -->
                 <div>
                     <div class="card-premium p-5 mb-4">
                         <h3 class="text-lg font-bold mb-3"><i class="fas fa-star"></i> Top Services</h3>
                         <div class="max-h-32 overflow-y-auto">
-                            ${topServices.map(([name, count]) => `
-                                <div class="flex justify-between items-center border-b border-gray-700/50 py-1">
-                                    <span class="text-sm">${name}</span>
-                                    <span class="text-sm text-cyan-400">${count} sold</span>
-                                </div>
-                            `).join('') || '<div class="text-gray-400 text-center py-4">No service data yet</div>'}
+                            ${(() => {
+                                const serviceCount = {};
+                                appData.transactions.forEach(t => { t.items.forEach(item => { serviceCount[item.serviceName] = (serviceCount[item.serviceName] || 0) + item.quantity; }); });
+                                const sortedServices = Object.entries(serviceCount).sort((a,b) => b[1] - a[1]).slice(0,5);
+                                return sortedServices.map(([name, count]) => `
+                                    <div class="flex justify-between items-center border-b border-gray-700/50 py-1">
+                                        <span class="text-sm">${name}</span>
+                                        <span class="text-sm text-cyan-400">${count} sold</span>
+                                    </div>
+                                `).join('') || '<div class="text-gray-400 text-center py-4">No service data yet</div>';
+                            })()}
                         </div>
                         <div class="mt-2 border-t border-gray-700/30 pt-2">
                             <div class="flex justify-between items-center">
                                 <span class="text-xs text-gray-400">Top Commission Earners (This Week)</span>
                             </div>
-                            ${topCommissionHtml}
+                            ${topStaffHtml}
                         </div>
                     </div>
                     <div class="card-premium p-5">
@@ -5544,6 +5616,7 @@
                 </div>
             </div>
 
+            <!-- Bottom Row: Activity Feed & Summary Stats -->
             <div class="grid md:grid-cols-2 gap-4 mt-4">
                 <div class="card-premium p-5">
                     <div class="flex justify-between items-center mb-3">
@@ -5573,42 +5646,34 @@
                             <div class="text-xs text-gray-400">Net Profit</div>
                             <div class="text-xl font-bold text-cyan-400">₱${(totalRevenue - totalExpenses).toFixed(2)}</div>
                         </div>
-                        <div class="bg-gray-800/50 p-3 rounded-lg text-center">
-                            <div class="text-xs text-gray-400">Total Transactions</div>
-                            <div class="text-xl font-bold text-blue-400">${totalTransactions}</div>
-                        </div>
-                        <div class="bg-gray-800/50 p-3 rounded-lg text-center">
-                            <div class="text-xs text-gray-400">Returning Customers</div>
-                            <div class="text-xl font-bold text-purple-400">${returningCustomers}</div>
-                        </div>
                     </div>
                     <div class="mt-3 flex gap-2 flex-wrap justify-center">
                         <button onclick="navigate('admin')" class="btn-neon px-3 py-1 rounded text-sm">Manage</button>
                         <button onclick="navigate('commission')" class="bg-purple-600 px-3 py-1 rounded text-sm"><i class="fas fa-percent"></i> Commissions</button>
                         <button onclick="navigate('reports')" class="bg-cyan-600 px-3 py-1 rounded text-sm"><i class="fas fa-chart-bar"></i> Reports</button>
-                        <button onclick="navigateAdmin('feedback')" class="bg-purple-400 px-3 py-1 rounded text-sm"><i class="fas fa-comment-dots"></i> Feedback</button>
                     </div>
                 </div>
             </div>
 
             <script>
+                // Initialize chart
                 window.chartPeriod = '${defaultPeriod}';
                 window.chartLabels = ${chartLabels};
                 window.chartValues = ${chartValues};
-                
+
                 function initChart() {
                     const ctx = document.getElementById('salesChart')?.getContext('2d');
                     if (!ctx) return;
-                    
+
                     if (window.chartInstance) {
                         window.chartInstance.destroy();
                     }
-                    
+
                     const gradient = ctx.createLinearGradient(0, 0, 0, 280);
                     gradient.addColorStop(0, 'rgba(0, 212, 255, 0.3)');
                     gradient.addColorStop(0.5, 'rgba(0, 212, 255, 0.1)');
                     gradient.addColorStop(1, 'rgba(0, 212, 255, 0)');
-                    
+
                     window.chartInstance = new Chart(ctx, {
                         type: 'line',
                         data: {
@@ -5651,7 +5716,7 @@
                             scales: {
                                 y: {
                                     beginAtZero: true,
-                                    grid: { 
+                                    grid: {
                                         color: 'rgba(255,255,255,0.05)',
                                         drawBorder: false
                                     },
@@ -5664,7 +5729,7 @@
                                     }
                                 },
                                 x: {
-                                    grid: { 
+                                    grid: {
                                         display: false,
                                         drawBorder: false
                                     },
@@ -5681,7 +5746,8 @@
                             }
                         }
                     });
-                    
+
+                    // Update period label
                     const periodLabelEl = document.getElementById('chartPeriodLabel');
                     if (periodLabelEl) {
                         const periods = {
@@ -5691,26 +5757,30 @@
                         };
                         periodLabelEl.textContent = periods[window.chartPeriod] || 'Weekly (12 Weeks)';
                     }
-                    
+
+                    // Update active button
                     document.querySelectorAll('.chart-period-btn').forEach(btn => {
                         btn.classList.toggle('active', btn.textContent.toLowerCase() === window.chartPeriod);
                     });
                 }
-                
+
+                // Function to update chart period
                 window.updateChartPeriod = function(period) {
                     window.chartPeriod = period;
                     appData.systemSettings.chartDefaultPeriod = period;
                     saveToLocal();
-                    
+
+                    // Fetch new data
                     const data = getChartData(period);
                     window.chartLabels = data.labels;
                     window.chartValues = data.data;
-                    
+
+                    // Update chart
                     if (window.chartInstance) {
                         window.chartInstance.data.labels = window.chartLabels;
                         window.chartInstance.data.datasets[0].data = window.chartValues;
                         window.chartInstance.update();
-                        
+
                         const periodLabelEl = document.getElementById('chartPeriodLabel');
                         if (periodLabelEl) {
                             const periods = {
@@ -5720,13 +5790,14 @@
                             };
                             periodLabelEl.textContent = periods[period] || 'Weekly (12 Weeks)';
                         }
-                        
+
                         document.querySelectorAll('.chart-period-btn').forEach(btn => {
                             btn.classList.toggle('active', btn.textContent.toLowerCase() === period);
                         });
                     }
                 };
-                
+
+                // Call init after render
                 setTimeout(initChart, 100);
             <\/script>
         `;
@@ -5910,7 +5981,7 @@
                         staffMember.jobsCompleted = (staffMember.jobsCompleted || 0) + jobs;
                         staffMember.salesGenerated = (staffMember.salesGenerated || 0) + sales;
                         staffMember.weeklyBreakdown[dayName] = (staffMember.weeklyBreakdown[dayName] || 0) +
-                        commission;
+                            commission;
                         staffMember.weeklyCommission = (staffMember.weeklyCommission || 0) + commission;
                         staffMember.monthlyCommission = (staffMember.monthlyCommission || 0) + commission;
                         staffMember.yearlyCommission = (staffMember.yearlyCommission || 0) + commission;
@@ -6849,7 +6920,7 @@
                 <div class="row"><span class="label">Comment</span><span class="value">${f.comment || 'No comment'}</span></div>
                 <div class="row"><span class="label">Status</span><span class="value"><span class="status-badge ${f.status === 'new' ? 'status-pending' : 'status-completed'}">${f.status || 'new'}</span></span></div>
                 <div class="row"><span class="label">Device</span><span class="value">${f.deviceType || 'Unknown'} | ${f.browser || 'Unknown'}</span></div>
-                <p style="margin-top:20px;font-size:10px;color:#888;">Printed from ${appData.systemSettings.companyName} POS System v8.8.5</p>
+                <p style="margin-top:20px;font-size:10px;color:#888;">Printed from ${appData.systemSettings.companyName} POS System v8.8.6</p>
                 <script>
                     window.onload = function() { window.print(); window.onafterprint = function() { window.close(); }; };
                 <\/script>
@@ -6919,7 +6990,7 @@
                     </tbody>
                 </table>
                 </div>
-                <p style="margin-top:20px;font-size:10px;color:#888;">Printed from ${appData.systemSettings.companyName} POS System v8.8.5</p>
+                <p style="margin-top:20px;font-size:10px;color:#888;">Printed from ${appData.systemSettings.companyName} POS System v8.8.6</p>
                 <script>
                     window.onload = function() { window.print(); window.onafterprint = function() { window.close(); }; };
                 <\/script>
@@ -7075,7 +7146,9 @@
                 window.classList.toggle('open');
                 if (aiAssistantOpen && aiChatHistory.length === 0) {
                     // Welcome message
-                    addAIMessage('assistant', '👋 Hi! I\'m your POS Assistant. I can help you with:\n\n• Viewing sales and revenue insights\n• Checking staff performance\n• Finding specific transactions\n• Analyzing customer data\n• Commission reports\n• Inventory status\n\nTry asking something like "What are today\'s sales?" or "Show me top performing staff"');
+                    addAIMessage('assistant',
+                        '👋 Hi! I\'m your POS Assistant. I can help you with:\n\n• Viewing sales and revenue insights\n• Checking staff performance\n• Finding specific transactions\n• Analyzing customer data\n• Commission reports\n• Inventory status\n\nTry asking something like "What are today\'s sales?" or "Show me top performing staff"'
+                        );
                 }
             }
             if (aiAssistantOpen) {
@@ -7139,7 +7212,8 @@
                 let response = '';
 
                 // Check for sales/transactions queries
-                if (q.includes('today') && (q.includes('sales') || q.includes('revenue') || q.includes('transaction'))) {
+                if (q.includes('today') && (q.includes('sales') || q.includes('revenue') || q.includes(
+                    'transaction'))) {
                     const today = new Date().toISOString().slice(0, 10);
                     const todayTx = appData.transactions.filter(t => t.date.startsWith(today));
                     const total = todayTx.reduce((s, t) => s + t.total, 0);
@@ -7147,7 +7221,8 @@
                     const avg = count > 0 ? total / count : 0;
                     const commissions = todayTx.filter(t => t.staffCommissions).reduce((sum, t) => sum + Object.values(t
                         .staffCommissions).reduce((s, st) => s + (st.commission || 0), 0), 0);
-                    response = `📊 **Today's Sales Summary**\n\n• Total Sales: ₱${total.toFixed(2)}\n• Transactions: ${count}\n• Average per Transaction: ₱${avg.toFixed(2)}\n• Staff Commission: ₱${commissions.toFixed(2)}\n\n${count > 0 ? '✅ Activity is healthy today!' : '⚠️ No transactions recorded today yet.'}`;
+                    response =
+                        `📊 **Today's Sales Summary**\n\n• Total Sales: ₱${total.toFixed(2)}\n• Transactions: ${count}\n• Average per Transaction: ₱${avg.toFixed(2)}\n• Staff Commission: ₱${commissions.toFixed(2)}\n\n${count > 0 ? '✅ Activity is healthy today!' : '⚠️ No transactions recorded today yet.'}`;
                 } else if (q.includes('week') && (q.includes('sales') || q.includes('revenue') || q.includes(
                     'transaction'))) {
                     const weekStart = getCurrentWeekStart();
@@ -7212,7 +7287,8 @@
                 }
 
                 // Check for transaction search
-                else if (q.includes('find') || q.includes('search') || q.includes('look') || q.includes('transaction')) {
+                else if (q.includes('find') || q.includes('search') || q.includes('look') || q.includes(
+                    'transaction')) {
                     // Try to extract a receipt number or customer name
                     const words = q.split(' ');
                     let searchTerm = '';
@@ -7442,7 +7518,7 @@
             return `<div class="admin-grid">
             <div class="admin-sidebar">
                 <h3 class="text-lg font-bold mb-4 neon-glow p-2 rounded text-center"><i class="fas fa-crown"></i> ${appData.systemSettings.uiLabels.adminTitle || 'Admin Panel'}</h3>
-                <div class="text-xs text-gray-400 mb-2 px-2">v8.8.5 — AI Assistant</div>
+                <div class="text-xs text-gray-400 mb-2 px-2">v8.8.6 — AI Assistant</div>
                 ${adminPanels.map(p => `<div class="admin-sidebar-item ${currentAdminPanel === p.id ? 'active' : ''}" onclick="navigateAdmin('${p.id}')"><i class="fas ${p.icon}"></i> ${p.label}</div>`).join('')}
                 <div class="mt-6 p-3 bg-gray-800 rounded-lg text-xs">
                     <div class="text-gray-400">System Status</div>
@@ -7452,7 +7528,7 @@
                         <div>Staff: ${appData.staff.length}</div>
                         <div>TX: ${appData.transactions.length}</div>
                         <div>Credit: ${(appData.credits || []).filter(c=>c.balance>0).length}</div>
-                        <div>v8.8.5</div>
+                        <div>v8.8.6</div>
                     </div>
                     <div class="mt-2 text-cyan-400 text-[10px]">Last Saved: ${new Date().toLocaleTimeString()}</div>
                     <div class="mt-1 text-green-400 text-[10px]">✅ Auto-Sync: ON | Auto-Commission: ON</div>
@@ -7504,7 +7580,7 @@
                             <button onclick="closePanelEditor()" class="text-gray-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
                         </div>
                         <p class="text-sm text-gray-400 mb-3">Edit the HTML content of this panel. Use standard HTML with Tailwind classes.</p>
-                        
+
                         <div class="editor-toolbar">
                             <button onclick="editorInsert('h2')"><i class="fas fa-heading"></i> H2</button>
                             <button onclick="editorInsert('h3')"><i class="fas fa-heading"></i> H3</button>
@@ -7516,9 +7592,9 @@
                             <button onclick="editorInsert('list')"><i class="fas fa-list"></i> List</button>
                             <button onclick="editorReset()" class="text-red-400 hover:text-red-300"><i class="fas fa-undo"></i> Reset</button>
                         </div>
-                        
+
                         <div class="editor-content" contenteditable="true" id="panelEditorContent">${currentContent}</div>
-                        
+
                         <div class="flex gap-3 mt-4">
                             <button onclick="savePanelCustomization('${panelId}')" class="btn-neon flex-1 p-2 rounded"><i class="fas fa-save"></i> Save Customization</button>
                             <button onclick="removePanelCustomization('${panelId}')" class="bg-red-600 flex-1 p-2 rounded hover:bg-red-700 transition"><i class="fas fa-trash"></i> Remove Customization</button>
@@ -7538,7 +7614,7 @@
                 const editor = document.getElementById('panelEditorContent');
                 if (!editor) return;
                 let template = '';
-                switch(type) {
+                switch (type) {
                     case 'h2':
                         template = '<h2 class="text-xl font-bold text-cyan-400 mb-3">Your Heading Here</h2>';
                         break;
@@ -7552,16 +7628,20 @@
                         template = '<div class="bg-gray-800/30 p-4 rounded-lg mb-3">Content inside a container</div>';
                         break;
                     case 'card':
-                        template = '<div class="bg-gray-800/20 border border-cyan-400/20 rounded-lg p-4 mb-3"><h4 class="font-bold text-cyan-400 mb-2">Card Title</h4><p class="text-gray-300">Card content goes here.</p></div>';
+                        template =
+                            '<div class="bg-gray-800/20 border border-cyan-400/20 rounded-lg p-4 mb-3"><h4 class="font-bold text-cyan-400 mb-2">Card Title</h4><p class="text-gray-300">Card content goes here.</p></div>';
                         break;
                     case 'stat':
-                        template = '<div class="grid grid-cols-2 gap-3 mb-3"><div class="bg-gray-800/30 p-3 rounded text-center"><div class="text-xs text-gray-400">Stat Label</div><div class="text-xl font-bold text-green-400">₱0.00</div></div><div class="bg-gray-800/30 p-3 rounded text-center"><div class="text-xs text-gray-400">Another Stat</div><div class="text-xl font-bold text-cyan-400">0</div></div></div>';
+                        template =
+                            '<div class="grid grid-cols-2 gap-3 mb-3"><div class="bg-gray-800/30 p-3 rounded text-center"><div class="text-xs text-gray-400">Stat Label</div><div class="text-xl font-bold text-green-400">₱0.00</div></div><div class="bg-gray-800/30 p-3 rounded text-center"><div class="text-xs text-gray-400">Another Stat</div><div class="text-xl font-bold text-cyan-400">0</div></div></div>';
                         break;
                     case 'table':
-                        template = '<table class="w-full text-sm border-collapse"><thead><tr class="border-b border-cyan-400"><th class="text-left py-2">Column 1</th><th class="text-left py-2">Column 2</th><th class="text-right py-2">Amount</th></tr></thead><tbody><tr class="border-b border-gray-700"><td class="py-2">Item 1</td><td>Description</td><td class="text-right text-green-400">₱0.00</td></tr></tbody></table>';
+                        template =
+                            '<table class="w-full text-sm border-collapse"><thead><tr class="border-b border-cyan-400"><th class="text-left py-2">Column 1</th><th class="text-left py-2">Column 2</th><th class="text-right py-2">Amount</th></tr></thead><tbody><tr class="border-b border-gray-700"><td class="py-2">Item 1</td><td>Description</td><td class="text-right text-green-400">₱0.00</td></tr></tbody></table>';
                         break;
                     case 'list':
-                        template = '<ul class="list-disc list-inside text-gray-300 space-y-1 mb-3"><li>List item 1</li><li>List item 2</li><li>List item 3</li></ul>';
+                        template =
+                            '<ul class="list-disc list-inside text-gray-300 space-y-1 mb-3"><li>List item 1</li><li>List item 2</li><li>List item 3</li></ul>';
                         break;
                     default:
                         template = '<div class="text-gray-300">Content</div>';
@@ -7685,7 +7765,7 @@
                     (t.plate && t.plate.toLowerCase().includes(q)) ||
                     t.items.some(i => i.serviceName.toLowerCase().includes(q)) ||
                     t.items.flatMap(i => i.assignedStaff?.map(s => s.name) || []).some(n => n.toLowerCase().includes(
-                    q))
+                        q))
                 );
             }
 
@@ -7738,7 +7818,7 @@
                 let txCommission = 0;
                 if (t.staffCommissions) {
                     txCommission = Object.values(t.staffCommissions).reduce((sum, st) => sum + (st
-                    .commission || 0), 0);
+                        .commission || 0), 0);
                 }
                 const customer = appData.customers.find(c => c.name === t.customer);
                 const customerId = customer?.id || '';
@@ -7795,7 +7875,7 @@
             const filterHtml = `
             <div class="filter-panel">
                 <input type="text" placeholder="🔍 Search by plate, receipt, customer..." class="search-input text-sm flex-1 min-w-[150px]" id="globalSearchInput" value="${searchQuery}" oninput="updateGlobalSearch(this.value)">
-                
+
                 <select id="filterPeriod" class="text-sm" onchange="applyFilters()">
                     <option value="daily" ${transactionFilter === 'daily' ? 'selected' : ''}>Daily</option>
                     <option value="weekly" ${transactionFilter === 'weekly' ? 'selected' : ''}>Weekly</option>
@@ -7803,25 +7883,25 @@
                     <option value="yearly" ${transactionFilter === 'yearly' ? 'selected' : ''}>Yearly</option>
                     <option value="custom" ${transactionFilter === 'custom' ? 'selected' : ''}>Custom</option>
                 </select>
-                
+
                 <input type="date" id="dateStartFilter" class="text-sm" value="${dateRangeStart}" onchange="applyFilters()" placeholder="Start">
                 <input type="date" id="dateEndFilter" class="text-sm" value="${dateRangeEnd}" onchange="applyFilters()" placeholder="End">
-                
+
                 <select id="filterStaff" class="text-sm" onchange="applyFilters()">
                     <option value="all">All Staff</option>
                     ${allStaff.map(s => `<option value="${s}" ${filterStaff === s ? 'selected' : ''}>${s}</option>`).join('')}
                 </select>
-                
+
                 <select id="filterService" class="text-sm" onchange="applyFilters()">
                     <option value="all">All Services</option>
                     ${allServices.map(s => `<option value="${s}" ${filterService === s ? 'selected' : ''}>${s}</option>`).join('')}
                 </select>
-                
+
                 <select id="filterPayment" class="text-sm" onchange="applyFilters()">
                     <option value="all">All Payments</option>
                     ${allPayments.map(p => `<option value="${p}" ${filterPayment === p ? 'selected' : ''}>${p}</option>`).join('')}
                 </select>
-                
+
                 <button onclick="applyFilters()" class="bg-cyan-600 px-3 py-1 rounded text-sm"><i class="fas fa-filter"></i> Apply</button>
                 <button onclick="clearFilters()" class="bg-gray-600 px-3 py-1 rounded text-sm"><i class="fas fa-times"></i> Clear</button>
             </div>
@@ -7851,10 +7931,10 @@
                     <button onclick="printFilteredTransactions()" class="bg-cyan-600 px-3 py-1 rounded text-sm"><i class="fas fa-print"></i> Print</button>
                 </div>
             </div>
-            
+
             ${filterHtml}
             ${vehicleSearchHtml}
-            
+
             <div class="table-container mt-3">
                 <table class="w-full text-sm" id="transactionTable">
                     <thead class="border-b-2 border-cyan-400">
@@ -7883,9 +7963,9 @@
                     </tfoot>
                 </table>
             </div>
-            
+
             ${paginationHtml}
-            
+
             <div class="mt-4">
                 <h4 class="text-sm font-bold text-cyan-400 mb-2"><i class="fas fa-chart-bar"></i> Transaction Summary</h4>
                 <div class="summary-grid">
@@ -7940,7 +8020,7 @@
                 let txCommission = 0;
                 if (t.staffCommissions) {
                     txCommission = Object.values(t.staffCommissions).reduce((sum, st) => sum + (st
-                    .commission || 0), 0);
+                        .commission || 0), 0);
                 }
                 const customer = appData.customers.find(c => c.name === t.customer);
                 const customerId = customer?.id || '';
@@ -8119,7 +8199,8 @@
 
         window.showAddServiceModal = () => {
             const categoryOptions = appData.categories.map(c => `<option>${c}</option>`).join('');
-            let modalHtml = `<div id="adminModal" class="modal"><div class="modal-content"><h3 class="text-xl font-bold mb-4">Add New Service</h3><div class="space-y-3"><div><label class="text-gray-400">Service Name</label><input type="text" id="newServiceName" class="w-full bg-gray-800 p-2 rounded"></div><div><label class="text-gray-400">Description</label><input type="text" id="newServiceDesc" class="w-full bg-gray-800 p-2 rounded"></div><div><label class="text-gray-400">Category</label><select id="newServiceCat" class="w-full bg-gray-800 p-2 rounded">${categoryOptions}</select></div><div><label class="text-gray-400">Sizes (comma separated)</label><input type="text" id="newServiceSizes" class="w-full bg-gray-800 p-2 rounded" placeholder="Small, Medium, Large"></div><div><label class="text-gray-400">Prices (comma separated matching sizes)</label><input type="text" id="newServicePrices" class="w-full bg-gray-800 p-2 rounded" placeholder="200, 230, 250"></div><div class="flex gap-3"><button onclick="confirmAddService()" class="btn-neon flex-1 p-2 rounded">Create</button><button onclick="closeAdminModal()" class="bg-gray-700 flex-1 p-2 rounded">Cancel</button></div></div></div></div>`;
+            let modalHtml =
+                `<div id="adminModal" class="modal"><div class="modal-content"><h3 class="text-xl font-bold mb-4">Add New Service</h3><div class="space-y-3"><div><label class="text-gray-400">Service Name</label><input type="text" id="newServiceName" class="w-full bg-gray-800 p-2 rounded"></div><div><label class="text-gray-400">Description</label><input type="text" id="newServiceDesc" class="w-full bg-gray-800 p-2 rounded"></div><div><label class="text-gray-400">Category</label><select id="newServiceCat" class="w-full bg-gray-800 p-2 rounded">${categoryOptions}</select></div><div><label class="text-gray-400">Sizes (comma separated)</label><input type="text" id="newServiceSizes" class="w-full bg-gray-800 p-2 rounded" placeholder="Small, Medium, Large"></div><div><label class="text-gray-400">Prices (comma separated matching sizes)</label><input type="text" id="newServicePrices" class="w-full bg-gray-800 p-2 rounded" placeholder="200, 230, 250"></div><div class="flex gap-3"><button onclick="confirmAddService()" class="btn-neon flex-1 p-2 rounded">Create</button><button onclick="closeAdminModal()" class="bg-gray-700 flex-1 p-2 rounded">Cancel</button></div></div></div></div>`;
             document.body.insertAdjacentHTML('beforeend', modalHtml);
         };
         window.confirmAddService = () => {
@@ -8132,7 +8213,7 @@
             const prices = {};
             sizes.forEach((size, idx) => { if (pricesArr[idx]) prices[size] = pricesArr[idx]; });
             const newService = { id: Date.now(), name: name.toUpperCase(), desc, sizes, prices, category,
-            isActive: true };
+                isActive: true };
             appData.services.push(newService);
             sizes.forEach(size => {
                 const price = prices[size];
@@ -8240,7 +8321,8 @@
         }
 
         window.showAddCategoryModal = () => {
-            let modalHtml = `<div id="adminModal" class="modal"><div class="modal-content"><h3 class="text-xl font-bold mb-4">Add New Category</h3><div class="space-y-3"><div><label class="text-gray-400">Category Name</label><input type="text" id="newCategoryName" class="w-full bg-gray-800 p-2 rounded" placeholder="e.g., Interior Services"></div><div class="flex gap-3 mt-4"><button onclick="confirmAddCategory()" class="btn-neon flex-1 p-2 rounded">Add Category</button><button onclick="closeAdminModal()" class="bg-gray-700 flex-1 p-2 rounded">Cancel</button></div></div></div></div>`;
+            let modalHtml =
+                `<div id="adminModal" class="modal"><div class="modal-content"><h3 class="text-xl font-bold mb-4">Add New Category</h3><div class="space-y-3"><div><label class="text-gray-400">Category Name</label><input type="text" id="newCategoryName" class="w-full bg-gray-800 p-2 rounded" placeholder="e.g., Interior Services"></div><div class="flex gap-3 mt-4"><button onclick="confirmAddCategory()" class="btn-neon flex-1 p-2 rounded">Add Category</button><button onclick="closeAdminModal()" class="bg-gray-700 flex-1 p-2 rounded">Cancel</button></div></div></div></div>`;
             document.body.insertAdjacentHTML('beforeend', modalHtml);
         };
         window.confirmAddCategory = () => {
@@ -8312,10 +8394,12 @@
                 renderApp();
             }
         };
-        window.deleteInventory = (id) => { if (confirm("Delete inventory item?")) { appData.inventory = appData.inventory
-                .filter(i => i.id !== id);
+        window.deleteInventory = (id) => {
+            if (confirm("Delete inventory item?")) { appData.inventory = appData.inventory
+                    .filter(i => i.id !== id);
                 saveToLocal();
-                renderApp(); } };
+                renderApp(); }
+        };
 
         function renderAdminExpenses() {
             if (showLogin) return renderLogin();
@@ -8348,7 +8432,8 @@
         }
 
         window.showAddExpenseModal = () => {
-            let modalHtml = `<div id="adminModal" class="modal"><div class="modal-content"><h3 class="text-xl font-bold mb-4">Add New Expense</h3><div class="space-y-3"><div><label>Description</label><input type="text" id="expenseDescInput" class="w-full bg-gray-800 p-2 rounded"></div><div><label>Amount</label><input type="number" id="expenseAmtInput" class="w-full bg-gray-800 p-2 rounded"></div><div><label>Category</label><input type="text" id="expenseCatInput" class="w-full bg-gray-800 p-2 rounded" placeholder="Supplies, Utilities"></div><div><label>Date</label><input type="date" id="expenseDateInput" class="w-full bg-gray-800 p-2 rounded" value="${new Date().toISOString().slice(0,10)}"></div><div class="flex gap-3 mt-4"><button onclick="confirmAddExpense()" class="btn-neon flex-1 p-2 rounded">Add</button><button onclick="closeAdminModal()" class="bg-gray-700 flex-1 p-2 rounded">Cancel</button></div></div></div></div>`;
+            let modalHtml =
+                `<div id="adminModal" class="modal"><div class="modal-content"><h3 class="text-xl font-bold mb-4">Add New Expense</h3><div class="space-y-3"><div><label>Description</label><input type="text" id="expenseDescInput" class="w-full bg-gray-800 p-2 rounded"></div><div><label>Amount</label><input type="number" id="expenseAmtInput" class="w-full bg-gray-800 p-2 rounded"></div><div><label>Category</label><input type="text" id="expenseCatInput" class="w-full bg-gray-800 p-2 rounded" placeholder="Supplies, Utilities"></div><div><label>Date</label><input type="date" id="expenseDateInput" class="w-full bg-gray-800 p-2 rounded" value="${new Date().toISOString().slice(0,10)}"></div><div class="flex gap-3 mt-4"><button onclick="confirmAddExpense()" class="btn-neon flex-1 p-2 rounded">Add</button><button onclick="closeAdminModal()" class="bg-gray-700 flex-1 p-2 rounded">Cancel</button></div></div></div></div>`;
             document.body.insertAdjacentHTML('beforeend', modalHtml);
         };
         window.confirmAddExpense = () => {
@@ -8367,7 +8452,8 @@
         window.editExpenseFull = (id) => {
             const e = appData.expenses.find(ex => ex.id === id);
             if (!e) return;
-            let modalHtml = `<div id="adminModal" class="modal"><div class="modal-content"><h3 class="text-xl font-bold mb-4">Edit Expense</h3><div class="space-y-3"><div><label>Description</label><input type="text" id="editExpenseDesc" class="w-full bg-gray-800 p-2 rounded" value="${e.description}"></div><div><label>Amount</label><input type="number" id="editExpenseAmt" class="w-full bg-gray-800 p-2 rounded" value="${e.amount}"></div><div><label>Category</label><input type="text" id="editExpenseCat" class="w-full bg-gray-800 p-2 rounded" value="${e.category || "General"}"></div><div><label>Date</label><input type="date" id="editExpenseDate" class="w-full bg-gray-800 p-2 rounded" value="${e.date}"></div><div class="flex gap-3 mt-4"><button onclick="confirmEditExpense(${id})" class="btn-neon flex-1 p-2 rounded">Update</button><button onclick="closeAdminModal()" class="bg-gray-700 flex-1 p-2 rounded">Cancel</button></div></div></div></div>`;
+            let modalHtml =
+                `<div id="adminModal" class="modal"><div class="modal-content"><h3 class="text-xl font-bold mb-4">Edit Expense</h3><div class="space-y-3"><div><label>Description</label><input type="text" id="editExpenseDesc" class="w-full bg-gray-800 p-2 rounded" value="${e.description}"></div><div><label>Amount</label><input type="number" id="editExpenseAmt" class="w-full bg-gray-800 p-2 rounded" value="${e.amount}"></div><div><label>Category</label><input type="text" id="editExpenseCat" class="w-full bg-gray-800 p-2 rounded" value="${e.category || "General"}"></div><div><label>Date</label><input type="date" id="editExpenseDate" class="w-full bg-gray-800 p-2 rounded" value="${e.date}"></div><div class="flex gap-3 mt-4"><button onclick="confirmEditExpense(${id})" class="btn-neon flex-1 p-2 rounded">Update</button><button onclick="closeAdminModal()" class="bg-gray-700 flex-1 p-2 rounded">Cancel</button></div></div></div></div>`;
             document.body.insertAdjacentHTML('beforeend', modalHtml);
         };
         window.confirmEditExpense = (id) => {
@@ -8462,7 +8548,8 @@
         };
         window.editCommissionFull = (key) => {
             const values = appData.commissionMatrix[key] || [0, 0, 0];
-            let modalHtml = `<div id="adminModal" class="modal"><div class="modal-content"><h3 class="text-xl font-bold mb-4">Edit Commission: ${key}</h3>
+            let modalHtml =
+                `<div id="adminModal" class="modal"><div class="modal-content"><h3 class="text-xl font-bold mb-4">Edit Commission: ${key}</h3>
             <div class="space-y-3">
                 <div><label class="text-cyan-400">30% Tier</label><input type="number" id="editComm30" class="w-full bg-gray-800 p-2 rounded" value="${values[0]}"></div>
                 <div><label class="text-green-400">35% Tier</label><input type="number" id="editComm35" class="w-full bg-gray-800 p-2 rounded" value="${values[1]}"></div>
@@ -8492,7 +8579,8 @@
         window.showAddCommissionModal = () => {
             const serviceNames = appData.services.map(s => s.name);
             const sizes = ['Small', 'Medium', 'Large', 'XL', '2XL', '3XL', 'Standard'];
-            let modalHtml = `<div id="adminModal" class="modal"><div class="modal-content"><h3 class="text-xl font-bold mb-4">Add Commission Entry</h3>
+            let modalHtml =
+                `<div id="adminModal" class="modal"><div class="modal-content"><h3 class="text-xl font-bold mb-4">Add Commission Entry</h3>
             <div class="space-y-3">
                 <div><label class="text-gray-400">Service Name</label><select id="addCommService" class="w-full bg-gray-800 p-2 rounded">${serviceNames.map(n => `<option>${n}</option>`).join('')}</select></div>
                 <div><label class="text-gray-400">Size</label><select id="addCommSize" class="w-full bg-gray-800 p-2 rounded">${sizes.map(s => `<option>${s}</option>`).join('')}</select></div>
@@ -8590,10 +8678,10 @@
             const logoHtml = s.companyLogo ? `<img src="${s.companyLogo}" class="company-logo" style="max-width:120px;max-height:80px;">` :
                 'No logo uploaded';
             const appIconHtml = s.appIcon ? `<img src="${s.appIcon}" class="app-icon-preview">` :
-            'No app icon uploaded';
+                'No app icon uploaded';
             const timeout = s.inactivityTimeout || 30;
 
-            return `<h3 class="text-xl font-bold mb-4"><i class="fas fa-cogs"></i> System Settings v8.8.5</h3>
+            return `<h3 class="text-xl font-bold mb-4"><i class="fas fa-cogs"></i> System Settings v8.8.6</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="space-y-3">
                     <div><label class="text-gray-400 text-sm">Company Logo</label>
@@ -8652,7 +8740,7 @@
                         </label>
                     </div>
                     <div><label class="text-gray-400 text-sm">Business Hours</label><div class="editable-field bg-gray-800 p-2 rounded cursor-pointer" onclick="editSetting('businessHours')">${s.businessHours}</div></div>
-                    
+
                     <div class="border-t border-gray-700 pt-3 mt-2">
                         <label class="text-gray-400 text-sm font-bold">Advanced Settings</label>
                         <div class="space-y-2 mt-2">
@@ -8708,7 +8796,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="border-t border-gray-700 pt-3 mt-2">
                         <label class="text-gray-400 text-sm font-bold">UI Customization</label>
                         <div class="space-y-2 mt-2">
@@ -8719,7 +8807,7 @@
                             <div><label class="text-gray-400 text-xs">Credit Management Title</label><div class="editable-field bg-gray-800 p-2 rounded cursor-pointer text-sm" onclick="editUILabel('creditManagement')">${s.uiLabels?.creditManagement || 'Credit Management'}</div></div>
                         </div>
                     </div>
-                    
+
                     <div><label class="text-gray-400 text-sm mt-2">Firebase</label>
                         <div class="flex gap-2 flex-wrap">
                             <button onclick="showFirebaseConfig()" class="bg-cyan-600 px-3 py-1 rounded text-sm"><i class="fas fa-database"></i> Configure Firebase</button>
@@ -8745,7 +8833,7 @@
             </div>
             <div class="mt-4 p-3 bg-gray-800 rounded-lg text-xs">
                 <div class="text-gray-400">System Info</div>
-                <div>Version: 8.8.5 QR Code Feedback Edition | Last Saved: ${localStorage.getItem('8068_system_last_saved_v8') ? new Date(localStorage.getItem('8068_system_last_saved_v8')).toLocaleString() : 'Never'}</div>
+                <div>Version: 8.8.6 QR Code Feedback Edition | Last Saved: ${localStorage.getItem('8068_system_last_saved_v8') ? new Date(localStorage.getItem('8068_system_last_saved_v8')).toLocaleString() : 'Never'}</div>
                 <div>Records: ${appData.transactions.length} TX | ${appData.customers.length} Customers | ${appData.staff.length} Staff</div>
                 <div>Credit Records: ${(appData.credits || []).length} | Outstanding: ₱${(appData.credits || []).reduce((sum, c) => sum + (c.balance || 0), 0).toFixed(2)}</div>
                 <div>Feedback: ${(appData.feedback || []).length} entries</div>
@@ -8803,8 +8891,9 @@
         // ===== FIREBASE CONFIG MODAL =====
         window.showFirebaseConfig = function() {
             const currentConfig = firebaseConfig;
-            let modalHtml = `<div id="adminModal" class="modal"><div class="modal-content firebase-config-modal">
-            <h3 class="text-xl font-bold mb-4"><i class="fas fa-database"></i> Firebase Configuration v8.8.5</h3>
+            let modalHtml =
+                `<div id="adminModal" class="modal"><div class="modal-content firebase-config-modal">
+            <h3 class="text-xl font-bold mb-4"><i class="fas fa-database"></i> Firebase Configuration v8.8.6</h3>
             <p class="text-sm text-gray-400 mb-4">Enter your Firebase Realtime Database configuration. Get these from your Firebase console.</p>
             <div class="space-y-3">
                 <div><label class="text-gray-400 text-sm">API Key</label><input type="text" id="fbApiKey" class="w-full bg-gray-800 p-2 rounded" value="${currentConfig.apiKey || ''}" placeholder="AIzaSy..."></div>
@@ -8822,7 +8911,7 @@
                 <div class="text-xs text-gray-500 mt-2">
                     <p class="text-yellow-400">⚠️ Your config is stored locally in your browser. Never share your config publicly.</p>
                     <p class="text-cyan-400 mt-1">📖 Get your config from Firebase Console → Project Settings → Your Apps → Web App Config</p>
-                    <p class="text-green-400 mt-1">✅ v8.8.5: QR Code Feedback Integration</p>
+                    <p class="text-green-400 mt-1">✅ v8.8.6: Enhanced Staff Management + Interactive Chart</p>
                     <p class="text-green-400 mt-1">🧾 Dual Receipts: Customer + Shop Copy with Cut Marker</p>
                     <p class="text-green-400 mt-1">💬 Customers scan QR to leave feedback</p>
                     <p class="text-green-400 mt-1">📊 All v8.8.2 Export Features Restored (Excel/PDF/CSV)</p>
@@ -8881,7 +8970,8 @@
                     try { firebase.app('testApp').delete(); } catch (e) {}
                 }).catch((error) => {
                     addFirebaseLog(`❌ Connection test failed: ${error.message}`, 'error');
-                    alert(`❌ Connection failed: ${error.message}\n\nCheck your Database URL and Security Rules.`);
+                    alert(
+                    `❌ Connection failed: ${error.message}\n\nCheck your Database URL and Security Rules.`);
                     try { firebase.app('testApp').delete(); } catch (e) {}
                 });
             } catch (e) {
@@ -9026,7 +9116,8 @@
         window.editTransactionFull = (id) => {
             const t = appData.transactions.find(tx => tx.id === id);
             if (!t) return;
-            let modalHtml = `<div id="adminModal" class="modal"><div class="modal-content">
+            let modalHtml =
+                `<div id="adminModal" class="modal"><div class="modal-content">
             <h3 class="text-xl font-bold mb-4">Edit Transaction</h3>
             <div class="space-y-3">
                 <div><label class="text-gray-400">Customer</label><input type="text" id="editTxCustomer" class="w-full bg-gray-800 p-2 rounded" value="${t.customer}"></div>
@@ -9638,15 +9729,15 @@
 
         window.exportOpenServices = function() {
             const data = appData.openServices.filter(s => s.status === 'pending' || s.status === 'in-progress').map(
-            s => ({
-                id: s.id,
-                customer: s.customer,
-                vehicle: s.vehicle,
-                plate: s.plate,
-                total: `₱${s.total.toFixed(2)}`,
-                status: s.status,
-                createdAt: new Date(s.createdAt).toLocaleString()
-            }));
+                s => ({
+                    id: s.id,
+                    customer: s.customer,
+                    vehicle: s.vehicle,
+                    plate: s.plate,
+                    total: `₱${s.total.toFixed(2)}`,
+                    status: s.status,
+                    createdAt: new Date(s.createdAt).toLocaleString()
+                }));
             const columns = [
                 { key: 'id', header: 'Service ID' },
                 { key: 'customer', header: 'Customer' },
@@ -9808,7 +9899,7 @@
                 const daySales = appData.transactions.filter(t => t.date.startsWith(dateStr)).reduce((s, t) => s + t
                     .total, 0);
                 const dayExpenses = appData.expenses.filter(e => e.date === dateStr).reduce((s, e) => s + e.amount,
-                0);
+                    0);
                 const dayCommission = appData.transactions.filter(t => t.date.startsWith(dateStr) && t
                     .staffCommissions)
                     .reduce((sum, t) => sum + Object.values(t.staffCommissions).reduce((s, st) => s + (st
@@ -10213,7 +10304,8 @@
                 'Credit Card', 'Bank Transfer', 'Credit (Utang)'
             ];
             const methodOptions = paymentMethods.map(m => `<option>${m}</option>`).join('');
-            let modalHtml = `<div id="adminModal" class="modal"><div class="modal-content">
+            let modalHtml =
+                `<div id="adminModal" class="modal"><div class="modal-content">
             <h3 class="text-xl font-bold mb-4">Add Manual Transaction</h3>
             <div class="space-y-3">
                 <div><label class="text-gray-400">Customer</label><input type="text" id="txCustomerInput" class="w-full bg-gray-800 p-2 rounded" value="Walk-in Customer"></div>
@@ -10239,8 +10331,8 @@
             const plate = document.getElementById('txPlateInput')?.value || "N/A";
             const payment = document.getElementById('txPaymentInput')?.value || "Cash";
             const remarks = document.getElementById('txRemarksInput')?.value || "";
-            const staffNames = document.getElementById('txStaffInput')?.value?.split(',').map(s => s.trim()).filter(Boolean) ||
-                [];
+            const staffNames = document.getElementById('txStaffInput')?.value?.split(',').map(s => s.trim()).filter(
+                Boolean) || [];
 
             if (isNaN(amount) || amount <= 0) { alert("Valid amount required!"); return; }
 
@@ -10478,7 +10570,7 @@
                     <button onclick="printWeeklyCommission()" class="bg-cyan-600 px-4 py-2 rounded text-sm"><i class="fas fa-print"></i> Print</button>
                 </div>
             </div>
-            
+
             <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
                 <div class="bg-gray-800/30 p-3 rounded-lg text-center">
                     <div class="text-xs text-gray-400">Total Commission</div>
@@ -10497,7 +10589,7 @@
                     <div class="text-2xl font-bold text-purple-400">${totals.transactions || 0}</div>
                 </div>
             </div>
-            
+
             <div class="grid grid-cols-2 gap-3 mb-4">
                 <div class="bg-gray-800/20 p-2 rounded-lg text-center">
                     <div class="text-xs text-gray-400">Monthly Commission (${monthlyReport?.month || 'N/A'})</div>
@@ -10508,7 +10600,7 @@
                     <div class="text-lg font-bold text-indigo-400">₱${(yearlyReport?.totals?.commission || 0).toFixed(2)}</div>
                 </div>
             </div>
-            
+
             <div class="grid md:grid-cols-4 gap-4 mb-4">
                 <div class="bg-gray-800/20 p-3 rounded-lg">
                     <div class="text-xs text-gray-400 mb-1">Daily Breakdown</div>
@@ -10540,7 +10632,7 @@
                     </table>
                 </div>
             </div>
-            
+
             ${archiveHtml}
         </div>`;
         }
@@ -10607,7 +10699,8 @@
             `;
             }
 
-            let modalHtml = `<div id="adminModal" class="modal"><div class="modal-content">
+            let modalHtml =
+                `<div id="adminModal" class="modal"><div class="modal-content">
             <h3 class="text-xl font-bold mb-2">Archived Week: ${weekLabel}</h3>
             <p class="text-sm text-gray-400 mb-4">Archived on: ${new Date(archive.archivedAt).toLocaleString()}</p>
             <div class="grid grid-cols-3 gap-3 mb-4">
@@ -10666,7 +10759,7 @@
             const dailyCommission = appData.transactions
                 .filter(t => t.date.startsWith(todayStr) && t.staffCommissions)
                 .reduce((sum, t) => sum + Object.values(t.staffCommissions).reduce((s, st) => s + (st.commission || 0),
-                0), 0);
+                    0), 0);
 
             const weekStart = getCurrentWeekStart();
             const weekStartStr = weekStart.toISOString().slice(0, 10);
@@ -11144,7 +11237,9 @@
             // Initialize AI chat if not already done
             const chat = document.getElementById('aiChat');
             if (chat && aiChatHistory.length === 0) {
-                addAIMessage('assistant', '👋 Hi! I\'m your POS Assistant. I can help you with:\n\n• Viewing sales and revenue insights\n• Checking staff performance\n• Finding specific transactions\n• Analyzing customer data\n• Commission reports\n• Inventory status\n\nTry asking something like "What are today\'s sales?" or "Show me top performing staff"');
+                addAIMessage('assistant',
+                    '👋 Hi! I\'m your POS Assistant. I can help you with:\n\n• Viewing sales and revenue insights\n• Checking staff performance\n• Finding specific transactions\n• Analyzing customer data\n• Commission reports\n• Inventory status\n\nTry asking something like "What are today\'s sales?" or "Show me top performing staff"'
+                    );
             }
 
             setTimeout(() => {
@@ -11201,7 +11296,8 @@
             const timeout = (appData.systemSettings.inactivityTimeout || 30) * 60 * 1000;
             inactivityTimer = setTimeout(() => {
                 if (!showLogin && appData.currentUser) {
-                    addActivityLog('Auto-Logout', `User ${appData.currentUser.name} was auto-logged out due to inactivity`);
+                    addActivityLog('Auto-Logout',
+                        `User ${appData.currentUser.name} was auto-logged out due to inactivity`);
                     addAuditTrail('Auto-Logout', `User ${appData.currentUser.name} was auto-logged out`, appData
                         .currentUser.id, 'user');
                     alert('You have been logged out due to inactivity.');
@@ -11225,7 +11321,8 @@
         loadLocalData();
         initFirebase().then((success) => {
             if (!success) {
-                addFirebaseLog('ℹ️ Running in offline mode with local cache. Data will sync when connection is restored.',
+                addFirebaseLog(
+                    'ℹ️ Running in offline mode with local cache. Data will sync when connection is restored.',
                     'warn');
                 updateFirebaseStatus('offline', 'Local Cache');
             }
@@ -11263,7 +11360,7 @@
                     </div>
                     <div class="brand-text">
                         <span class="company-title">8068 CAR SQUARE</span>
-                        <span class="company-subtitle">One Stop Shop <span class="company-version">| v8.8.5</span></span>
+                        <span class="company-subtitle">One Stop Shop <span class="company-version">| v8.8.6</span></span>
                     </div>
                 </div>
 
@@ -11297,7 +11394,7 @@
 
             <div id="mainContent" class="mt-2"></div>
 
-            <footer class="text-center text-gray-500 text-sm mt-8 pt-4 border-t border-gray-800">${appData.systemSettings.companyName} | v8.8.5 | QR Code Feedback | Sunday-Saturday Payroll Cycle | ${firebaseInitialized && isFirebasePrimary ? '🌐 Online Mode - Real-time Sync ON' : '📡 Offline Mode - Local Cache'}</footer>
+            <footer class="text-center text-gray-500 text-sm mt-8 pt-4 border-t border-gray-800">${appData.systemSettings.companyName} | v8.8.6 | QR Code Feedback | Sunday-Saturday Payroll Cycle | ${firebaseInitialized && isFirebasePrimary ? '🌐 Online Mode - Real-time Sync ON' : '📡 Offline Mode - Local Cache'}</footer>
         </div>
     `;
 
@@ -11308,7 +11405,7 @@
         saveToLocal();
 
         console.log(
-            '%c8068 CAR SQUARE - Enterprise Management System v8.8.5 (AI-Powered Edition)',
+            '%c8068 CAR SQUARE - Enterprise Management System v8.8.6 (AI-Powered Edition)',
             'color: #00d4ff; font-size: 20px; font-weight: bold;');
         console.log(
             `%cRecords: ${appData.transactions.length} TX | ${appData.customers.length} Customers | ${appData.staff.length} Staff | ${getAllFeedback().length} Feedback`,
