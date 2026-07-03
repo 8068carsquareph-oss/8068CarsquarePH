@@ -5153,49 +5153,150 @@
             alert(msg);
         };
 
-        // ===== STAFF DASHBOARD (FIXED) =====
-        function renderStaffDashboard() {
-            if (showLogin) return renderLogin();
-            if (appData.currentUser?.role !== 'Staff') {
-                currentView = 'dashboard';
-                return renderDashboard();
-            }
-
-            // Get staff member's own data
-            const staffMember = appData.staff.find(s => s.name === appData.currentUser.name);
-            const staffCommissions = staffMember ? staffMember.totalCommission || 0 : 0;
-            const staffJobs = staffMember ? staffMember.jobsCompleted || 0 : 0;
-            const staffSales = staffMember ? staffMember.salesGenerated || 0 : 0;
-
-            return `
-            <div class="max-w-7xl mx-auto px-4 py-6">
-                <div class="flex justify-between items-center mb-4">
-                    <div>
-                        <h2 class="text-2xl font-bold"><i class="fas fa-user-shield"></i> Staff Portal</h2>
-                        <p class="text-sm text-gray-400">Welcome, ${appData.currentUser.name}. Here is your personal performance overview.</p>
-                    </div>
-                    <span class="text-xs text-cyan-400"><i class="fas fa-clock"></i> ${new Date().toLocaleString()}</span>
+        ======================== STAFF DASHBOARD ========================
+    function renderStaffDashboard() {
+        if(showLogin) return renderLogin();
+        recalculateStaffCommissions();
+        const totalCommission = appData.staff.reduce((s, st) => s + (st.totalCommission || 0), 0);
+        const totalJobs = appData.staff.reduce((s, st) => s + (st.jobsCompleted || 0), 0);
+        const totalSales = appData.staff.reduce((s, st) => s + (st.salesGenerated || 0), 0);
+        
+        return `<div class="card-premium p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold"><i class="fas fa-id-badge"></i> Staff Dashboard</h2>
+                <div class="flex gap-2 flex-wrap">
+                    <button onclick="exportStaffCSV()" class="csv-export-btn px-4 py-2 rounded text-sm text-white"><i class="fas fa-file-csv"></i> CSV</button>
+                    <button onclick="exportCommissionReport()" class="excel-export-btn px-4 py-2 rounded text-sm text-white"><i class="fas fa-file-excel"></i> Excel</button>
+                    <button onclick="exportCommissionPDF()" class="pdf-export-btn px-4 py-2 rounded text-sm text-white"><i class="fas fa-file-pdf"></i> PDF</button>
+                    <button onclick="printStaffDashboard()" class="bg-cyan-600 px-4 py-2 rounded text-sm"><i class="fas fa-print"></i> Print</button>
+                    <button onclick="addStaffPopup()" class="bg-green-600 px-4 py-2 rounded text-sm"><i class="fas fa-plus"></i> Add Staff</button>
                 </div>
-                
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    <div class="bg-gray-800/30 p-4 rounded-lg text-center border border-cyan-400/20">
-                        <div class="text-xs text-gray-400">Your Total Commission</div>
-                        <div class="text-2xl font-bold text-green-400">₱${staffCommissions.toFixed(2)}</div>
-                    </div>
-                    <div class="bg-gray-800/30 p-4 rounded-lg text-center border border-cyan-400/20">
-                        <div class="text-xs text-gray-400">Jobs Completed</div>
-                        <div class="text-2xl font-bold text-yellow-400">${staffJobs}</div>
-                    </div>
-                    <div class="bg-gray-800/30 p-4 rounded-lg text-center border border-cyan-400/20">
-                        <div class="text-xs text-gray-400">Sales Generated</div>
-                        <div class="text-2xl font-bold text-cyan-400">₱${staffSales.toFixed(2)}</div>
-                    </div>
-                </div>
-
-                ${renderWeeklyCommissionReport()}
             </div>
-            `;
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div class="bg-gray-800 p-4 rounded-lg text-center">
+                    <div class="text-gray-400 text-sm">Total Staff</div>
+                    <div class="text-2xl font-bold text-cyan-400">${appData.staff.length}</div>
+                </div>
+                <div class="bg-gray-800 p-4 rounded-lg text-center">
+                    <div class="text-gray-400 text-sm">Total Jobs Completed</div>
+                    <div class="text-2xl font-bold text-green-400">${totalJobs}</div>
+                </div>
+                <div class="bg-gray-800 p-4 rounded-lg text-center">
+                    <div class="text-gray-400 text-sm">Total Sales Generated</div>
+                    <div class="text-2xl font-bold text-yellow-400">₱${totalSales.toFixed(2)}</div>
+                </div>
+                <div class="bg-gray-800 p-4 rounded-lg text-center">
+                    <div class="text-gray-400 text-sm">Total Commissions Paid</div>
+                    <div class="text-2xl font-bold text-purple-400">₱${totalCommission.toFixed(2)}</div>
+                </div>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm" id="staffTable">
+                    <thead class="border-b-2 border-cyan-400">
+                        <tr>
+                            <th class="text-left py-2">#</th>
+                            <th class="text-left py-2">Staff Name</th>
+                            <th class="text-left py-2">Position</th>
+                            <th class="text-center py-2">Tier</th>
+                            <th class="text-center py-2">Jobs Done</th>
+                            <th class="text-right py-2">Sales Generated</th>
+                            <th class="text-right py-2">Commission</th>
+                            <th class="text-center py-2">Status</th>
+                            <th class="text-center py-2">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${appData.staff.map((s, idx) => `
+                            <tr class="border-b border-gray-700 hover:bg-gray-800 transition">
+                                <td class="py-2">${idx + 1}</td>
+                                <td class="editable-field cursor-pointer" onclick="editStaffName(${s.id})">${s.name}</td>
+                                <td class="editable-field cursor-pointer" onclick="editStaffPosition(${s.id})">${s.position}</td>
+                                <td class="text-center"><span class="commission-badge editable-field cursor-pointer" onclick="editStaffCommission(${s.id})">${s.commissionTier}%</span></td>
+                                <td class="text-center editable-field cursor-pointer" onclick="editStaffJobs(${s.id})">${s.jobsCompleted || 0}</td>
+                                <td class="text-right editable-field cursor-pointer" onclick="editStaffSales(${s.id})">₱${(s.salesGenerated || 0).toFixed(2)}</td>
+                                <td class="text-right text-green-400">₱${(s.totalCommission || 0).toFixed(2)}</td>
+                                <td class="text-center"><button onclick="toggleStaffStatus(${s.id})" class="text-${s.isActive ? 'green' : 'red'}-400 text-sm">${s.isActive ? 'Active' : 'Inactive'}</button></td>
+                                <td class="text-center">
+                                    <button onclick="deleteStaffMember(${s.id})" class="text-red-400"><i class="fas fa-trash"></i></button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                        ${appData.staff.length === 0 ? '<tr><td colspan="9" class="text-center py-4 text-gray-400">No staff members added yet</td></tr>' : ''}
+                    </tbody>
+                    <tfoot class="border-t-2 border-cyan-400 bg-gray-800 font-bold">
+                        <tr>
+                            <td colspan="4" class="py-2 text-right">TOTALS:</td>
+                            <td class="text-center">${totalJobs}</td>
+                            <td class="text-right">₱${totalSales.toFixed(2)}</td>
+                            <td class="text-right text-green-400">₱${totalCommission.toFixed(2)}</td>
+                            <td colspan="2"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>`;
+    }
+
+    // Staff helper functions
+    window.editStaffName = (id) => {
+        const staff = appData.staff.find(s => s.id === id);
+        if(staff) {
+            const newName = prompt("Edit staff name:", staff.name);
+            if(newName) { staff.name = newName; saveToLocal(); renderApp(); }
         }
+    };
+    window.editStaffPosition = (id) => {
+        const staff = appData.staff.find(s => s.id === id);
+        if(staff) {
+            const newPos = prompt("Edit position:", staff.position);
+            if(newPos) { staff.position = newPos; saveToLocal(); renderApp(); }
+        }
+    };
+    window.editStaffCommission = (id) => {
+        const staff = appData.staff.find(s => s.id === id);
+        if(staff) {
+            const newTier = parseInt(prompt("Edit commission tier (30, 35, 40):", staff.commissionTier));
+            if([30,35,40].includes(newTier)) { staff.commissionTier = newTier; saveToLocal(); renderApp(); }
+        }
+    };
+    window.editStaffJobs = (id) => {
+        const staff = appData.staff.find(s => s.id === id);
+        if(staff) {
+            const newJobs = parseInt(prompt("Edit jobs completed:", staff.jobsCompleted || 0));
+            if(!isNaN(newJobs) && newJobs >= 0) { staff.jobsCompleted = newJobs; saveToLocal(); renderApp(); }
+        }
+    };
+    window.editStaffSales = (id) => {
+        const staff = appData.staff.find(s => s.id === id);
+        if(staff) {
+            const newSales = parseFloat(prompt("Edit sales generated:", staff.salesGenerated || 0));
+            if(!isNaN(newSales) && newSales >= 0) { staff.salesGenerated = newSales; saveToLocal(); renderApp(); }
+        }
+    };
+    window.toggleStaffStatus = (id) => {
+        const staff = appData.staff.find(s => s.id === id);
+        if(staff) { staff.isActive = !staff.isActive; saveToLocal(); renderApp(); }
+    };
+    window.deleteStaffMember = (id) => {
+        if(confirm("Delete this staff member?")) {
+            const staff = appData.staff.find(s => s.id === id);
+            if (staff) addActivityLog('Staff Deleted', staff.name);
+            appData.staff = appData.staff.filter(s => s.id !== id);
+            saveToLocal(); renderApp();
+        }
+    };
+    window.addStaffPopup = () => {
+        let name = prompt("Staff Name:"); if(!name) return;
+        let pos = prompt("Position:") || "Staff";
+        let tier = parseInt(prompt("Commission Tier (30, 35, 40):", "35"));
+        if([30,35,40].includes(tier)) {
+            appData.staff.push({ id: Date.now(), name, position: pos, contact: "", salesGenerated: 0, jobsCompleted: 0, commissionTier: tier, isActive: true, totalCommission: 0 });
+            addActivityLog('Staff Added', name);
+            saveToLocal(); renderApp();
+        }
+    };
 
         // ===== DASHBOARD =====
         function getChartData(period) {
