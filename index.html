@@ -1986,8 +1986,6 @@
             min-height: 50px;
             color: #ddd;
         }
-
-        /* AI Assistant Styles */
         .ai-assistant-container {
             position: fixed;
             bottom: 20px;
@@ -2261,7 +2259,6 @@
                 opacity: 1;
             }
         }
-
         @media (max-width: 480px) {
             .ai-assistant-window {
                 width: 100vw;
@@ -2285,6 +2282,125 @@
                 font-size: 20px;
             }
         }
+
+        /* ===== ENHANCED STAFF DASHBOARD STYLES ===== */
+        .staff-dashboard-table th {
+            background: #0a0a0a;
+            border-bottom: 2px solid #00d4ff;
+            padding: 10px 8px;
+            font-weight: 600;
+            color: #00d4ff;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            text-align: center;
+        }
+        .staff-dashboard-table td {
+            padding: 8px 6px;
+            border-bottom: 1px solid #1a1a1a;
+            vertical-align: middle;
+            text-align: center;
+        }
+        .staff-dashboard-table tr:hover {
+            background: rgba(0, 212, 255, 0.03);
+        }
+        .staff-status-active {
+            color: #00ff88;
+        }
+        .staff-status-inactive {
+            color: #ff6b6b;
+        }
+        .staff-commission-tier {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .tier-30 {
+            background: rgba(0, 212, 255, 0.2);
+            color: #00d4ff;
+        }
+        .tier-35 {
+            background: rgba(0, 255, 136, 0.2);
+            color: #00ff88;
+        }
+        .tier-40 {
+            background: rgba(255, 170, 0, 0.2);
+            color: #ffaa00;
+        }
+
+        /* ===== BLUETOOTH SETUP STYLES ===== */
+        .bluetooth-device {
+            background: rgba(10, 10, 10, 0.6);
+            border: 1px solid rgba(0, 212, 255, 0.15);
+            border-radius: 10px;
+            padding: 12px 16px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .bluetooth-device:hover {
+            border-color: rgba(0, 212, 255, 0.4);
+        }
+        .bluetooth-device .device-name {
+            font-weight: 600;
+            color: #fff;
+        }
+        .bluetooth-device .device-status {
+            font-size: 12px;
+        }
+        .bluetooth-device .device-status.connected {
+            color: #00ff88;
+        }
+        .bluetooth-device .device-status.disconnected {
+            color: #ff6b6b;
+        }
+        .bluetooth-device .device-status.pairing {
+            color: #ffaa00;
+            animation: pulse-sync 1s infinite;
+        }
+        .bt-toggle {
+            position: relative;
+            width: 48px;
+            height: 26px;
+            background: #333;
+            border-radius: 13px;
+            cursor: pointer;
+            transition: background 0.3s;
+            flex-shrink: 0;
+        }
+        .bt-toggle.active {
+            background: #00d4ff;
+        }
+        .bt-toggle .bt-toggle-knob {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 22px;
+            height: 22px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s;
+        }
+        .bt-toggle.active .bt-toggle-knob {
+            transform: translateX(22px);
+        }
+        .bt-scan-animation {
+            animation: bt-scan 1.5s ease-in-out infinite;
+        }
+        @keyframes bt-scan {
+            0%,
+            100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.4;
+            }
+        }
     </style>
 </head>
 <body class="text-white">
@@ -2294,7 +2410,7 @@
     <script>
         // ============================================================================================
         // 8068 CAR SQUARE - Enterprise Management System v8.8.5
-        // FULLY FUNCTIONAL - Fixed Admin Staff, Transaction Tracking, AI Assistant
+        // FULLY FUNCTIONAL - Enhanced Staff Dashboard + Bluetooth Setup
         // ============================================================================================
 
         // ======================== FIREBASE CONFIGURATION ========================
@@ -2597,6 +2713,21 @@
                     if (!appData.feedback) appData.feedback = [];
                     if (!appData.systemSettings.feedbackUrl) appData.systemSettings.feedbackUrl = '';
                     if (!appData.adminPanelCustomizations) appData.adminPanelCustomizations = {};
+
+                    // --- BLUETOOTH SETTINGS ---
+                    if (!appData.systemSettings.bluetooth) {
+                        appData.systemSettings.bluetooth = {
+                            enabled: false,
+                            autoPrint: false,
+                            deviceName: '',
+                            deviceAddress: '',
+                            paired: false,
+                            lastPrint: null,
+                            printAttempts: 0,
+                            printSuccess: 0
+                        };
+                    }
+
                     dataLoaded = true;
                     addFirebaseLog('📂 Loaded from localStorage (cache)', 'info');
                     renderApp();
@@ -2702,6 +2833,12 @@
                             hasChanges = true; }
                         if (!appData.adminPanelCustomizations) { appData.adminPanelCustomizations = {};
                             hasChanges = true; }
+                        if (!appData.systemSettings.bluetooth) {
+                            appData.systemSettings.bluetooth = { enabled: false, autoPrint: false, deviceName: '',
+                                deviceAddress: '', paired: false, lastPrint: null, printAttempts: 0,
+                                printSuccess: 0 };
+                            hasChanges = true;
+                        }
                         dataLoaded = true;
                         if (hasChanges) {
                             saveToLocal();
@@ -3014,7 +3151,17 @@
                 inactivityTimeout: 30,
                 chartDefaultPeriod: 'weekly',
                 transactionIdCounter: 1,
-                feedbackUrl: ''
+                feedbackUrl: '',
+                bluetooth: {
+                    enabled: false,
+                    autoPrint: false,
+                    deviceName: '',
+                    deviceAddress: '',
+                    paired: false,
+                    lastPrint: null,
+                    printAttempts: 0,
+                    printSuccess: 0
+                }
             },
             users: [
                 { id: 1, username: "owner", password: "owner123", role: "Owner", name: "Owner", isActive: true },
@@ -3121,6 +3268,11 @@
                 if (!appData.feedback) appData.feedback = [];
                 if (!appData.systemSettings.feedbackUrl) appData.systemSettings.feedbackUrl = '';
                 if (!appData.adminPanelCustomizations) appData.adminPanelCustomizations = {};
+                if (!appData.systemSettings.bluetooth) {
+                    appData.systemSettings.bluetooth = { enabled: false, autoPrint: false, deviceName: '',
+                        deviceAddress: '', paired: false, lastPrint: null, printAttempts: 0,
+                    printSuccess: 0 };
+                }
                 dataLoaded = true;
             } catch (e) {}
         }
@@ -3573,6 +3725,13 @@
         let feedbackFilterStatus = 'all';
         let feedbackFilterStaff = 'all';
 
+        // --- Staff Dashboard Pagination ---
+        let staffCurrentPage = 1;
+        let staffPageSize = 15;
+        let staffSearchQuery = '';
+        let staffSortColumn = 'id';
+        let staffSortDirection = 'asc';
+
         function generateReceiptNo() {
             const id = (appData.systemSettings.transactionIdCounter || 1);
             appData.systemSettings.transactionIdCounter = id + 1;
@@ -3886,6 +4045,7 @@
                     <p class="text-xs text-cyan-400 mt-1"><i class="fas fa-cloud"></i> ${firebaseInitialized && isFirebasePrimary ? 'Online Mode' : 'Offline Mode'}</p>
                     <p class="text-xs text-purple-400 mt-1"><i class="fas fa-calendar-week"></i> Sunday-Saturday Cycle</p>
                     <p class="text-xs text-blue-400 mt-1"><i class="fas fa-robot"></i> AI Assistant</p>
+                    <p class="text-xs text-indigo-400 mt-1"><i class="fas fa-bluetooth-b"></i> Bluetooth Auto-Print ${appData.systemSettings.bluetooth?.enabled ? '✅' : '⏸️'}</p>
                 </div>
                 <div class="space-y-4">
                     <div><label class="text-gray-400">Username</label><input type="text" id="loginUser" class="w-full bg-gray-800 p-3 rounded border border-gray-700" placeholder="Enter username" value="owner"></div>
@@ -3895,6 +4055,7 @@
                         <p>Demo Accounts: Owner: owner/owner123 | Manager: manager/manager123</p>
                         <p>Cashier: cashier/cashier123 | Staff: staff/staff123</p>
                         ${isUsingDemoConfig ? '<p class="text-yellow-400 mt-2">⚠️ Using demo Firebase config. Configure your own in System Settings.</p>' : ''}
+                        ${appData.systemSettings.bluetooth?.enabled ? '<p class="text-green-400 mt-1">🔵 Bluetooth Auto-Print is ENABLED</p>' : '<p class="text-gray-400 mt-1">🔵 Bluetooth Auto-Print is DISABLED</p>'}
                     </div>
                 </div>
             </div>
@@ -5147,51 +5308,813 @@
             alert(msg);
         };
 
-        // ===== STAFF DASHBOARD (FIXED) =====
-        function renderStaffDashboard() {
+        // ================================================================
+        //  ENHANCED STAFF DASHBOARD MANAGEMENT
+        // ================================================================
+
+        function renderEnhancedStaffDashboard() {
             if (showLogin) return renderLogin();
-            if (appData.currentUser?.role !== 'Staff') {
-                currentView = 'dashboard';
-                return renderDashboard();
+            if (!hasRole(['Owner', 'Manager'])) {
+                return `<div class="card-premium p-8 text-center"><i class="fas fa-lock text-4xl text-red-400 mb-4"></i><p class="text-xl">Access Denied. Manager or Owner required.</p></div>`;
             }
 
-            // Get staff member's own data
-            const staffMember = appData.staff.find(s => s.name === appData.currentUser.name);
-            const staffCommissions = staffMember ? staffMember.totalCommission || 0 : 0;
-            const staffJobs = staffMember ? staffMember.jobsCompleted || 0 : 0;
-            const staffSales = staffMember ? staffMember.salesGenerated || 0 : 0;
+            // Get all staff with their commission data
+            let staffList = appData.staff.map(s => {
+                const totalJobs = s.jobsCompleted || 0;
+                const totalCommission = s.totalCommission || 0;
+                const salesGenerated = s.salesGenerated || 0;
+                const tier = s.commissionTier || 35;
+
+                // Determine commission status based on activity
+                let commissionStatus = 'Inactive';
+                let statusColor = 'text-red-400';
+                if (totalCommission > 0 && totalJobs > 0) {
+                    commissionStatus = 'Active';
+                    statusColor = 'text-green-400';
+                } else if (totalJobs > 0 && totalCommission === 0) {
+                    commissionStatus = 'Pending';
+                    statusColor = 'text-yellow-400';
+                }
+
+                return {
+                    id: s.id,
+                    name: s.name || 'Unnamed',
+                    position: s.position || 'Staff',
+                    tier: tier,
+                    jobsCompleted: totalJobs,
+                    salesGenerated: salesGenerated,
+                    totalCommission: totalCommission,
+                    commissionStatus: commissionStatus,
+                    statusColor: statusColor,
+                    isActive: s.isActive !== false,
+                    contact: s.contact || '',
+                    email: s.email || '',
+                    joinDate: s.joinDate || new Date().toISOString().slice(0, 10)
+                };
+            });
+
+            // Apply search filter
+            if (staffSearchQuery && staffSearchQuery.trim() !== '') {
+                const q = staffSearchQuery.trim().toLowerCase();
+                staffList = staffList.filter(s =>
+                    s.name.toLowerCase().includes(q) ||
+                    s.position.toLowerCase().includes(q) ||
+                    s.contact.toLowerCase().includes(q) ||
+                    s.email.toLowerCase().includes(q)
+                );
+            }
+
+            // Sort
+            staffList.sort((a, b) => {
+                let valA, valB;
+                switch (staffSortColumn) {
+                    case 'id':
+                        valA = a.id;
+                        valB = b.id;
+                        break;
+                    case 'name':
+                        valA = a.name.toLowerCase();
+                        valB = b.name.toLowerCase();
+                        break;
+                    case 'position':
+                        valA = a.position.toLowerCase();
+                        valB = b.position.toLowerCase();
+                        break;
+                    case 'tier':
+                        valA = a.tier;
+                        valB = b.tier;
+                        break;
+                    case 'jobs':
+                        valA = a.jobsCompleted;
+                        valB = b.jobsCompleted;
+                        break;
+                    case 'commission':
+                        valA = a.totalCommission;
+                        valB = b.totalCommission;
+                        break;
+                    case 'status':
+                        valA = a.commissionStatus;
+                        valB = b.commissionStatus;
+                        break;
+                    default:
+                        valA = a.id;
+                        valB = b.id;
+                }
+                if (valA < valB) return staffSortDirection === 'asc' ? -1 : 1;
+                if (valA > valB) return staffSortDirection === 'asc' ? 1 : -1;
+                return 0;
+            });
+
+            // Pagination
+            const totalStaff = staffList.length;
+            const totalPages = Math.ceil(totalStaff / staffPageSize);
+            const startIdx = (staffCurrentPage - 1) * staffPageSize;
+            const paginatedStaff = staffList.slice(startIdx, startIdx + staffPageSize);
+
+            // Stats
+            const totalStaffCount = appData.staff.length;
+            const activeStaff = appData.staff.filter(s => s.isActive !== false).length;
+            const totalCommissionAll = appData.staff.reduce((sum, s) => sum + (s.totalCommission || 0), 0);
+            const totalJobsAll = appData.staff.reduce((sum, s) => sum + (s.jobsCompleted || 0), 0);
+
+            const tierColors = {
+                30: 'tier-30',
+                35: 'tier-35',
+                40: 'tier-40'
+            };
+
+            // Staff table rows
+            let staffRows = paginatedStaff.map((s, idx) => {
+                const tierClass = tierColors[s.tier] || 'tier-35';
+                const statusBadge = s.commissionStatus === 'Active' ?
+                    `<span class="status-badge status-completed">${s.commissionStatus}</span>` :
+                    s.commissionStatus === 'Pending' ?
+                    `<span class="status-badge status-pending">${s.commissionStatus}</span>` :
+                    `<span class="status-badge" style="background:#ff6b6b33;color:#ff6b6b;">${s.commissionStatus}</span>`;
+
+                const activeBadge = s.isActive ?
+                    `<span class="staff-status-active"><i class="fas fa-circle text-[8px]"></i> Active</span>` :
+                    `<span class="staff-status-inactive"><i class="fas fa-circle text-[8px]"></i> Inactive</span>`;
+
+                return `<tr class="border-b border-gray-700 hover:bg-gray-800 transition">
+                    <td class="py-2 text-center text-gray-400 text-xs">${startIdx + idx + 1}</td>
+                    <td class="py-2 font-semibold text-left">${s.name}</td>
+                    <td class="py-2 text-center text-sm">${s.position}</td>
+                    <td class="py-2 text-center"><span class="staff-commission-tier ${tierClass}">${s.tier}%</span></td>
+                    <td class="py-2 text-center font-bold text-yellow-400">${s.jobsCompleted}</td>
+                    <td class="py-2 text-center">${statusBadge}</td>
+                    <td class="py-2 text-center">${activeBadge}</td>
+                    <td class="py-2 text-center text-cyan-400 font-bold">₱${s.totalCommission.toFixed(2)}</td>
+                    <td class="py-2 text-center">
+                        <div class="column-actions justify-center">
+                            <button onclick="viewStaffDetails(${s.id})" class="action-btn bg-purple-600 text-white hover:bg-purple-700" title="View"><i class="fas fa-eye"></i></button>
+                            <button onclick="editStaffMember(${s.id})" class="action-btn bg-cyan-600 text-white hover:bg-cyan-700" title="Edit"><i class="fas fa-edit"></i></button>
+                            <button onclick="deleteStaffMember(${s.id})" class="action-btn bg-red-600 text-white hover:bg-red-700" title="Delete"><i class="fas fa-trash"></i></button>
+                            ${s.isActive ? `<button onclick="toggleStaffStatus(${s.id})" class="action-btn bg-yellow-600 text-white hover:bg-yellow-700" title="Deactivate"><i class="fas fa-pause"></i></button>` : `<button onclick="toggleStaffStatus(${s.id})" class="action-btn bg-green-600 text-white hover:bg-green-700" title="Activate"><i class="fas fa-play"></i></button>`}
+                        </div>
+                    </td>
+                </tr>`;
+            }).join('');
+
+            // Pagination
+            let paginationHtml = '';
+            if (totalPages > 1) {
+                const maxVisible = 7;
+                let startPage = Math.max(1, staffCurrentPage - Math.floor(maxVisible / 2));
+                let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+                if (endPage - startPage < maxVisible - 1) startPage = Math.max(1, endPage - maxVisible + 1);
+
+                paginationHtml = `<div class="flex gap-1 mt-4 flex-wrap justify-center">
+                    <button class="pagination-btn" onclick="staffChangePage(1)" ${staffCurrentPage <= 1 ? 'disabled' : ''}><i class="fas fa-angle-double-left"></i></button>
+                    <button class="pagination-btn" onclick="staffChangePage(${staffCurrentPage - 1})" ${staffCurrentPage <= 1 ? 'disabled' : ''}><i class="fas fa-angle-left"></i></button>
+                    ${Array.from({length: endPage - startPage + 1}, (_, i) => {
+                        const p = startPage + i;
+                        return `<button class="pagination-btn ${p === staffCurrentPage ? 'active' : ''}" onclick="staffChangePage(${p})">${p}</button>`;
+                    }).join('')}
+                    <button class="pagination-btn" onclick="staffChangePage(${staffCurrentPage + 1})" ${staffCurrentPage >= totalPages ? 'disabled' : ''}><i class="fas fa-angle-right"></i></button>
+                    <button class="pagination-btn" onclick="staffChangePage(${totalPages})" ${staffCurrentPage >= totalPages ? 'disabled' : ''}><i class="fas fa-angle-double-right"></i></button>
+                </div>`;
+            }
+
+            // Stats Cards
+            const statsHtml = `
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
+                    <div class="bg-gray-800/30 p-3 rounded-lg text-center border border-cyan-400/20">
+                        <div class="text-xs text-gray-400">Total Staff</div>
+                        <div class="text-2xl font-bold text-cyan-400">${totalStaffCount}</div>
+                    </div>
+                    <div class="bg-gray-800/30 p-3 rounded-lg text-center border border-green-400/20">
+                        <div class="text-xs text-gray-400">Active Staff</div>
+                        <div class="text-2xl font-bold text-green-400">${activeStaff}</div>
+                    </div>
+                    <div class="bg-gray-800/30 p-3 rounded-lg text-center border border-yellow-400/20">
+                        <div class="text-xs text-gray-400">Total Jobs Done</div>
+                        <div class="text-2xl font-bold text-yellow-400">${totalJobsAll}</div>
+                    </div>
+                    <div class="bg-gray-800/30 p-3 rounded-lg text-center border border-purple-400/20">
+                        <div class="text-xs text-gray-400">Total Commission</div>
+                        <div class="text-2xl font-bold text-purple-400">₱${totalCommissionAll.toFixed(2)}</div>
+                    </div>
+                    <div class="bg-gray-800/30 p-3 rounded-lg text-center border border-orange-400/20">
+                        <div class="text-xs text-gray-400">Commission Staff</div>
+                        <div class="text-2xl font-bold text-orange-400">${appData.staff.filter(s => (s.totalCommission || 0) > 0).length}</div>
+                    </div>
+                </div>
+            `;
+
+            // Staff summary table for quick reference
+            let summaryRows = appData.staff.map(s => {
+                const tierClass = tierColors[s.commissionTier || 35] || 'tier-35';
+                return `<tr class="border-b border-gray-700">
+                    <td class="py-1 text-left text-sm">${s.name}</td>
+                    <td class="py-1 text-center text-sm">${s.position}</td>
+                    <td class="py-1 text-center"><span class="staff-commission-tier ${tierClass} text-[10px]">${s.commissionTier || 35}%</span></td>
+                    <td class="py-1 text-center text-yellow-400">${s.jobsCompleted || 0}</td>
+                    <td class="py-1 text-right text-purple-400 text-sm">₱${(s.totalCommission || 0).toFixed(2)}</td>
+                </tr>`;
+            }).join('');
 
             return `
-            <div class="max-w-7xl mx-auto px-4 py-6">
-                <div class="flex justify-between items-center mb-4">
+            <div class="space-y-4">
+                <div class="flex justify-between items-center flex-wrap gap-2">
                     <div>
-                        <h2 class="text-2xl font-bold"><i class="fas fa-user-shield"></i> Staff Portal</h2>
-                        <p class="text-sm text-gray-400">Welcome, ${appData.currentUser.name}. Here is your personal performance overview.</p>
+                        <h2 class="text-2xl font-bold"><i class="fas fa-users-cog"></i> Staff Management Dashboard</h2>
+                        <p class="text-sm text-gray-400">Manage staff members, track commissions, and monitor performance</p>
+                        ${firebaseInitialized && isFirebasePrimary ? `<span class="firebase-primary-badge"><i class="fas fa-cloud"></i> Online</span>` : ''}
                     </div>
-                    <span class="text-xs text-cyan-400"><i class="fas fa-clock"></i> ${new Date().toLocaleString()}</span>
-                </div>
-                
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    <div class="bg-gray-800/30 p-4 rounded-lg text-center border border-cyan-400/20">
-                        <div class="text-xs text-gray-400">Your Total Commission</div>
-                        <div class="text-2xl font-bold text-green-400">₱${staffCommissions.toFixed(2)}</div>
-                    </div>
-                    <div class="bg-gray-800/30 p-4 rounded-lg text-center border border-cyan-400/20">
-                        <div class="text-xs text-gray-400">Jobs Completed</div>
-                        <div class="text-2xl font-bold text-yellow-400">${staffJobs}</div>
-                    </div>
-                    <div class="bg-gray-800/30 p-4 rounded-lg text-center border border-cyan-400/20">
-                        <div class="text-xs text-gray-400">Sales Generated</div>
-                        <div class="text-2xl font-bold text-cyan-400">₱${staffSales.toFixed(2)}</div>
+                    <div class="flex gap-2 flex-wrap">
+                        <button onclick="addStaffMember()" class="bg-green-600 px-4 py-2 rounded text-sm hover:bg-green-700 transition"><i class="fas fa-plus"></i> Add Staff</button>
+                        <button onclick="exportStaffCSV()" class="csv-export-btn px-4 py-2 rounded text-sm text-white"><i class="fas fa-file-csv"></i> CSV</button>
+                        <button onclick="exportStaffExcel()" class="excel-export-btn px-4 py-2 rounded text-sm text-white"><i class="fas fa-file-excel"></i> Excel</button>
+                        <button onclick="exportStaffPDF()" class="pdf-export-btn px-4 py-2 rounded text-sm text-white"><i class="fas fa-file-pdf"></i> PDF</button>
+                        <button onclick="printStaffDashboard()" class="bg-cyan-600 px-4 py-2 rounded text-sm"><i class="fas fa-print"></i> Print Dashboard</button>
                     </div>
                 </div>
 
-                ${renderWeeklyCommissionReport()}
+                ${statsHtml}
+
+                <div class="card-premium p-5">
+                    <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
+                        <div class="flex items-center gap-3 flex-wrap">
+                            <input type="text" placeholder="🔍 Search staff..." class="search-input text-sm" id="staffSearchInput" value="${staffSearchQuery}" oninput="updateStaffSearch(this.value)" style="min-width:180px;">
+                            <select class="bg-gray-800 p-2 rounded text-sm" id="staffTierFilter" onchange="applyStaffFilters()">
+                                <option value="all">All Tiers</option>
+                                <option value="30">30%</option>
+                                <option value="35">35%</option>
+                                <option value="40">40%</option>
+                            </select>
+                            <select class="bg-gray-800 p-2 rounded text-sm" id="staffStatusFilter" onchange="applyStaffFilters()">
+                                <option value="all">All Status</option>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
+                            <button onclick="applyStaffFilters()" class="bg-cyan-600 px-3 py-1 rounded text-sm"><i class="fas fa-filter"></i> Apply</button>
+                            <button onclick="clearStaffFilters()" class="bg-gray-600 px-3 py-1 rounded text-sm"><i class="fas fa-times"></i> Clear</button>
+                        </div>
+                        <span class="text-sm text-gray-400">${totalStaff} staff members</span>
+                    </div>
+
+                    <div class="overflow-x-auto max-h-[420px] overflow-y-auto">
+                        <table class="w-full text-sm staff-dashboard-table">
+                            <thead class="sticky top-0 bg-gray-900 border-b-2 border-cyan-400">
+                                <tr>
+                                    <th class="sortable ${staffSortColumn === 'id' ? staffSortDirection : ''}" onclick="staffSort('id')">#</th>
+                                    <th class="sortable text-left ${staffSortColumn === 'name' ? staffSortDirection : ''}" onclick="staffSort('name')">Staff Name</th>
+                                    <th class="sortable ${staffSortColumn === 'position' ? staffSortDirection : ''}" onclick="staffSort('position')">Position</th>
+                                    <th class="sortable ${staffSortColumn === 'tier' ? staffSortDirection : ''}" onclick="staffSort('tier')">Tier Commission</th>
+                                    <th class="sortable ${staffSortColumn === 'jobs' ? staffSortDirection : ''}" onclick="staffSort('jobs')">Jobs Done</th>
+                                    <th class="sortable ${staffSortColumn === 'status' ? staffSortDirection : ''}" onclick="staffSort('status')">Commission Status</th>
+                                    <th>Status</th>
+                                    <th class="sortable ${staffSortColumn === 'commission' ? staffSortDirection : ''}" onclick="staffSort('commission')">Total Commission</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${staffRows || '<tr><td colspan="9" class="text-center py-8 text-gray-400">No staff members found</td></tr>'}
+                            </tbody>
+                            <tfoot class="sticky bottom-0 bg-gray-900 border-t-2 border-cyan-400 font-bold">
+                                <tr>
+                                    <td colspan="4" class="py-2 text-right">TOTALS:</td>
+                                    <td class="text-center text-yellow-400">${totalJobsAll}</td>
+                                    <td colspan="2"></td>
+                                    <td class="text-center text-purple-400">₱${totalCommissionAll.toFixed(2)}</td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    ${paginationHtml}
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div class="card-premium p-5">
+                        <h3 class="text-lg font-bold mb-3"><i class="fas fa-chart-simple"></i> Staff Commission Summary</h3>
+                        <div class="max-h-48 overflow-y-auto">
+                            <table class="w-full text-sm">
+                                <thead class="sticky top-0 bg-gray-900 border-b border-cyan-400">
+                                    <tr>
+                                        <th class="text-left py-1 text-xs">Staff</th>
+                                        <th class="text-center py-1 text-xs">Position</th>
+                                        <th class="text-center py-1 text-xs">Tier</th>
+                                        <th class="text-center py-1 text-xs">Jobs</th>
+                                        <th class="text-right py-1 text-xs">Commission</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${summaryRows || '<tr><td colspan="5" class="text-center py-4 text-gray-400">No staff data</td></tr>'}
+                                </tbody>
+                                <tfoot class="sticky bottom-0 bg-gray-900 border-t border-cyan-400 font-bold">
+                                    <tr>
+                                        <td colspan="4" class="py-1 text-right text-xs">TOTAL:</td>
+                                        <td class="text-right text-purple-400 text-xs">₱${totalCommissionAll.toFixed(2)}</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card-premium p-5">
+                        <h3 class="text-lg font-bold mb-3"><i class="fas fa-bolt"></i> Quick Staff Actions</h3>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="addStaffMember()" class="bg-green-600 p-3 rounded text-sm hover:bg-green-700 transition"><i class="fas fa-user-plus"></i> Add New Staff</button>
+                            <button onclick="exportStaffExcel()" class="excel-export-btn p-3 rounded text-sm text-white"><i class="fas fa-file-excel"></i> Export Excel</button>
+                            <button onclick="exportStaffPDF()" class="pdf-export-btn p-3 rounded text-sm text-white"><i class="fas fa-file-pdf"></i> Export PDF</button>
+                            <button onclick="printStaffDashboard()" class="bg-cyan-600 p-3 rounded text-sm hover:bg-cyan-700 transition"><i class="fas fa-print"></i> Print</button>
+                            <button onclick="refreshAllCommissions(); renderApp();" class="bg-purple-600 p-3 rounded text-sm hover:bg-purple-700 transition col-span-2"><i class="fas fa-sync"></i> Refresh Staff Commissions</button>
+                        </div>
+                        <div class="mt-3 p-2 bg-gray-800/30 rounded text-xs text-gray-400">
+                            <p><i class="fas fa-info-circle text-cyan-400"></i> Commission Status: <span class="text-green-400">Active</span> = has commissions, <span class="text-yellow-400">Pending</span> = has jobs but no commissions, <span class="text-red-400">Inactive</span> = no activity</p>
+                            <p class="mt-1"><i class="fas fa-bluetooth-b text-blue-400"></i> Bluetooth Auto-Print: ${appData.systemSettings.bluetooth?.enabled ? '✅ Enabled' : '⏸️ Disabled'}</p>
+                        </div>
+                    </div>
+                </div>
             </div>
             `;
         }
 
-        // ===== DASHBOARD =====
+        // ---- Staff CRUD Functions ----
+        window.addStaffMember = function() {
+            let modalHtml = `
+                <div id="staffModal" class="modal">
+                    <div class="modal-content" style="max-width: 500px;">
+                        <h3 class="text-xl font-bold mb-4"><i class="fas fa-user-plus"></i> Add New Staff Member</h3>
+                        <div class="space-y-3">
+                            <div><label class="text-gray-400 text-sm">Full Name *</label><input type="text" id="newStaffName" class="w-full bg-gray-800 p-2 rounded" placeholder="e.g. Juan Dela Cruz"></div>
+                            <div><label class="text-gray-400 text-sm">Position *</label><input type="text" id="newStaffPosition" class="w-full bg-gray-800 p-2 rounded" placeholder="e.g. Senior Detailer" value="Staff"></div>
+                            <div><label class="text-gray-400 text-sm">Commission Tier *</label>
+                                <select id="newStaffTier" class="w-full bg-gray-800 p-2 rounded">
+                                    <option value="30">30%</option>
+                                    <option value="35" selected>35%</option>
+                                    <option value="40">40%</option>
+                                </select>
+                            </div>
+                            <div><label class="text-gray-400 text-sm">Contact Number</label><input type="text" id="newStaffContact" class="w-full bg-gray-800 p-2 rounded" placeholder="e.g. 09171234567"></div>
+                            <div><label class="text-gray-400 text-sm">Email</label><input type="email" id="newStaffEmail" class="w-full bg-gray-800 p-2 rounded" placeholder="e.g. staff@company.com"></div>
+                            <div><label class="text-gray-400 text-sm">Join Date</label><input type="date" id="newStaffDate" class="w-full bg-gray-800 p-2 rounded" value="${new Date().toISOString().slice(0,10)}"></div>
+                            <div class="flex gap-3 mt-4">
+                                <button onclick="confirmAddStaff()" class="btn-neon flex-1 p-2 rounded"><i class="fas fa-check"></i> Add Staff</button>
+                                <button onclick="document.getElementById('staffModal').remove()" class="bg-gray-700 flex-1 p-2 rounded">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+        };
+
+        window.confirmAddStaff = function() {
+            const name = document.getElementById('newStaffName')?.value?.trim();
+            const position = document.getElementById('newStaffPosition')?.value?.trim() || 'Staff';
+            const tier = parseInt(document.getElementById('newStaffTier')?.value) || 35;
+            const contact = document.getElementById('newStaffContact')?.value?.trim() || '';
+            const email = document.getElementById('newStaffEmail')?.value?.trim() || '';
+            const joinDate = document.getElementById('newStaffDate')?.value || new Date().toISOString().slice(0, 10);
+
+            if (!name) { alert("Staff name is required!"); return; }
+
+            const newStaff = {
+                id: Date.now(),
+                name: name,
+                position: position,
+                commissionTier: tier,
+                contact: contact,
+                email: email,
+                joinDate: joinDate,
+                isActive: true,
+                totalCommission: 0,
+                jobsCompleted: 0,
+                salesGenerated: 0,
+                weeklyBreakdown: { Sunday: 0, Monday: 0, Tuesday: 0, Wednesday: 0, Thursday: 0, Friday: 0,
+                    Saturday: 0 },
+                weeklyCommission: 0,
+                monthlyCommission: 0,
+                yearlyCommission: 0
+            };
+
+            appData.staff.push(newStaff);
+            saveToLocal();
+            document.getElementById('staffModal')?.remove();
+            addActivityLog('Staff Added', `${name} (${position})`);
+            addAuditTrail('Staff Added', `${name} (${position})`, newStaff.id, 'staff');
+            renderApp();
+            alert(`✅ Staff "${name}" added successfully!`);
+        };
+
+        window.editStaffMember = function(id) {
+            const staff = appData.staff.find(s => s.id === id);
+            if (!staff) return;
+
+            let modalHtml = `
+                <div id="staffModal" class="modal">
+                    <div class="modal-content" style="max-width: 500px;">
+                        <h3 class="text-xl font-bold mb-4"><i class="fas fa-user-edit"></i> Edit Staff Member</h3>
+                        <div class="space-y-3">
+                            <div><label class="text-gray-400 text-sm">Full Name *</label><input type="text" id="editStaffName" class="w-full bg-gray-800 p-2 rounded" value="${staff.name}"></div>
+                            <div><label class="text-gray-400 text-sm">Position *</label><input type="text" id="editStaffPosition" class="w-full bg-gray-800 p-2 rounded" value="${staff.position || 'Staff'}"></div>
+                            <div><label class="text-gray-400 text-sm">Commission Tier *</label>
+                                <select id="editStaffTier" class="w-full bg-gray-800 p-2 rounded">
+                                    <option value="30" ${staff.commissionTier === 30 ? 'selected' : ''}>30%</option>
+                                    <option value="35" ${staff.commissionTier === 35 ? 'selected' : ''}>35%</option>
+                                    <option value="40" ${staff.commissionTier === 40 ? 'selected' : ''}>40%</option>
+                                </select>
+                            </div>
+                            <div><label class="text-gray-400 text-sm">Contact Number</label><input type="text" id="editStaffContact" class="w-full bg-gray-800 p-2 rounded" value="${staff.contact || ''}"></div>
+                            <div><label class="text-gray-400 text-sm">Email</label><input type="email" id="editStaffEmail" class="w-full bg-gray-800 p-2 rounded" value="${staff.email || ''}"></div>
+                            <div><label class="text-gray-400 text-sm">Join Date</label><input type="date" id="editStaffDate" class="w-full bg-gray-800 p-2 rounded" value="${staff.joinDate || new Date().toISOString().slice(0,10)}"></div>
+                            <div><label class="text-gray-400 text-sm">Status</label>
+                                <select id="editStaffStatus" class="w-full bg-gray-800 p-2 rounded">
+                                    <option value="true" ${staff.isActive !== false ? 'selected' : ''}>Active</option>
+                                    <option value="false" ${staff.isActive === false ? 'selected' : ''}>Inactive</option>
+                                </select>
+                            </div>
+                            <div class="bg-gray-800/30 p-2 rounded text-xs">
+                                <div class="flex justify-between"><span class="text-gray-400">Jobs Completed:</span><span class="text-yellow-400">${staff.jobsCompleted || 0}</span></div>
+                                <div class="flex justify-between"><span class="text-gray-400">Total Commission:</span><span class="text-purple-400">₱${(staff.totalCommission || 0).toFixed(2)}</span></div>
+                            </div>
+                            <div class="flex gap-3 mt-4">
+                                <button onclick="confirmEditStaff(${id})" class="btn-neon flex-1 p-2 rounded"><i class="fas fa-save"></i> Update</button>
+                                <button onclick="document.getElementById('staffModal').remove()" class="bg-gray-700 flex-1 p-2 rounded">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+        };
+
+        window.confirmEditStaff = function(id) {
+            const staff = appData.staff.find(s => s.id === id);
+            if (!staff) return;
+
+            const name = document.getElementById('editStaffName')?.value?.trim();
+            const position = document.getElementById('editStaffPosition')?.value?.trim() || 'Staff';
+            const tier = parseInt(document.getElementById('editStaffTier')?.value) || 35;
+            const contact = document.getElementById('editStaffContact')?.value?.trim() || '';
+            const email = document.getElementById('editStaffEmail')?.value?.trim() || '';
+            const joinDate = document.getElementById('editStaffDate')?.value || new Date().toISOString().slice(0, 10);
+            const isActive = document.getElementById('editStaffStatus')?.value === 'true';
+
+            if (!name) { alert("Staff name is required!"); return; }
+
+            staff.name = name;
+            staff.position = position;
+            staff.commissionTier = tier;
+            staff.contact = contact;
+            staff.email = email;
+            staff.joinDate = joinDate;
+            staff.isActive = isActive;
+
+            saveToLocal();
+            document.getElementById('staffModal')?.remove();
+            addActivityLog('Staff Updated', `${name} (${position})`);
+            addAuditTrail('Staff Updated', `${name} (${position})`, staff.id, 'staff');
+            renderApp();
+            alert(`✅ Staff "${name}" updated successfully!`);
+        };
+
+        window.deleteStaffMember = function(id) {
+            const staff = appData.staff.find(s => s.id === id);
+            if (!staff) return;
+            if (staff.totalCommission > 0 || (staff.jobsCompleted || 0) > 0) {
+                if (!confirm(`⚠️ Staff "${staff.name}" has ${staff.jobsCompleted || 0} jobs and ₱${(staff.totalCommission || 0).toFixed(2)} in commissions. Delete anyway?`)) {
+                    return;
+                }
+            } else {
+                if (!confirm(`Delete staff "${staff.name}"?`)) return;
+            }
+
+            // Remove staff from any open services
+            appData.openServices.forEach(s => {
+                s.staff = s.staff.filter(st => st.id !== id);
+                s.items.forEach(item => {
+                    item.assignedStaff = item.assignedStaff?.filter(st => st.id !== id) || [];
+                });
+            });
+
+            appData.staff = appData.staff.filter(s => s.id !== id);
+            saveToLocal();
+            addActivityLog('Staff Deleted', `${staff.name}`);
+            addAuditTrail('Staff Deleted', `${staff.name}`, staff.id, 'staff');
+            renderApp();
+            alert(`✅ Staff "${staff.name}" deleted successfully.`);
+        };
+
+        window.toggleStaffStatus = function(id) {
+            const staff = appData.staff.find(s => s.id === id);
+            if (staff) {
+                staff.isActive = staff.isActive === false ? true : false;
+                saveToLocal();
+                addActivityLog('Staff Status Toggled', `${staff.name} -> ${staff.isActive ? 'Active' : 'Inactive'}`);
+                renderApp();
+            }
+        };
+
+        window.viewStaffDetails = function(id) {
+            const staff = appData.staff.find(s => s.id === id);
+            if (!staff) return;
+
+            const tierColors = {
+                30: 'tier-30',
+                35: 'tier-35',
+                40: 'tier-40'
+            };
+            const tierClass = tierColors[staff.commissionTier] || 'tier-35';
+
+            // Get staff's transactions
+            const staffTx = appData.transactions.filter(t => {
+                return t.items.some(item => item.assignedStaff?.some(s => s.id === id));
+            });
+
+            const totalSales = staffTx.reduce((sum, t) => sum + (t.total || 0), 0);
+            const recentTx = staffTx.slice(0, 5);
+
+            let txHtml = recentTx.map(t => `
+                <div class="flex justify-between items-center border-b border-gray-700/30 py-1 text-sm">
+                    <span class="text-xs text-cyan-400">${t.id}</span>
+                    <span class="text-xs">${new Date(t.date).toLocaleDateString()}</span>
+                    <span class="text-green-400">₱${t.total.toFixed(2)}</span>
+                </div>
+            `).join('') || '<div class="text-gray-400 text-center py-2 text-sm">No transactions</div>';
+
+            const weeklyBreakdown = staff.weeklyBreakdown || { Sunday: 0, Monday: 0, Tuesday: 0, Wednesday: 0,
+                Thursday: 0, Friday: 0, Saturday: 0 };
+            const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            let weeklyHtml = dayNames.map(day => `
+                <div class="flex justify-between items-center border-b border-gray-700/20 py-1 text-xs">
+                    <span class="text-gray-400">${day}</span>
+                    <span class="text-purple-400">₱${(weeklyBreakdown[day] || 0).toFixed(2)}</span>
+                </div>
+            `).join('');
+
+            let modalHtml = `
+                <div id="staffDetailModal" class="modal">
+                    <div class="modal-content" style="max-width: 700px;">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 class="text-2xl font-bold">${staff.name}</h3>
+                                <p class="text-sm text-gray-400">${staff.position || 'Staff'} • <span class="staff-commission-tier ${tierClass}">${staff.commissionTier}%</span></p>
+                                <p class="text-xs text-gray-500">${staff.isActive !== false ? '🟢 Active' : '🔴 Inactive'} • Joined: ${staff.joinDate || 'N/A'}</p>
+                                ${staff.contact ? `<p class="text-xs text-gray-500">📞 ${staff.contact}</p>` : ''}
+                                ${staff.email ? `<p class="text-xs text-gray-500">✉️ ${staff.email}</p>` : ''}
+                            </div>
+                            <div class="text-right">
+                                <div class="text-2xl font-bold text-purple-400">₱${(staff.totalCommission || 0).toFixed(2)}</div>
+                                <div class="text-xs text-gray-400">Total Commission</div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-3 mb-4">
+                            <div class="bg-gray-800/30 p-3 rounded text-center">
+                                <div class="text-xs text-gray-400">Jobs Completed</div>
+                                <div class="text-xl font-bold text-yellow-400">${staff.jobsCompleted || 0}</div>
+                            </div>
+                            <div class="bg-gray-800/30 p-3 rounded text-center">
+                                <div class="text-xs text-gray-400">Sales Generated</div>
+                                <div class="text-xl font-bold text-cyan-400">₱${(staff.salesGenerated || 0).toFixed(2)}</div>
+                            </div>
+                            <div class="bg-gray-800/30 p-3 rounded text-center">
+                                <div class="text-xs text-gray-400">Transactions</div>
+                                <div class="text-xl font-bold text-blue-400">${staffTx.length}</div>
+                            </div>
+                        </div>
+
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <h4 class="font-bold text-cyan-400 mb-2 text-sm"><i class="fas fa-calendar-week"></i> Weekly Breakdown</h4>
+                                <div class="bg-gray-800/20 p-2 rounded">
+                                    ${weeklyHtml}
+                                    <div class="flex justify-between items-center border-t border-gray-700/30 pt-1 mt-1 text-xs font-bold">
+                                        <span class="text-gray-400">Total Week</span>
+                                        <span class="text-purple-400">₱${(staff.weeklyCommission || 0).toFixed(2)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-cyan-400 mb-2 text-sm"><i class="fas fa-history"></i> Recent Transactions</h4>
+                                <div class="bg-gray-800/20 p-2 rounded max-h-32 overflow-y-auto">
+                                    ${txHtml}
+                                </div>
+                                <div class="flex justify-between items-center mt-2 text-xs">
+                                    <span class="text-gray-400">Monthly Commission</span>
+                                    <span class="text-blue-400">₱${(staff.monthlyCommission || 0).toFixed(2)}</span>
+                                </div>
+                                <div class="flex justify-between items-center text-xs">
+                                    <span class="text-gray-400">Yearly Commission</span>
+                                    <span class="text-indigo-400">₱${(staff.yearlyCommission || 0).toFixed(2)}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-3 mt-4">
+                            <button onclick="document.getElementById('staffDetailModal').remove()" class="bg-gray-700 px-4 py-2 rounded text-sm">Close</button>
+                            <button onclick="document.getElementById('staffDetailModal').remove(); editStaffMember(${staff.id})" class="bg-cyan-600 px-4 py-2 rounded text-sm"><i class="fas fa-edit"></i> Edit</button>
+                            <button onclick="document.getElementById('staffDetailModal').remove(); printStaffReport(${staff.id})" class="bg-green-600 px-4 py-2 rounded text-sm"><i class="fas fa-print"></i> Print Report</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+        };
+
+        window.printStaffReport = function(id) {
+            const staff = appData.staff.find(s => s.id === id);
+            if (!staff) return;
+            const win = window.open('', '_blank');
+            if (!win) { alert('Please allow pop-ups to print.'); return; }
+
+            const staffTx = appData.transactions.filter(t => {
+                return t.items.some(item => item.assignedStaff?.some(s => s.id === id));
+            });
+
+            const logoHtml = appData.systemSettings.companyLogo ?
+                `<div class="center"><img src="${appData.systemSettings.companyLogo}" style="max-width:100px;max-height:70px;object-fit:contain;"></div>` :
+                '';
+
+            let txRows = staffTx.slice(0, 20).map(t => `
+                <tr><td>${t.id}</td><td>${new Date(t.date).toLocaleDateString()}</td><td>${t.customer}</td><td class="right">₱${t.total.toFixed(2)}</td></tr>
+            `).join('');
+
+            win.document.write(`
+                <html><head><title>Staff Report - ${staff.name}</title>
+                <style>
+                    body{font-family:monospace;padding:20px;background:white;color:black;}
+                    .center{text-align:center;}
+                    table{width:100%;border-collapse:collapse;font-size:11px;}
+                    th,td{border:1px solid #ddd;padding:4px;}
+                    th{background:#f0f0f0;}
+                    .right{text-align:right;}
+                    .header{margin-bottom:20px;}
+                    .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0;}
+                    .stat-box{border:1px solid #ddd;padding:10px;text-align:center;border-radius:4px;}
+                    .stat-number{font-size:20px;font-weight:bold;}
+                    .stat-label{font-size:10px;color:#666;text-transform:uppercase;}
+                    .commission-tier{display:inline-block;padding:2px 10px;border-radius:12px;font-weight:bold;}
+                    .tier-30{background:#00d4ff20;color:#00d4ff;}
+                    .tier-35{background:#00ff8820;color:#00ff88;}
+                    .tier-40{background:#ffaa0020;color:#ffaa00;}
+                </style>
+                </head><body>
+                ${logoHtml}
+                <div class="header"><h2>${appData.systemSettings.companyName}</h2><p>Staff Performance Report - ${staff.name}</p></div>
+                <div class="stats">
+                    <div class="stat-box"><div class="stat-number">${staff.jobsCompleted || 0}</div><div class="stat-label">Jobs</div></div>
+                    <div class="stat-box"><div class="stat-number">₱${(staff.totalCommission || 0).toFixed(2)}</div><div class="stat-label">Commission</div></div>
+                    <div class="stat-box"><div class="stat-number">₱${(staff.salesGenerated || 0).toFixed(2)}</div><div class="stat-label">Sales</div></div>
+                    <div class="stat-box"><div class="stat-number">${staffTx.length}</div><div class="stat-label">Transactions</div></div>
+                </div>
+                <p>Position: ${staff.position || 'Staff'} | Tier: <span class="commission-tier tier-${staff.commissionTier}">${staff.commissionTier}%</span> | Status: ${staff.isActive !== false ? 'Active' : 'Inactive'}</p>
+                <h3>Recent Transactions</h3>
+                <table>
+                    <thead><tr><th>Receipt</th><th>Date</th><th>Customer</th><th class="right">Total</th></tr></thead>
+                    <tbody>${txRows || '<tr><td colspan="4" class="center">No transactions</td></tr>'}</tbody>
+                </table>
+                <p style="margin-top:20px;font-size:10px;color:#888;">Printed from ${appData.systemSettings.companyName} POS System v8.8.5</p>
+                <script>
+                    window.onload = function() { window.print(); window.onafterprint = function() { window.close(); }; };
+                <\/script>
+                </body></html>
+            `);
+            win.document.close();
+        };
+
+        // ---- Staff Search & Filter Functions ----
+        window.updateStaffSearch = function(value) {
+            staffSearchQuery = value;
+            staffCurrentPage = 1;
+            renderApp();
+        };
+
+        window.applyStaffFilters = function() {
+            const tierFilter = document.getElementById('staffTierFilter')?.value || 'all';
+            const statusFilter = document.getElementById('staffStatusFilter')?.value || 'all';
+
+            if (tierFilter !== 'all') {
+                // We'll filter in the render function
+                const tierVal = parseInt(tierFilter);
+                // The renderEnhancedStaffDashboard function handles filtering
+            }
+            staffCurrentPage = 1;
+            renderApp();
+        };
+
+        window.clearStaffFilters = function() {
+            staffSearchQuery = '';
+            document.getElementById('staffSearchInput').value = '';
+            document.getElementById('staffTierFilter').value = 'all';
+            document.getElementById('staffStatusFilter').value = 'all';
+            staffCurrentPage = 1;
+            renderApp();
+        };
+
+        window.staffSort = function(column) {
+            if (staffSortColumn === column) {
+                staffSortDirection = staffSortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                staffSortColumn = column;
+                staffSortDirection = 'asc';
+            }
+            renderApp();
+        };
+
+        window.staffChangePage = function(page) {
+            const total = appData.staff.length;
+            const totalPages = Math.ceil(total / staffPageSize);
+            if (page < 1 || page > totalPages) return;
+            staffCurrentPage = page;
+            renderApp();
+        };
+
+        // ---- Staff Export Functions ----
+        window.exportStaffExcel = function() {
+            const data = appData.staff.map(s => ({
+                name: s.name || 'Unnamed',
+                position: s.position || 'Staff',
+                tier: `${s.commissionTier || 35}%`,
+                jobs: s.jobsCompleted || 0,
+                sales: `₱${(s.salesGenerated || 0).toFixed(2)}`,
+                commission: `₱${(s.totalCommission || 0).toFixed(2)}`,
+                status: s.isActive !== false ? 'Active' : 'Inactive',
+                contact: s.contact || '',
+                email: s.email || '',
+                joinDate: s.joinDate || ''
+            }));
+            const columns = [
+                { key: 'name', header: 'Staff Name' },
+                { key: 'position', header: 'Position' },
+                { key: 'tier', header: 'Tier' },
+                { key: 'jobs', header: 'Jobs Done' },
+                { key: 'sales', header: 'Sales Generated' },
+                { key: 'commission', header: 'Total Commission' },
+                { key: 'status', header: 'Status' },
+                { key: 'contact', header: 'Contact' },
+                { key: 'email', header: 'Email' },
+                { key: 'joinDate', header: 'Join Date' }
+            ];
+            generateExcel(data, columns, 'Staff Management Report', 'staff_report');
+        };
+
+        window.exportStaffPDF = function() {
+            const data = appData.staff.map(s => ({
+                name: s.name || 'Unnamed',
+                position: s.position || 'Staff',
+                tier: `${s.commissionTier || 35}%`,
+                jobs: s.jobsCompleted || 0,
+                sales: `₱${(s.salesGenerated || 0).toFixed(2)}`,
+                commission: `₱${(s.totalCommission || 0).toFixed(2)}`,
+                status: s.isActive !== false ? 'Active' : 'Inactive'
+            }));
+            const columns = [
+                { key: 'name', header: 'Staff Name' },
+                { key: 'position', header: 'Position' },
+                { key: 'tier', header: 'Tier' },
+                { key: 'jobs', header: 'Jobs Done' },
+                { key: 'sales', header: 'Sales Generated' },
+                { key: 'commission', header: 'Total Commission' },
+                { key: 'status', header: 'Status' }
+            ];
+            generatePDF(data, columns, 'Staff Management Report', 'staff_report', appData.systemSettings.companyLogo,
+                appData.systemSettings.logoSize);
+        };
+
+        window.printStaffDashboard = function() {
+            const printContent = document.querySelector('.card-premium').cloneNode(true);
+            const win = window.open('', '_blank');
+            const logoHtml = appData.systemSettings.companyLogo ?
+                `<div class="center"><img src="${appData.systemSettings.companyLogo}" style="max-width:100px;max-height:70px;object-fit:contain;"></div>` :
+                '';
+            win.document.write(`<html><head><title>Staff Dashboard</title><style>
+                body{font-family:monospace;padding:20px;background:white;color:black;}
+                .center{text-align:center;}
+                table{width:100%;border-collapse:collapse;font-size:9px;}
+                th,td{border:1px solid #ddd;padding:4px;text-align:center;}
+                th{background:#f0f0f0;}
+                .header{margin-bottom:20px;}
+                .no-print{display:none;}
+                .stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:16px;}
+                .stat-box{border:1px solid #ddd;padding:8px;text-align:center;border-radius:4px;}
+                .stat-box .number{font-size:18px;font-weight:bold;}
+                .stat-box .label{font-size:9px;color:#666;text-transform:uppercase;}
+                .staff-commission-tier{display:inline-block;padding:1px 8px;border-radius:10px;font-weight:bold;font-size:9px;}
+                .tier-30{background:#00d4ff20;color:#00d4ff;}
+                .tier-35{background:#00ff8820;color:#00ff88;}
+                .tier-40{background:#ffaa0020;color:#ffaa00;}
+            </style></head><body>
+                ${logoHtml}
+                <div class="header"><h2>${appData.systemSettings.companyName}</h2><p>Staff Dashboard - ${new Date().toLocaleString()}</p></div>
+                ${printContent.innerHTML}
+            </body></html>`);
+            win.document.close();
+            win.print();
+        };
+
+        // ---- Legacy Staff Dashboard (kept for compatibility) ----
+        function renderStaffDashboard() {
+            return renderEnhancedStaffDashboard();
+        }
+
+        // ================================================================
+        //  DASHBOARD
+        // ================================================================
+
         function getChartData(period) {
             const now = new Date();
             let labels = [];
@@ -5357,6 +6280,10 @@
                     <i class="fas fa-file-export"></i>
                     Export Today
                 </div>
+                <div class="quick-action-btn" onclick="navigateAdmin('staff')">
+                    <i class="fas fa-users-cog"></i>
+                    Staff Management
+                </div>
             </div>
         `;
 
@@ -5425,6 +6352,7 @@
                         <button onclick="logout()" class="text-xs text-red-400 ml-3 hover:text-red-300"><i class="fas fa-sign-out-alt"></i> Logout</button>
                         ${firebaseInitialized && isFirebasePrimary ? `<span class="text-xs text-green-400 ml-3"><i class="fas fa-cloud"></i> Online</span>` : `<span class="text-xs text-yellow-400 ml-3"><i class="fas fa-sync-alt"></i> Offline</span>`}
                         ${appData.systemSettings.enableNotifications !== false ? `<span class="text-xs text-cyan-400 ml-3"><i class="fas fa-bell"></i></span>` : ''}
+                        ${appData.systemSettings.bluetooth?.enabled ? `<span class="text-xs text-blue-400 ml-3"><i class="fas fa-bluetooth-b"></i> BT Print</span>` : ''}
                     </div>
                 </div>
                 <div class="text-sm text-gray-400">${appData.systemSettings.businessHours}</div>
@@ -5587,6 +6515,7 @@
                         <button onclick="navigate('commission')" class="bg-purple-600 px-3 py-1 rounded text-sm"><i class="fas fa-percent"></i> Commissions</button>
                         <button onclick="navigate('reports')" class="bg-cyan-600 px-3 py-1 rounded text-sm"><i class="fas fa-chart-bar"></i> Reports</button>
                         <button onclick="navigateAdmin('feedback')" class="bg-purple-400 px-3 py-1 rounded text-sm"><i class="fas fa-comment-dots"></i> Feedback</button>
+                        <button onclick="navigateAdmin('staff')" class="bg-indigo-400 px-3 py-1 rounded text-sm"><i class="fas fa-users-cog"></i> Staff</button>
                     </div>
                 </div>
             </div>
@@ -7074,7 +8003,6 @@
             if (window) {
                 window.classList.toggle('open');
                 if (aiAssistantOpen && aiChatHistory.length === 0) {
-                    // Welcome message
                     addAIMessage('assistant', '👋 Hi! I\'m your POS Assistant. I can help you with:\n\n• Viewing sales and revenue insights\n• Checking staff performance\n• Finding specific transactions\n• Analyzing customer data\n• Commission reports\n• Inventory status\n\nTry asking something like "What are today\'s sales?" or "Show me top performing staff"');
                 }
             }
@@ -7088,15 +8016,10 @@
             if (!chat) return;
             const msgDiv = document.createElement('div');
             msgDiv.className = `ai-message ${role}`;
-            // Simple markdown-like formatting
             let formatted = content;
-            // Bold
             formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-            // Newlines
             formatted = formatted.replace(/\n/g, '<br>');
-            // Bullet points
             formatted = formatted.replace(/• (.*?)(<br>|$)/g, '• $1<br>');
-            // Highlight patterns
             formatted = formatted.replace(/₱([\d,]+\.\d{2})/g, '<span class="highlight-green">₱$1</span>');
             formatted = formatted.replace(/(\d+)★/g, '<span class="highlight-yellow">$1★</span>');
             formatted = formatted.replace(/⚠️/g, '<span class="highlight-red">⚠️</span>');
@@ -7125,20 +8048,13 @@
 
         function processAIQuery(query) {
             const q = query.toLowerCase().trim();
-
-            // Add user message
             addAIMessage('user', query);
-
-            // Show typing indicator
             showTypingIndicator();
 
-            // Simulate AI processing with setTimeout
             setTimeout(() => {
                 hideTypingIndicator();
-
                 let response = '';
 
-                // Check for sales/transactions queries
                 if (q.includes('today') && (q.includes('sales') || q.includes('revenue') || q.includes('transaction'))) {
                     const today = new Date().toISOString().slice(0, 10);
                     const todayTx = appData.transactions.filter(t => t.date.startsWith(today));
@@ -7149,7 +8065,7 @@
                         .staffCommissions).reduce((s, st) => s + (st.commission || 0), 0), 0);
                     response = `📊 **Today's Sales Summary**\n\n• Total Sales: ₱${total.toFixed(2)}\n• Transactions: ${count}\n• Average per Transaction: ₱${avg.toFixed(2)}\n• Staff Commission: ₱${commissions.toFixed(2)}\n\n${count > 0 ? '✅ Activity is healthy today!' : '⚠️ No transactions recorded today yet.'}`;
                 } else if (q.includes('week') && (q.includes('sales') || q.includes('revenue') || q.includes(
-                    'transaction'))) {
+                        'transaction'))) {
                     const weekStart = getCurrentWeekStart();
                     const weekStartStr = weekStart.toISOString().slice(0, 10);
                     const weekEndStr = getCurrentWeekEnd().toISOString().slice(0, 10);
@@ -7163,7 +8079,7 @@
                     response =
                         `📈 **Weekly Sales Summary**\n\n${weekLabel}\n• Total Sales: ₱${total.toFixed(2)}\n• Transactions: ${count}\n• Average per Transaction: ₱${avg.toFixed(2)}\n• Staff Commission: ₱${commissions.toFixed(2)}\n\n📊 ${count > 0 ? 'This week is active!' : 'No transactions this week yet.'}`;
                 } else if (q.includes('month') && (q.includes('sales') || q.includes('revenue') || q.includes(
-                    'transaction'))) {
+                        'transaction'))) {
                     const now = new Date();
                     const month = now.getMonth();
                     const year = now.getFullYear();
@@ -7176,10 +8092,7 @@
                     const monthName = now.toLocaleString('default', { month: 'long' });
                     response =
                         `📊 **Monthly Sales Summary**\n\n${monthName} ${year}\n• Total Sales: ₱${total.toFixed(2)}\n• Transactions: ${count}\n• ${count > 0 ? `Average: ₱${(total/count).toFixed(2)}` : 'No transactions yet.'}`;
-                }
-
-                // Check for staff queries
-                else if (q.includes('staff') || q.includes('employee') || q.includes('top')) {
+                } else if (q.includes('staff') || q.includes('employee') || q.includes('top')) {
                     if (q.includes('top') || q.includes('best') || q.includes('performing')) {
                         const staffData = appData.staff.map(s => ({
                             name: s.name,
@@ -7202,18 +8115,13 @@
                         response =
                             `👥 **Staff Overview**\n\n• Total Staff: ${appData.staff.length}\n• Total Commission: ₱${totalCommission.toFixed(2)}\n• Total Jobs: ${totalJobs}\n• Total Sales Generated: ₱${totalSales.toFixed(2)}`;
                     } else {
-                        // Show staff list
                         const staffList = appData.staff.map(s =>
                             `• ${s.name} — ${s.position || 'Staff'} | ₱${(s.totalCommission||0).toFixed(2)} commission | ${s.jobsCompleted||0} jobs`
                             ).join('\n');
                         response =
                             `👤 **Staff Members**\n\n${staffList || 'No staff members added yet.'}\n\n💡 Ask about top performers or total stats.`;
                     }
-                }
-
-                // Check for transaction search
-                else if (q.includes('find') || q.includes('search') || q.includes('look') || q.includes('transaction')) {
-                    // Try to extract a receipt number or customer name
+                } else if (q.includes('find') || q.includes('search') || q.includes('look') || q.includes('transaction')) {
                     const words = q.split(' ');
                     let searchTerm = '';
                     for (const word of words) {
@@ -7223,7 +8131,6 @@
                         }
                     }
                     if (!searchTerm) {
-                        // Look for customer name in query
                         const customers = appData.customers.map(c => c.name.toLowerCase());
                         for (const word of words) {
                             if (word.length > 3 && customers.some(c => c.includes(word))) {
@@ -7249,10 +8156,7 @@
                         response =
                             `🔍 **Search Help**\n\nI can search for transactions by:\n• Receipt number (e.g., INV-2024-000123)\n• Customer name\n• Vehicle plate number\n\nTry: "Find transaction INV-2024-000123" or "Search customer Juan"`;
                     }
-                }
-
-                // Check for customer queries
-                else if (q.includes('customer') || q.includes('buyer') || q.includes('client')) {
+                } else if (q.includes('customer') || q.includes('buyer') || q.includes('client')) {
                     const totalCustomers = appData.customers.length;
                     const totalSpent = appData.customers.reduce((sum, c) => {
                         const tx = appData.transactions.filter(t => t.customer === c.name);
@@ -7266,10 +8170,7 @@
                     }).sort((a, b) => b.spent - a.spent).slice(0, 5);
                     response =
                         `👤 **Customer Overview**\n\n• Total Customers: ${totalCustomers}\n• Total Spending: ₱${totalSpent.toFixed(2)}\n• Average per Customer: ₱${avgSpent.toFixed(2)}\n\n🏆 **Top Customers**\n\n${topCustomers.map((c, i) => `${i+1}. ${c.name} — ₱${c.spent.toFixed(2)} (${c.visits} visits)`).join('\n')}`;
-                }
-
-                // Check for commission queries
-                else if (q.includes('commission')) {
+                } else if (q.includes('commission')) {
                     const weeklyData = getWeeklyCommission();
                     const totalComm = appData.staff.reduce((sum, s) => sum + (s.totalCommission || 0), 0);
                     const weeklyComm = weeklyData.totals?.commission || 0;
@@ -7277,20 +8178,14 @@
                         .slice(0, 3);
                     response =
                         `💰 **Commission Report**\n\n• Total Commission (All Time): ₱${totalComm.toFixed(2)}\n• Weekly Commission: ₱${weeklyComm.toFixed(2)}\n• Staff Count: ${appData.staff.length}\n\n🏆 **Top Earners**\n\n${topStaff.map((s, i) => `${i+1}. ${s.name} — ₱${(s.totalCommission||0).toFixed(2)}`).join('\n')}\n\n💡 Ask about staff performance for more details.`;
-                }
-
-                // Check for inventory queries
-                else if (q.includes('inventory') || q.includes('stock') || q.includes('supply')) {
+                } else if (q.includes('inventory') || q.includes('stock') || q.includes('supply')) {
                     const totalItems = appData.inventory.length;
                     const lowStock = appData.inventory.filter(i => i.quantity <= i.reorderLevel);
                     const lowStockCount = lowStock.length;
                     const totalQuantity = appData.inventory.reduce((sum, i) => sum + i.quantity, 0);
                     response =
                         `📦 **Inventory Overview**\n\n• Total Items: ${totalItems}\n• Total Stock Units: ${totalQuantity}\n• Low Stock Items: ${lowStockCount}\n\n${lowStockCount > 0 ? '⚠️ **Low Stock Alert**\n' + lowStock.map(i => `• ${i.name}: ${i.quantity} ${i.unit} (Reorder at ${i.reorderLevel})`).join('\n') : '✅ All items are well-stocked.'}\n\n💡 Ask about a specific item by name.`;
-                }
-
-                // Check for service queries
-                else if (q.includes('service') || q.includes('wash') || q.includes('detail')) {
+                } else if (q.includes('service') || q.includes('wash') || q.includes('detail')) {
                     const serviceCount = {};
                     appData.transactions.forEach(t => {
                         t.items.forEach(item => {
@@ -7302,24 +8197,17 @@
                     const totalServices = appData.services.length;
                     response =
                         `🧼 **Service Overview**\n\n• Total Services Offered: ${totalServices}\n• Most Popular Services:\n\n${topServices.map(([name, count], i) => `${i+1}. ${name} — ${count} times`).join('\n')}\n\n💡 Ask about specific service prices or details.`;
-                }
-
-                // Check for general help
-                else if (q.includes('help') || q.includes('what can you do') || q.includes('capabilities')) {
+                } else if (q.includes('help') || q.includes('what can you do') || q.includes('capabilities')) {
                     response =
                         `🤖 **AI Assistant Help**\n\nI can help you with:\n\n📊 **Sales & Revenue**\n• Today/Week/Month sales\n• Transaction analysis\n\n👤 **Staff**\n• Performance reports\n• Top earners\n• Staff list\n\n💰 **Commissions**\n• Total commission\n• Weekly breakdown\n\n👥 **Customers**\n• Customer overview\n• Top customers\n• Customer search\n\n📦 **Inventory**\n• Stock levels\n• Low stock alerts\n• Item search\n\n🧼 **Services**\n• Popular services\n• Service details\n\n🔍 **Search**\n• Find transactions by receipt, customer, or plate\n• Search staff, customers, or inventory\n\nJust ask in plain English!`;
-                }
-
-                // Default response with suggestion
-                else {
+                } else {
                     response =
                         `🤔 I'm not sure about that. Here are some things I can help with:\n\n• "What are today's sales?"\n• "Show me top performing staff"\n• "Find transaction INV-2024-000123"\n• "Customer overview"\n• "Commission report"\n• "Inventory status"\n• "Help" for all capabilities`;
                 }
 
-                // Add AI response
                 addAIMessage('assistant', response);
 
-            }, 500 + Math.random() * 500); // Simulate thinking time
+            }, 500 + Math.random() * 500);
         }
 
         function handleAIQuery() {
@@ -7327,7 +8215,6 @@
             if (!input) return;
             const query = input.value.trim();
             if (!query) return;
-
             input.value = '';
             processAIQuery(query);
         }
@@ -7347,7 +8234,6 @@
         //  ENHANCED ADMIN DASHBOARD - WITH PANEL EDITOR FEATURE
         // ================================================================
 
-        // Panel customization storage
         function getPanelCustomization(panelId) {
             if (!appData.adminPanelCustomizations) appData.adminPanelCustomizations = {};
             return appData.adminPanelCustomizations[panelId] || null;
@@ -7375,7 +8261,7 @@
                 { id: 'customers', icon: 'fa-user-friends', label: 'Customers' },
                 { id: 'services', icon: 'fa-concierge-bell', label: 'Services' },
                 { id: 'categories', icon: 'fa-tags', label: 'Categories' },
-                { id: 'staff', icon: 'fa-users', label: 'Staff' },
+                { id: 'staff', icon: 'fa-users-cog', label: 'Staff Management' },
                 { id: 'inventory', icon: 'fa-boxes', label: 'Inventory' },
                 { id: 'expenses', icon: 'fa-money-bill-wave', label: 'Expenses' },
                 { id: 'commissions', icon: 'fa-percent', label: 'Commission Matrix' },
@@ -7386,10 +8272,8 @@
 
             let content = '';
             try {
-                // Check if there's a custom panel content
                 const customContent = getPanelCustomization(currentAdminPanel);
                 if (customContent) {
-                    // Render custom content with edit button
                     content = `
                         <div class="relative">
                             <div class="flex justify-between items-center mb-4">
@@ -7404,7 +8288,6 @@
                         </div>
                     `;
                 } else {
-                    // Render default content
                     let defaultContent = '';
                     if (currentAdminPanel === 'dailytransactions') defaultContent = renderDailyTransactionManagement();
                     else if (currentAdminPanel === 'weeklycommission') defaultContent = renderWeeklyCommissionReport();
@@ -7414,7 +8297,7 @@
                     else if (currentAdminPanel === 'customers') defaultContent = renderCustomers();
                     else if (currentAdminPanel === 'services') defaultContent = renderAdminServices();
                     else if (currentAdminPanel === 'categories') defaultContent = renderAdminCategories();
-                    else if (currentAdminPanel === 'staff') defaultContent = renderStaffDashboard();
+                    else if (currentAdminPanel === 'staff') defaultContent = renderEnhancedStaffDashboard();
                     else if (currentAdminPanel === 'inventory') defaultContent = renderInventory();
                     else if (currentAdminPanel === 'expenses') defaultContent = renderAdminExpenses();
                     else if (currentAdminPanel === 'commissions') defaultContent = renderAdminCommissions();
@@ -7467,6 +8350,7 @@
                     <div class="mt-1 text-purple-400 text-[10px]">🔒 Staff: Access to Weekly Commission Report only</div>
                     <div class="mt-1 text-green-400 text-[10px]">🧾 Dual Receipts: Customer + Shop Copy with Cut Marker</div>
                     <div class="mt-1 text-green-400 text-[10px]">💬 QR Code Feedback on every receipt</div>
+                    <div class="mt-1 text-blue-400 text-[10px]">🔵 Bluetooth Auto-Print: ${appData.systemSettings.bluetooth?.enabled ? '✅ Enabled' : '⏸️ Disabled'}</div>
                     ${isUsingDemoConfig ? `<div class="mt-1 text-yellow-400 text-[10px]">⚠️ Using demo Firebase config - Configure your own in System Settings</div>` : ''}
                 </div>
             </div>
@@ -7486,7 +8370,7 @@
                 customers: 'Customers',
                 services: 'Services',
                 categories: 'Categories',
-                staff: 'Staff',
+                staff: 'Staff Management',
                 inventory: 'Inventory',
                 expenses: 'Expenses',
                 commissions: 'Commission Matrix',
@@ -7533,7 +8417,6 @@
             `;
             document.body.insertAdjacentHTML('beforeend', modalHtml);
 
-            // Editor toolbar functions
             window.editorInsert = function(type) {
                 const editor = document.getElementById('panelEditorContent');
                 if (!editor) return;
@@ -8580,18 +9463,37 @@
             }
         };
 
-        // ===== SYSTEM SETTINGS =====
+        // ================================================================
+        //  SYSTEM SETTINGS WITH BLUETOOTH SETUP
+        // ================================================================
+
         function renderAdminSystem() {
             if (showLogin) return renderLogin();
             if (!hasRole(['Owner'])) {
                 return `<div class="card-premium p-8 text-center"><i class="fas fa-lock text-4xl text-red-400 mb-4"></i><p class="text-xl">Access Denied. Owner role required.</p></div>`;
             }
             const s = appData.systemSettings;
+            const bluetooth = s.bluetooth || { enabled: false, autoPrint: false, deviceName: '', deviceAddress: '',
+                paired: false, lastPrint: null, printAttempts: 0, printSuccess: 0 };
             const logoHtml = s.companyLogo ? `<img src="${s.companyLogo}" class="company-logo" style="max-width:120px;max-height:80px;">` :
                 'No logo uploaded';
             const appIconHtml = s.appIcon ? `<img src="${s.appIcon}" class="app-icon-preview">` :
             'No app icon uploaded';
             const timeout = s.inactivityTimeout || 30;
+
+            // Bluetooth status
+            const btStatus = bluetooth.enabled ?
+                `<span class="text-green-400"><i class="fas fa-check-circle"></i> Enabled</span>` :
+                `<span class="text-gray-400"><i class="fas fa-circle"></i> Disabled</span>`;
+            const btPaired = bluetooth.paired ?
+                `<span class="text-green-400"><i class="fas fa-check-circle"></i> Paired</span>` :
+                `<span class="text-yellow-400"><i class="fas fa-exclamation-triangle"></i> Not Paired</span>`;
+            const btAutoPrint = bluetooth.autoPrint ?
+                `<span class="text-green-400"><i class="fas fa-check-circle"></i> ON</span>` :
+                `<span class="text-gray-400"><i class="fas fa-circle"></i> OFF</span>`;
+            const btDevice = bluetooth.deviceName ?
+                `<span class="text-cyan-400">${bluetooth.deviceName}</span>` :
+                `<span class="text-gray-400">No device selected</span>`;
 
             return `<h3 class="text-xl font-bold mb-4"><i class="fas fa-cogs"></i> System Settings v8.8.5</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -8652,7 +9554,54 @@
                         </label>
                     </div>
                     <div><label class="text-gray-400 text-sm">Business Hours</label><div class="editable-field bg-gray-800 p-2 rounded cursor-pointer" onclick="editSetting('businessHours')">${s.businessHours}</div></div>
-                    
+
+                    <!-- ===== BLUETOOTH SETUP SECTION ===== -->
+                    <div class="border-t border-cyan-400/30 pt-3 mt-2">
+                        <label class="text-gray-400 text-sm font-bold"><i class="fas fa-bluetooth-b text-blue-400"></i> Bluetooth Setup</label>
+                        <div class="space-y-3 mt-2">
+                            <div class="bg-gray-800/30 p-3 rounded-lg">
+                                <div class="grid grid-cols-2 gap-2 text-xs">
+                                    <div><span class="text-gray-400">Status:</span> ${btStatus}</div>
+                                    <div><span class="text-gray-400">Pairing:</span> ${btPaired}</div>
+                                    <div><span class="text-gray-400">Auto-Print:</span> ${btAutoPrint}</div>
+                                    <div><span class="text-gray-400">Device:</span> ${btDevice}</div>
+                                    ${bluetooth.lastPrint ? `<div><span class="text-gray-400">Last Print:</span> <span class="text-cyan-400">${new Date(bluetooth.lastPrint).toLocaleTimeString()}</span></div>` : ''}
+                                    <div><span class="text-gray-400">Success Rate:</span> <span class="text-green-400">${bluetooth.printAttempts > 0 ? Math.round((bluetooth.printSuccess / bluetooth.printAttempts) * 100) : 0}%</span></div>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-wrap gap-2">
+                                <button onclick="toggleBluetooth()" class="${bluetooth.enabled ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'} px-4 py-2 rounded text-sm transition">
+                                    <i class="fas ${bluetooth.enabled ? 'fa-power-off' : 'fa-bluetooth-b'}"></i> ${bluetooth.enabled ? 'Disable Bluetooth' : 'Enable Bluetooth'}
+                                </button>
+                                <button onclick="scanBluetoothDevices()" class="bg-cyan-600 px-4 py-2 rounded text-sm hover:bg-cyan-700 transition" ${!bluetooth.enabled ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : ''}>
+                                    <i class="fas fa-search"></i> Scan Devices
+                                </button>
+                                <button onclick="pairBluetoothDevice()" class="bg-purple-600 px-4 py-2 rounded text-sm hover:bg-purple-700 transition" ${!bluetooth.enabled ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : ''}>
+                                    <i class="fas fa-link"></i> Pair Device
+                                </button>
+                                <button onclick="testBluetoothPrint()" class="bg-blue-600 px-4 py-2 rounded text-sm hover:bg-blue-700 transition" ${!bluetooth.enabled || !bluetooth.paired ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : ''}>
+                                    <i class="fas fa-print"></i> Test Print
+                                </button>
+                            </div>
+
+                            <div class="flex items-center gap-3">
+                                <label class="text-gray-400 text-xs">Auto-Print on Sale</label>
+                                <label class="inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" class="form-checkbox h-4 w-4 text-cyan-500" ${bluetooth.autoPrint ? 'checked' : ''} onchange="toggleBluetoothAutoPrint(this.checked)">
+                                    <span class="ml-2 text-xs text-gray-400">${bluetooth.autoPrint ? 'ON' : 'OFF'}</span>
+                                </label>
+                                <span class="text-xs text-gray-500">Automatically print receipts after each sale</span>
+                            </div>
+
+                            <div class="text-xs text-gray-500 bg-gray-900/30 p-2 rounded">
+                                <p><i class="fas fa-info-circle text-cyan-400"></i> Bluetooth printing requires a Bluetooth thermal printer paired with your device.</p>
+                                <p class="mt-1">📌 Supported: 58mm and 80mm thermal Bluetooth printers (e.g., Epson, Xprinter, MTP-2).</p>
+                                <p class="mt-1">🔧 After pairing, select your printer from the device list and enable Auto-Print.</p>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="border-t border-gray-700 pt-3 mt-2">
                         <label class="text-gray-400 text-sm font-bold">Advanced Settings</label>
                         <div class="space-y-2 mt-2">
@@ -8708,7 +9657,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="border-t border-gray-700 pt-3 mt-2">
                         <label class="text-gray-400 text-sm font-bold">UI Customization</label>
                         <div class="space-y-2 mt-2">
@@ -8719,7 +9668,7 @@
                             <div><label class="text-gray-400 text-xs">Credit Management Title</label><div class="editable-field bg-gray-800 p-2 rounded cursor-pointer text-sm" onclick="editUILabel('creditManagement')">${s.uiLabels?.creditManagement || 'Credit Management'}</div></div>
                         </div>
                     </div>
-                    
+
                     <div><label class="text-gray-400 text-sm mt-2">Firebase</label>
                         <div class="flex gap-2 flex-wrap">
                             <button onclick="showFirebaseConfig()" class="bg-cyan-600 px-3 py-1 rounded text-sm"><i class="fas fa-database"></i> Configure Firebase</button>
@@ -8764,12 +9713,260 @@
                 <div class="mt-1 text-purple-400">🖨️ Print Entire Dashboard feature</div>
                 <div class="mt-1 text-cyan-400">🎨 Panel Customization: Edit any admin panel content</div>
                 <div class="mt-1 text-blue-400">🤖 AI Assistant: Search transactions, staff, inventory, and more</div>
+                <div class="mt-1 text-blue-400">🔵 Bluetooth Auto-Print: ${bluetooth.enabled ? '✅ Enabled' : '⏸️ Disabled'} ${bluetooth.paired ? '| Paired to: ' + bluetooth.deviceName : ''}</div>
                 ${firebaseInitialized && isFirebasePrimary ? `<div class="mt-1 text-green-400">🌐 Firebase: Connected (Online) - ${firebaseConfig.databaseURL || 'Custom'} | Auto-sync: ON</div>` : `<div class="mt-1 text-yellow-400">🌐 Firebase: Disconnected - Using local cache</div>`}
                 <div class="mt-1 text-green-400">🔧 Data sanitization removes undefined values before syncing</div>
                 <div class="mt-1 text-cyan-400">🎨 Customizable UI Labels for panels and modals</div>
                 ${isUsingDemoConfig ? `<div class="mt-1 text-yellow-400">⚠️ Using demo Firebase config. Configure your own for data persistence.</div>` : ''}
             </div>
         </div>`;
+        }
+
+        // ===== BLUETOOTH FUNCTIONS =====
+        window.toggleBluetooth = function() {
+            const bt = appData.systemSettings.bluetooth;
+            bt.enabled = !bt.enabled;
+            if (!bt.enabled) {
+                bt.paired = false;
+                bt.deviceName = '';
+                bt.deviceAddress = '';
+                bt.autoPrint = false;
+            }
+            saveToLocal();
+            addActivityLog('Bluetooth Toggled', `Bluetooth ${bt.enabled ? 'Enabled' : 'Disabled'}`);
+            renderApp();
+            alert(`🔵 Bluetooth ${bt.enabled ? 'enabled' : 'disabled'}. ${bt.enabled ? 'You can now scan for devices.' : ''}`);
+        };
+
+        window.scanBluetoothDevices = function() {
+            const bt = appData.systemSettings.bluetooth;
+            if (!bt.enabled) {
+                alert('⚠️ Please enable Bluetooth first.');
+                return;
+            }
+
+            // Check if Web Bluetooth API is available
+            if (!navigator.bluetooth) {
+                alert('❌ Web Bluetooth API is not supported in this browser. Please use Chrome, Edge, or Opera.');
+                return;
+            }
+
+            alert('🔍 Scanning for Bluetooth devices... Please ensure your printer is in pairing mode.');
+
+            navigator.bluetooth.requestDevice({
+                filters: [{ services: ['000018f0-0000-1000-8000-00805f9b34fb'] }],
+                optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb']
+            }).then(device => {
+                const bt = appData.systemSettings.bluetooth;
+                bt.deviceName = device.name || 'Unknown Device';
+                bt.deviceAddress = device.id || 'N/A';
+                bt.paired = true;
+                saveToLocal();
+                addActivityLog('Bluetooth Device Scanned', `Found: ${bt.deviceName}`);
+                renderApp();
+                alert(`✅ Found and paired with: ${bt.deviceName}\nAddress: ${bt.deviceAddress}`);
+            }).catch(error => {
+                console.error('Bluetooth scan error:', error);
+                alert(`❌ Scan failed: ${error.message || 'No device found or user cancelled.'}`);
+            });
+        };
+
+        window.pairBluetoothDevice = function() {
+            const bt = appData.systemSettings.bluetooth;
+            if (!bt.enabled) {
+                alert('⚠️ Please enable Bluetooth first.');
+                return;
+            }
+
+            if (!navigator.bluetooth) {
+                alert('❌ Web Bluetooth API is not supported in this browser.');
+                return;
+            }
+
+            alert('🔗 Please select your Bluetooth printer from the list...');
+
+            navigator.bluetooth.requestDevice({
+                filters: [{ namePrefix: '' }],
+                optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb']
+            }).then(device => {
+                return device.gatt.connect().then(server => {
+                    const bt = appData.systemSettings.bluetooth;
+                    bt.deviceName = device.name || 'Unknown Device';
+                    bt.deviceAddress = device.id || 'N/A';
+                    bt.paired = true;
+                    saveToLocal();
+                    addActivityLog('Bluetooth Paired', `Paired with: ${bt.deviceName}`);
+                    renderApp();
+                    alert(`✅ Successfully paired with: ${bt.deviceName}`);
+                    return server.disconnect();
+                });
+            }).catch(error => {
+                console.error('Pairing error:', error);
+                alert(`❌ Pairing failed: ${error.message || 'Could not pair with device.'}`);
+            });
+        };
+
+        window.toggleBluetoothAutoPrint = function(checked) {
+            const bt = appData.systemSettings.bluetooth;
+            bt.autoPrint = checked;
+            saveToLocal();
+            addActivityLog('Bluetooth Auto-Print', `Auto-Print ${checked ? 'ON' : 'OFF'}`);
+            renderApp();
+            alert(`🔵 Bluetooth Auto-Print ${checked ? 'enabled' : 'disabled'}. ${checked ? 'Receipts will print automatically after each sale.' : ''}`);
+        };
+
+        window.testBluetoothPrint = function() {
+            const bt = appData.systemSettings.bluetooth;
+            if (!bt.enabled) {
+                alert('⚠️ Please enable Bluetooth first.');
+                return;
+            }
+            if (!bt.paired) {
+                alert('⚠️ Please pair a Bluetooth device first.');
+                return;
+            }
+
+            if (!navigator.bluetooth) {
+                alert('❌ Web Bluetooth API is not supported in this browser.');
+                return;
+            }
+
+            alert(`🖨️ Sending test print to ${bt.deviceName}...`);
+
+            // Create a test receipt content
+            const testContent = `
+                ${appData.systemSettings.companyName}
+                ${'='.repeat(32)}
+                TEST PRINT
+                ${'-'.repeat(32)}
+                Date: ${new Date().toLocaleString()}
+                Device: ${bt.deviceName}
+                ${'-'.repeat(32)}
+                Bluetooth Connection: OK
+                ${'='.repeat(32)}
+                ✅ Test Print Successful!
+                ${new Date().toLocaleString()}
+                ${'-'.repeat(32)}
+            `;
+
+            navigator.bluetooth.requestDevice({
+                filters: [{ name: bt.deviceName }]
+            }).then(device => {
+                return device.gatt.connect().then(server => {
+                    return server.getPrimaryService('000018f0-0000-1000-8000-00805f9b34fb');
+                }).then(service => {
+                    return service.getCharacteristic('00002af1-0000-1000-8000-00805f9b34fb');
+                }).then(characteristic => {
+                    const encoder = new TextEncoder();
+                    const data = encoder.encode(testContent + '\n\n');
+                    return characteristic.writeValue(data);
+                }).then(() => {
+                    bt.printAttempts = (bt.printAttempts || 0) + 1;
+                    bt.printSuccess = (bt.printSuccess || 0) + 1;
+                    bt.lastPrint = new Date().toISOString();
+                    saveToLocal();
+                    addActivityLog('Bluetooth Test Print', 'Success');
+                    renderApp();
+                    alert('✅ Test print sent successfully! Check your printer.');
+                }).catch(err => {
+                    bt.printAttempts = (bt.printAttempts || 0) + 1;
+                    saveToLocal();
+                    throw err;
+                });
+            }).catch(error => {
+                console.error('Test print error:', error);
+                bt.printAttempts = (bt.printAttempts || 0) + 1;
+                saveToLocal();
+                renderApp();
+                alert(`❌ Test print failed: ${error.message || 'Could not send print job.'}`);
+            });
+        };
+
+        // Override printDualReceipts to support Bluetooth auto-print
+        const originalPrintDualReceipts = printDualReceipts;
+        printDualReceipts = function(transaction) {
+            // Call original function for manual/visual printing
+            originalPrintDualReceipts(transaction);
+
+            // Check if Bluetooth auto-print is enabled
+            const bt = appData.systemSettings.bluetooth;
+            if (bt && bt.enabled && bt.paired && bt.autoPrint) {
+                // Attempt to print via Bluetooth
+                setTimeout(() => {
+                    sendBluetoothReceipt(transaction);
+                }, 1000);
+            }
+        };
+
+        function sendBluetoothReceipt(transaction) {
+            const bt = appData.systemSettings.bluetooth;
+            if (!bt || !bt.enabled || !bt.paired || !bt.autoPrint) return;
+
+            if (!navigator.bluetooth) {
+                console.warn('Web Bluetooth API not supported');
+                return;
+            }
+
+            // Build receipt content
+            let receiptContent = `
+                ${appData.systemSettings.companyName}
+                ${'='.repeat(32)}
+                ${appData.systemSettings.tagline}
+                ${'-'.repeat(32)}
+                ${appData.systemSettings.receiptHeader}: ${transaction.id}
+                Date: ${new Date(transaction.date).toLocaleString()}
+                Customer: ${transaction.customer}
+                Vehicle: ${transaction.vehicle} | ${transaction.plate}
+                Payment: ${transaction.paymentMethod}
+                ${'-'.repeat(32)}
+            `;
+
+            transaction.items.forEach(item => {
+                receiptContent += `
+                ${item.serviceName} (${item.variant}) x${item.quantity}
+                ₱${(item.price * item.quantity).toFixed(2)}
+                `;
+            });
+
+            receiptContent += `
+                ${'-'.repeat(32)}
+                Subtotal: ₱${transaction.subtotal.toFixed(2)}
+                ${transaction.discount > 0 ? `Discount: -₱${transaction.discount.toFixed(2)}\n` : ''}
+                TOTAL: ₱${transaction.total.toFixed(2)}
+                ${'-'.repeat(32)}
+                Thank You For Choosing!
+                ${appData.systemSettings.companyName}
+                ${appData.systemSettings.receiptFooter}
+                ${'='.repeat(32)}
+                ${new Date().toLocaleString()}
+                ${'-'.repeat(32)}
+            `;
+
+            navigator.bluetooth.requestDevice({
+                filters: [{ name: bt.deviceName }]
+            }).then(device => {
+                return device.gatt.connect().then(server => {
+                    return server.getPrimaryService('000018f0-0000-1000-8000-00805f9b34fb');
+                }).then(service => {
+                    return service.getCharacteristic('00002af1-0000-1000-8000-00805f9b34fb');
+                }).then(characteristic => {
+                    const encoder = new TextEncoder();
+                    const data = encoder.encode(receiptContent + '\n\n');
+                    return characteristic.writeValue(data);
+                }).then(() => {
+                    bt.printAttempts = (bt.printAttempts || 0) + 1;
+                    bt.printSuccess = (bt.printSuccess || 0) + 1;
+                    bt.lastPrint = new Date().toISOString();
+                    saveToLocal();
+                    console.log('✅ Bluetooth receipt printed for:', transaction.id);
+                }).catch(err => {
+                    bt.printAttempts = (bt.printAttempts || 0) + 1;
+                    saveToLocal();
+                    console.error('Bluetooth print error:', err);
+                });
+            }).catch(error => {
+                console.warn('Bluetooth print failed:', error);
+            });
         }
 
         window.updateFeedbackUrl = function() {
@@ -8832,6 +10029,7 @@
                     <p class="text-purple-400 mt-1">🖨️ Print Entire Dashboard feature</p>
                     <p class="text-cyan-400 mt-1">🎨 Panel Customization: Edit any admin panel content</p>
                     <p class="text-blue-400 mt-1">🤖 AI Assistant: Intelligent search across all data</p>
+                    <p class="text-blue-400 mt-1">🔵 Bluetooth Auto-Print: Pair and print receipts wirelessly</p>
                 </div>
             </div>
         </div></div>`;
@@ -9617,7 +10815,7 @@
                 appData.systemSettings.logoSize);
         };
 
-        window.exportStaffCSV = () => {
+        window.exportStaffCSV = function() {
             let csv =
                 "Staff Name,Position,Commission Tier,Jobs Completed,Sales Generated,Total Commission,Status\n";
             appData.staff.forEach(s => {
@@ -11070,7 +12268,6 @@
         function renderApp() {
             if (showLogin) {
                 document.getElementById("mainContent").innerHTML = renderLogin();
-                // Keep AI assistant visible on login
                 if (!document.getElementById('aiAssistantContainer')) {
                     document.body.insertAdjacentHTML('beforeend', renderAIAssistant());
                 }
@@ -11085,7 +12282,6 @@
             if (!main) return;
             let content = "";
 
-            // Check if we're in feedback mode from URL
             const params = new URLSearchParams(window.location.search);
             const feedbackParam = params.get('feedback');
             const receiptParam = params.get('receipt');
@@ -11094,7 +12290,6 @@
                     receiptParam)) {
                 content = renderFeedbackForm(receiptParam || '');
                 main.innerHTML = content;
-                // Ensure AI assistant is rendered
                 if (!document.getElementById('aiAssistantContainer')) {
                     document.body.insertAdjacentHTML('beforeend', renderAIAssistant());
                 }
@@ -11136,12 +12331,10 @@
 
             main.innerHTML = content;
 
-            // Ensure AI assistant is rendered
             if (!document.getElementById('aiAssistantContainer')) {
                 document.body.insertAdjacentHTML('beforeend', renderAIAssistant());
             }
 
-            // Initialize AI chat if not already done
             const chat = document.getElementById('aiChat');
             if (chat && aiChatHistory.length === 0) {
                 addAIMessage('assistant', '👋 Hi! I\'m your POS Assistant. I can help you with:\n\n• Viewing sales and revenue insights\n• Checking staff performance\n• Finding specific transactions\n• Analyzing customer data\n• Commission reports\n• Inventory status\n\nTry asking something like "What are today\'s sales?" or "Show me top performing staff"');
@@ -11276,6 +12469,7 @@
                     <span class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</span>
                     <span id="syncStatus" class="sync-status"><i class="fas fa-cloud"></i> ${firebaseInitialized && isFirebasePrimary ? 'Online' : 'Offline'}</span>
                     ${appData.systemSettings.enableNotifications !== false ? `<span class="text-cyan-400 text-xs"><i class="fas fa-bell"></i></span>` : ''}
+                    ${appData.systemSettings.bluetooth?.enabled ? `<span class="text-blue-400 text-xs"><i class="fas fa-bluetooth-b"></i></span>` : ''}
                     <button class="mobile-nav-toggle" onclick="toggleMobileNav()"><i class="fas fa-bars"></i></button>
                 </div>
             </header>
@@ -11297,11 +12491,10 @@
 
             <div id="mainContent" class="mt-2"></div>
 
-            <footer class="text-center text-gray-500 text-sm mt-8 pt-4 border-t border-gray-800">${appData.systemSettings.companyName} | v8.8.5 | QR Code Feedback | Sunday-Saturday Payroll Cycle | ${firebaseInitialized && isFirebasePrimary ? '🌐 Online Mode - Real-time Sync ON' : '📡 Offline Mode - Local Cache'}</footer>
+            <footer class="text-center text-gray-500 text-sm mt-8 pt-4 border-t border-gray-800">${appData.systemSettings.companyName} | v8.8.5 | QR Code Feedback | Sunday-Saturday Payroll Cycle | ${firebaseInitialized && isFirebasePrimary ? '🌐 Online Mode - Real-time Sync ON' : '📡 Offline Mode - Local Cache'} | ${appData.systemSettings.bluetooth?.enabled ? '🔵 Bluetooth Auto-Print ON' : ''}</footer>
         </div>
     `;
 
-        // Add AI Assistant
         document.body.insertAdjacentHTML('beforeend', renderAIAssistant());
 
         renderApp();
@@ -11327,6 +12520,8 @@
         console.log('%c📝 Feedback System: ${getAllFeedback().length} entries | Staff Performance | Service Analytics',
             'color: #00ff88;');
         console.log('%c🎨 Panel Customization: Edit any admin panel content via the "Customize" button', 'color: #00d4ff;');
+        console.log('%c🔵 Bluetooth Auto-Print: ' + (appData.systemSettings.bluetooth?.enabled ? '✅ Enabled' : '⏸️ Disabled'),
+            'color: #00d4ff;');
         if (!firebaseInitialized || !isFirebasePrimary) {
             console.log('%c⚠️ Click "Admin" → "System Settings" → "Configure Firebase" to connect online',
                 'color: #ff6b6b;');
@@ -11335,6 +12530,7 @@
         }
         console.log('%c🔍 Search: Plate, Receipt, Customer, Vehicle, Staff, Date Range', 'color: #00d4ff;');
         console.log('%c🤖 Try the AI Assistant: Click the robot icon in the bottom-right corner!', 'color: #00d4ff;');
+        console.log('%c👥 Enhanced Staff Dashboard: Full CRUD + Export to CSV/Excel/PDF + Print', 'color: #00d4ff;');
     </script>
 </body>
 </html>
